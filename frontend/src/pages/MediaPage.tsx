@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
-import Sidebar, { type ActiveModule } from '../components/Sidebar';
+import AdminLayout from '../components/AdminLayout';
+import { type ActiveModule } from '../components/Sidebar';
 
 type MediaItem = {
     id: number;
@@ -50,14 +51,11 @@ function formatBytes(bytes: number): string {
 }
 
 type NavigationProps = {
-    onBack: () => void;
-    onOpenCategories: () => void;
-    onOpenPosts: () => void;
-    onOpenPages: () => void;
+    onNavigate: (module: ActiveModule) => void;
     onLogout: () => void;
 };
 
-export default function MediaPage({ onBack, onOpenCategories, onOpenPosts, onOpenPages, onLogout }: NavigationProps) {
+export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
     const [items, setItems] = useState < MediaItem[] > ([]);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
@@ -205,217 +203,180 @@ export default function MediaPage({ onBack, onOpenCategories, onOpenPosts, onOpe
     }
 
     return (
-        <div className="cms-shell">
-            <Sidebar
-              active="media"
-              onNavigate={(module: ActiveModule) => {
-                switch (module) {
-                  case 'dashboard':
-                    onBack();
-                    break;
-                  case 'posts':
-                    onOpenPosts();
-                    break;
-                  case 'pages':
-                    onOpenPages();
-                    break;
-                  case 'categories':
-                    onOpenCategories();
-                    break;
-                }
-              }}
-            />
+        <AdminLayout
+            active="media"
+            onNavigate={onNavigate}
+            onLogout={onLogout}
+            title="Artikel"
+            breadcrumb="Workspace / Konten / Media"
+        >
+            <section className="welcome-panel">
+                <div>
+                    <span className="eyebrow">MEDIA LIBRARY</span>
+                    <h2>Kelola aset visual CMS.</h2>
+                    <p>Unggah gambar dan gunakan kembali pada artikel maupun halaman.</p>
+                </div>
+                <div className="welcome-icon" aria-hidden="true">
+                    ▣
+                </div>
+            </section>
 
-            <main className="cms-main">
-                <header className="topbar">
+            {error && (
+                <div className="alert alert-danger mt-3" role="alert">
+                    {error}
+                    <button className="btn-close float-end" type="button"
+                        onClick={() => setError('')} aria-label="Tutup" />
+                </div>
+            )}
+            
+            {notice && (
+                <div className="alert alert-success mt-3" role="status">
+                    {notice}
+                    <button className="btn-close float-end" type="button"
+                        onClick={() => setNotice('')} aria-label="Tutup" />
+                </div>
+            )}
+
+            <section className="content-panel mt-4">                <div className="panel-heading">
                     <div>
-                        <div className="breadcrumb-text">
-                            Workspace / Konten / Media
+                        <h3>Unggah Gambar</h3>
+                        <p>Format JPEG, JPG, PNG, WebP, atau GIF. Maksimum 5 MB.</p>
+                    </div>
+                </div>
+
+                <form className="px-4 pb-4" onSubmit={uploadMedia}>
+                    <div className="mb-3">
+                        <label className="form-label" htmlFor="media-file">File gambar *</label>
+                        <input
+                        id="media-file"
+                        className="form-control"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        required
+                        onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+                        />
+                    {selectedFile && (
+                        <div className="form-text">
+                            {selectedFile.name} · {formatBytes(selectedFile.size)}
                         </div>
-                        <h1>Media</h1>
-                    </div>
-                    <button className="btn btn-outline-secondary" type="button" onClick={onLogout}>
-                        Keluar
-                    </button>
-                </header>
+                    )}
+                </div>
+                <div className="mb-3">
+                    <label className="form-label" htmlFor="upload-alt">Alt text</label>
+                    <input
+                    id="upload-alt"
+                    className="form-control"
+                    maxLength={255}
+                    value={uploadAlt}
+                    placeholder="Deskripsi singkat gambar untuk aksesibilitas"
+                    onChange={(event) => setUploadAlt(event.target.value)}
+                    />
+            </div>
+            <button className="btn btn-primary" type="submit" disabled={uploading}>
+                {uploading ? 'Mengunggah...': 'Unggah Gambar'}
+            </button>
+        </form>
+            </section>
 
-                <section className="welcome-panel">
-                    <div>
-                        <span className="eyebrow">MEDIA LIBRARY</span>
-                        <h2>Kelola aset visual CMS.</h2>
-                        <p>
-                            Unggah gambar dan gunakan kembali pada artikel maupun halaman.
-                        </p>
-                    </div>
-                    <div className="welcome-icon" aria-hidden="true">
-                        ▣
-                    </div>
-                </section>
+            <section className="content-panel mt-4">                <div className="panel-heading">
+            <div>
+                <h3>Perpustakaan Media</h3>
+                <p>
+                    Gambar terbaru ditampilkan terlebih dahulu.
+                </p>
+            </div>
+            <span className="total-badge">{total} file</span>
+        </div>
 
-                {error && (
-                    <div className="alert alert-danger mt-3" role="alert">
-                        {error}
-                        <button className="btn-close float-end" type="button"
-                            onClick={() => setError('')} aria-label="Tutup" />
-                    </div>
-                )}
-                {notice && (
-                    <div className="alert alert-success mt-3" role="status">
-                        {notice}
-                        <button className="btn-close float-end" type="button"
-                            onClick={() => setNotice('')} aria-label="Tutup" />
-                    </div>
-                )}
-
-                <section className="content-panel mt-4">
-                    <div className="panel-heading">
-                        <div>
-                            <h3>Unggah Gambar</h3>
+                    {loading ? (
+                        <div className="empty-state">
+                            Memuat media...
+                        </div>
+                    ): items.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-icon">
+                                ▣
+                            </div>
+                            <strong>Belum ada gambar</strong>
                             <p>
-                                Format JPEG, JPG, PNG, WebP, atau GIF. Maksimum 5 MB.
+                                Unggah gambar pertama menggunakan formulir di atas.
                             </p>
                         </div>
-                    </div>
-
-                    <form className="px-4 pb-4" onSubmit={uploadMedia}>
-                        <div className="mb-3">
-                            <label className="form-label" htmlFor="media-file">File gambar *</label>
-                            <input
-                            id="media-file"
-                            className="form-control"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/gif"
-                            required
-                            onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
-                            />
-                        {selectedFile && (
-                            <div className="form-text">
-                                {selectedFile.name} · {formatBytes(selectedFile.size)}
+                    ): (
+                        <div className="media-grid">
+                            {items.map((media) => (
+                                <article className="media-card" key={media.id}>
+                                    <a
+                                        className="media-preview"
+                                        href={getMediaUrl(media)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        aria-label={`Buka gambar ${media.original_name} di tab baru`}
+                                        >
+                                        <img
+                                        src={getMediaUrl(media)}
+                                        alt={media.alt_text || media.original_name}
+                                        loading="lazy"
+                                        />
+                                </a>
+                                <div className="media-card-body">
+                                    <div className="media-filename" title={media.original_name}>
+                                        {media.original_name}
+                                    </div>
+                                    <div className="media-meta">
+                                        {formatBytes(media.size)} · {media.mime_type}
+                                    </div>
+                                    <label className="form-label mt-3" htmlFor={`alt-${media.id}`}>
+                                        Alt text
+                                    </label>
+                                    <input
+                                    id={`alt-${media.id}`}
+                                    className="form-control form-control-sm"
+                                    maxLength={255}
+                                    value={altTexts[media.id] ?? ''}
+                                    onChange={(event) => setAltTexts((current) => ({
+                                        ...current,
+                                        [media.id]: event.target.value,
+                                    }))}
+                                    />
+                                <div className="d-flex gap-2 mt-3">
+                                    <button
+                                        className="btn btn-sm btn-primary flex-grow-1"
+                                        type="button"
+                                        disabled={savingAltId !== null || deletingId !== null}
+                                        onClick={() => void saveAltText(media)}
+                                        >
+                                        {savingAltId === media.id ? 'Menyimpan...': 'Simpan Alt'}
+                                    </button>
+                                    <button
+                                        className="btn btn-sm btn-outline-danger"
+                                        type="button"
+                                        disabled={deletingId !== null || savingAltId !== null}
+                                        onClick={() => void deleteMedia(media)}
+                                        >
+                                        {deletingId === media.id ? '...': 'Hapus'}
+                                    </button>
+                                </div>
                             </div>
-                        )}
+                            </article>
+                        ))}
+                </div>
+                    )}
+            
+                    <div className="pagination-bar">
+                <span>Halaman {page} dari {lastPage}</span>
+                <div className="d-flex gap-2">
+                    <button className="btn btn-sm btn-outline-secondary" type="button"
+                        disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>
+                        Sebelumnya
+                    </button>
+                    <button className="btn btn-sm btn-outline-secondary" type="button"
+                        disabled={page >= lastPage || loading} onClick={() => setPage((p) => p + 1)}>
+                        Berikutnya
+                    </button>
+                </div>
                     </div>
-                    <div className="mb-3">
-                        <label className="form-label" htmlFor="upload-alt">Alt text</label>
-                        <input
-                        id="upload-alt"
-                        className="form-control"
-                        maxLength={255}
-                        value={uploadAlt}
-                        placeholder="Deskripsi singkat gambar untuk aksesibilitas"
-                        onChange={(event) => setUploadAlt(event.target.value)}
-                        />
-                </div>
-                <button className="btn btn-primary" type="submit" disabled={uploading}>
-                    {uploading ? 'Mengunggah...': 'Unggah Gambar'}
-                </button>
-            </form>
-        </section>
-
-        <section className="content-panel mt-4">
-            <div className="panel-heading">
-                <div>
-                    <h3>Perpustakaan Media</h3>
-                    <p>
-                        Gambar terbaru ditampilkan terlebih dahulu.
-                    </p>
-                </div>
-                <span className="total-badge">{total} file</span>
-            </div>
-
-            {loading ? (
-                <div className="empty-state">
-                    Memuat media...
-                </div>
-            ): items.length === 0 ? (
-                <div className="empty-state">
-                    <div className="empty-icon">
-                        ▣
-                    </div>
-                    <strong>Belum ada gambar</strong>
-                    <p>
-                        Unggah gambar pertama menggunakan formulir di atas.
-                    </p>
-                </div>
-            ): (
-                <div className="media-grid">
-                    {items.map((media) => (
-                        <article className="media-card" key={media.id}>
-                            <a
-                                className="media-preview"
-                                href={getMediaUrl(media)}
-                                target="_blank"
-                                rel="noreferrer"
-                                aria-label={`Buka gambar ${media.original_name} di tab baru`}
-                                >
-                                <img
-                                src={getMediaUrl(media)}
-                                alt={media.alt_text || media.original_name}
-                                loading="lazy"
-                                />
-                        </a>
-                        <div className="media-card-body">
-                            <div className="media-filename" title={media.original_name}>
-                                {media.original_name}
-                            </div>
-                            <div className="media-meta">
-                                {formatBytes(media.size)} · {media.mime_type}
-                            </div>
-                            <label className="form-label mt-3" htmlFor={`alt-${media.id}`}>
-                                Alt text
-                            </label>
-                            <input
-                            id={`alt-${media.id}`}
-                            className="form-control form-control-sm"
-                            maxLength={255}
-                            value={altTexts[media.id] ?? ''}
-                            onChange={(event) => setAltTexts((current) => ({
-                                ...current,
-                                [media.id]: event.target.value,
-                            }))}
-                            />
-                        <div className="d-flex gap-2 mt-3">
-                            <button
-                                className="btn btn-sm btn-primary flex-grow-1"
-                                type="button"
-                                disabled={savingAltId !== null || deletingId !== null}
-                                onClick={() => void saveAltText(media)}
-                                >
-                                {savingAltId === media.id ? 'Menyimpan...': 'Simpan Alt'}
-                            </button>
-                            <button
-                                className="btn btn-sm btn-outline-danger"
-                                type="button"
-                                disabled={deletingId !== null || savingAltId !== null}
-                                onClick={() => void deleteMedia(media)}
-                                >
-                                {deletingId === media.id ? '...': 'Hapus'}
-                            </button>
-                        </div>
-                    </div>
-                    </article>
-                ))}
-        </div>
-    )}
-
-    <div className="pagination-bar">
-        <span>Halaman {page} dari {lastPage}</span>
-        <div className="d-flex gap-2">
-            <button className="btn btn-sm btn-outline-secondary" type="button"
-                disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>
-                Sebelumnya
-            </button>
-            <button className="btn btn-sm btn-outline-secondary" type="button"
-                disabled={page >= lastPage || loading} onClick={() => setPage((p) => p + 1)}>
-                Berikutnya
-            </button>
-        </div>
-    </div>
-</section>
-
-    <footer className="cms-footer">
-        ContentHub CMS · Backend Laravel API
-    </footer>
-</main>
-</div>
-);
+            </section>
+        </AdminLayout>
+    );
 }

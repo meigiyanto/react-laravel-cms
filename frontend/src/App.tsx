@@ -17,8 +17,6 @@ import type {
     ActiveModule
 } from './components/Sidebar';
 
-type ActiveModule = | 'dashboard'| 'posts'| 'categories'| 'media'| 'pages';
-
 function App() {
     const [authenticated,
         setAuthenticated] = useState(false);
@@ -118,10 +116,6 @@ function App() {
     const navigation = {
         onNavigate: (module: ActiveModule) => setActiveModule(module),
         onBack: () => setActiveModule('dashboard'),
-        onOpenPosts: () => setActiveModule('posts'),
-        onOpenCategories: () => setActiveModule('categories'),
-        onOpenMedia: () => setActiveModule('media'),
-        onOpenPages: () => setActiveModule('pages'),
         onLogout: () => void handleLogout(),
     };
 
@@ -137,10 +131,7 @@ function App() {
         case 'categories':
             return (
                 <CategoriesPage
-                    onBack={navigation.onBack}
-                    onOpenPosts={navigation.onOpenPosts}
-                    onOpenMedia={navigation.onOpenMedia}
-                    onOpenPages={navigation.onOpenPages}
+                    onNavigate={navigation.onNavigate}
                     onLogout={navigation.onLogout}
                 />
             );
@@ -148,10 +139,7 @@ function App() {
         case 'media':
             return (
                 <MediaPage
-                    onBack={navigation.onBack}
-                    onOpenPosts={navigation.onOpenPosts}
-                    onOpenCategories={navigation.onOpenCategories}
-                    onOpenPages={navigation.onOpenPages}
+                    onNavigate={navigation.onNavigate}
                     onLogout={navigation.onLogout}
                 />
             );
@@ -159,13 +147,10 @@ function App() {
         case 'pages':
             return (
                 <PagesPage
-                    onBack={navigation.onBack}
-                    onOpenCategories={navigation.onOpenCategories}
-                    onOpenMedia={navigation.onOpenMedia}
+                    onNavigate={navigation.onNavigate}
                     onLogout={navigation.onLogout}
                 />
             );
-
         case 'dashboard':
         default:
             return (

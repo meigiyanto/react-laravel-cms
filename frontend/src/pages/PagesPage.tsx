@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
-import Sidebar, { type ActiveModule } from '../components/Sidebar';
+import AdminLayout from '../components/AdminLayout';
+import { type ActiveModule } from '../components/Sidebar';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -66,13 +67,11 @@ function errorMessage(error: unknown): string {
 }
 
 type NavigationProps = {
-    onBack: () => void;
-    onOpenMedia: () => void;
-    onOpenPosts: () => void;
+    onNavigate: (module: ActiveModule) => void;
     onLogout: () => void;
 };
 
-export default function PagesPage({ onBack, onOpenMedia, onOpenPosts, onLogout }: NavigationProps) {
+export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
     const [pages, setPages] = useState <CmsPage[]> ([]);
     const [media, setMedia] = useState <MediaOption[]> ([]);
     const [page, setPage] = useState(1);
@@ -226,7 +225,7 @@ export default function PagesPage({ onBack, onOpenMedia, onOpenPosts, onLogout }
 
     async function deletePage(item: CmsPage) {
         if (!window.confirm(
-            `Hapus halaman "${item.title}"? Tindakan ini tidak dapat dibatalkan.`,
+            `Hapus halaman "${item.title}"? Tindakan ini tidak dapat dibatalkan.`
         )) return;
 
         setDeletingId(item.id);
@@ -250,62 +249,46 @@ export default function PagesPage({ onBack, onOpenMedia, onOpenPosts, onLogout }
     }
 
     return (
-        <div className="cms-shell">
-            <Sidebar
-              active="pages"
-              onNavigate={(module: ActiveModule) => {
-                switch (module) {
-                  case 'dashboard':
-                    onBack();
-                    break;
-                  case 'posts':
-                    onOpenPosts();
-                    break;
-                  case 'media':
-                    onOpenMedia();
-                    break;
-                  case 'categories':
-                    break;
-                }
-              }}
-            />
+        <AdminLayout
+            active="pages"
+            onNavigate={onNavigate}
+            onLogout={onLogout}
+            title="Artikel"
+            breadcrumb="Workspace / Konten / Halaman"
+            actions={
+                <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={openCreateForm}
+                    >
+                    + Halaman Baru
+                </button>
+            }
+        >
+            <section className="welcome-panel">
+                <div>
+                    <span className="eyebrow">PAGE MANAGEMENT</span>
+                    <h2>Kelola halaman situs.</h2>
+                    <p>Atur isi halaman, publikasi, gambar unggulan, dan metadata SEO.</p>
+                </div>
+                <div className="welcome-icon" aria-hidden="true">▱</div>
+            </section>
 
-            <main className="cms-main">
-                <header className="topbar">
-                    <div>
-                        <div className="breadcrumb-text">Workspace / Konten / Halaman</div>
-                        <h1>Halaman</h1>
-                    </div>
-                    <div className="d-flex align-items-center gap-2">
-                        <button className="btn btn-outline-secondary" type="button" onClick={onLogout}>Keluar</button>
-                        <button className="btn btn-primary" type="button" onClick={openCreateForm}>+ Halaman Baru</button>
-                    </div>
-                </header>
+            {error && (
+                <div className="alert alert-danger mt-3" role="alert">
+                    {error}
+                    <button className="btn-close float-end" type="button" onClick={() => setError('')} aria-label="Tutup" />
+                </div>
+            )}
+            
+            {notice && (
+                <div className="alert alert-success mt-3" role="status">
+                    {notice}
+                    <button className="btn-close float-end" type="button" onClick={() => setNotice('')} aria-label="Tutup" />
+                </div>
+            )}
 
-                <section className="welcome-panel">
-                    <div>
-                        <span className="eyebrow">PAGE MANAGEMENT</span>
-                        <h2>Kelola halaman situs.</h2>
-                        <p>Atur isi halaman, publikasi, gambar unggulan, dan metadata SEO.</p>
-                    </div>
-                    <div className="welcome-icon" aria-hidden="true">▱</div>
-                </section>
-
-                {error && (
-                    <div className="alert alert-danger mt-3" role="alert">
-                        {error}
-                        <button className="btn-close float-end" type="button" onClick={() => setError('')} aria-label="Tutup" />
-                    </div>
-                )}
-                
-                {notice && (
-                    <div className="alert alert-success mt-3" role="status">
-                        {notice}
-                        <button className="btn-close float-end" type="button" onClick={() => setNotice('')} aria-label="Tutup" />
-                    </div>
-                )}
-
-                <section className="content-panel mt-4">
+            <section className="content-panel mt-4">
                     <div className="panel-heading">
                         <div>
                             <h3>Daftar Halaman</h3>
@@ -416,9 +399,6 @@ export default function PagesPage({ onBack, onOpenMedia, onOpenPosts, onLogout }
                     </div>
                 </section>
 
-                <footer className="cms-footer">ContentHub CMS · Backend Laravel API</footer>
-            </main>
-
             {showForm && (
                 <div className="modal-backdrop-custom" role="presentation">
                     <section className="editor-modal page-editor-modal" role="dialog" aria-modal="true" aria-labelledby="page-editor-title">
@@ -505,7 +485,7 @@ export default function PagesPage({ onBack, onOpenMedia, onOpenPosts, onLogout }
                     </section>
                 </div>
             )}
-        </div>
+        </AdminLayout>
     );
 }
 

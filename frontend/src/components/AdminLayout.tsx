@@ -17,11 +17,13 @@ export default function AdminLayout({ active, onNavigate, onLogout, title, bread
                     </div>
                 
                     <div className="d-flex align-items-center gap-2">
-                        {actions}
                         <button className="btn btn-outline-secondary" type="button" onClick={onLogout}>Keluar</button>
+                        {actions}
                     </div>
                 </header>
+                
                 {children}
+                
                 <footer className="cms-footer">ContentHub CMS · Backend Laravel API</footer>
             </main>
         </div>
