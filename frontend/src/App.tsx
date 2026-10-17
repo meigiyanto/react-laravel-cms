@@ -217,7 +217,8 @@ function Dashboard({ onLogout, onOpenCategories }: {  onLogout: () => void; onOp
                 setSearch('');
                 setStatusFilter('');
                 setPage(1);
-            }}>
+            }}
+            >
                 <span>▤</span> Artikel
             </button>
             <button className="nav-item" type="button" onClick={onOpenCategories}>

@@ -53,21 +53,39 @@ function getErrorMessage(error: unknown): string {
     return 'Terjadi kesalahan yang tidak diketahui.';
 }
 
-export default function CategoriesPage({ onBack, onLogout }: { onBack: () => void; onLogout: () => void; }) {
-    const [categories, setCategories] = useState < Category[] > ([]);
-    const [page, setPage] = useState(1);
-    const [lastPage, setLastPage] = useState(1);
-    const [total, setTotal] = useState(0);
-    const [search, setSearch] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [deletingId, setDeletingId] = useState < number | null > (null);
-    const [error, setError] = useState('');
-    const [notice, setNotice] = useState('');
-    const [editing, setEditing] = useState < Category | null > (null);
-    const [form, setForm] = useState < CategoryForm > (emptyForm);
-    const [showForm, setShowForm] = useState(false);
-    
+export default function CategoriesPage({
+    onBack,
+    onLogout,
+}: {
+    onBack: () => void;
+    onLogout: () => void;
+}) {
+    const [categories,
+        setCategories] = useState < Category[] > ([]);
+    const [page,
+        setPage] = useState(1);
+    const [lastPage,
+        setLastPage] = useState(1);
+    const [total,
+        setTotal] = useState(0);
+    const [search,
+        setSearch] = useState('');
+    const [loading,
+        setLoading] = useState(true);
+    const [saving,
+        setSaving] = useState(false);
+    const [deletingId,
+        setDeletingId] = useState < number | null > (null);
+    const [error,
+        setError] = useState('');
+    const [notice,
+        setNotice] = useState('');
+    const [editing,
+        setEditing] = useState < Category | null > (null);
+    const [form,
+        setForm] = useState < CategoryForm > (emptyForm);
+    const [showForm,
+        setShowForm] = useState(false);
 
     const loadCategories = useCallback(async () => {
         setLoading(true);
@@ -188,7 +206,9 @@ export default function CategoriesPage({ onBack, onLogout }: { onBack: () => voi
     }
 
     async function deleteCategory(category: Category) {
-        const confirmed = window.confirm(`Hapus kategori ${category.name}? Tindakan ini tidak dapat dibatalkan.`);
+        const confirmed = window.confirm(
+            `Hapus kategori "${category.name}"? Tindakan ini tidak dapat dibatalkan.`,
+        );
 
         if (!confirmed) return;
 
@@ -239,11 +259,13 @@ export default function CategoriesPage({ onBack, onLogout }: { onBack: () => voi
                 <button className="nav-item active" type="button" aria-current="page">
                     <span>▧</span> Kategori
                 </button>
-                <button className="nav-item" type="button">
+                <button className="nav-item" type="button" disabled>
                     <span>▣</span> Media
+                    <small>Segera</small>
                 </button>
-                <button className="nav-item" type="button">
+                <button className="nav-item" type="button" disabled>
                     <span>▱</span> Halaman
+                    <small>Segera</small>
                 </button>
 
                 <div className="sidebar-bottom">
@@ -495,15 +517,15 @@ export default function CategoriesPage({ onBack, onLogout }: { onBack: () => voi
                                 Nama kategori *
                             </label>
                             <input
-                                id="category-name"
-                                className="form-control"
-                                required
-                                maxLength={150}
-                                autoFocus
-                                value={form.name}
-                                onChange={(event) =>
-                                    setForm((current) => ({ ...current, name: event.target.value }))
-                                }
+                            id="category-name"
+                            className="form-control"
+                            required
+                            maxLength={150}
+                            autoFocus
+                            value={form.name}
+                            onChange={(event) =>
+                            setForm((current) => ({ ...current, name: event.target.value }))
+                            }
                             />
                     </div>
 
