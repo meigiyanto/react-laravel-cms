@@ -3,8 +3,10 @@ import axios from 'axios';
 import api, { AUTH_EXPIRED_EVENT, TOKEN_KEY } from './api/client';
 import LoginPage from './pages/LoginPage';
 import CategoriesPage from './pages/CategoriesPage';
+import MediaPage from './pages/MediaPage';
+import PagesPage from './pages/PagesPage';
 
-type Status = 'draft' | 'published' | 'archived';
+type ActiveModule = 'dashboard' | 'categories' | 'media' | 'pages';
 
 type Post = {
   id: number;
@@ -58,7 +60,17 @@ function errorMessage(error: unknown): string {
   return 'Terjadi kesalahan yang tidak diketahui.';
 }
 
-function Dashboard({ onLogout, onOpenCategories }: {  onLogout: () => void; onOpenCategories: () => void; }) {
+function Dashboard({
+  onLogout,
+  onOpenCategories,
+  onOpenMedia,
+  onOpenPages,
+}: {
+  onLogout: () => void;
+  onOpenCategories: () => void;
+  onOpenMedia: () => void;
+  onOpenPages: () => void;
+}) {  
   const [stats, setStats] = useState<Stats>({
     total: 0, published: 0, draft: 0, archived: 0,
   });
@@ -224,15 +236,21 @@ function Dashboard({ onLogout, onOpenCategories }: {  onLogout: () => void; onOp
             <button className="nav-item" type="button" onClick={onOpenCategories}>
                 <span>▧</span> Kategori
             </button>
-            <button className="nav-item" type="button" disabled>
-                <span>▣</span> Media
-                <small>Segera</small>
+            <button
+              className="nav-item"
+              type="button"
+              onClick={onOpenMedia}
+            >
+              <span>▣</span> Media
             </button>
-            <button className="nav-item" type="button" disabled>
-                <span>▱</span> Halaman
-                <small>Segera</small>
+            
+            <button
+              className="nav-item"
+              type="button"
+              onClick={onOpenPages}
+            >
+              <span>▱</span> Halaman
             </button>
-    
             <div className="sidebar-bottom">
                 <div className="sidebar-label">
                     STATUS SISTEM
@@ -336,8 +354,8 @@ function Dashboard({ onLogout, onOpenCategories }: {  onLogout: () => void; onOp
                         className="form-select status-filter"
                         value={statusFilter}
                         onChange={(event)=> {
-                        setStatusFilter(event.target.value);
-                        setPage(1);
+                            setStatusFilter(event.target.value);
+                            setPage(1);
                         }}
                         aria-label="Filter status artikel"
                         >
@@ -515,7 +533,7 @@ function StatusBadge({ status }: { status: Status }) {
 function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [activeModule, setActiveModule] = useState<'dashboard' | 'categories'>('dashboard');
+  const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
 
   const handleLogout = useCallback(async () => {
     try {
@@ -602,17 +620,56 @@ function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-    return activeModule === 'categories' ? (
-          <CategoriesPage
-            onBack={() => setActiveModule('dashboard')}
-            onLogout={() => void handleLogout()}
-          />
-        ) : (
-          <Dashboard
-            onLogout={() => void handleLogout()}
-            onOpenCategories={() => setActiveModule('categories')}
-          />
-        );
+
+    const navigation = {
+      onBack: () => setActiveModule('dashboard'),
+      onOpenCategories: () => setActiveModule('categories'),
+      onOpenMedia: () => setActiveModule('media'),
+      onOpenPages: () => setActiveModule('pages'),
+      onLogout: () => void handleLogout(),
+    };
+    
+    if (activeModule === 'categories') {
+      return (
+        <CategoriesPage
+          onBack={navigation.onBack}
+          onOpenMedia={navigation.onOpenMedia}
+          onOpenPages={navigation.onOpenPages}
+          onLogout={navigation.onLogout}
+        />
+      );
     }
+    
+    if (activeModule === 'media') {
+      return (
+        <MediaPage
+          onBack={navigation.onBack}
+          onOpenCategories={navigation.onOpenCategories}
+          onOpenPages={navigation.onOpenPages}
+          onLogout={navigation.onLogout}
+        />
+      );
+    }
+    
+    if (activeModule === 'pages') {
+      return (
+        <PagesPage
+          onBack={navigation.onBack}
+          onOpenCategories={navigation.onOpenCategories}
+          onOpenMedia={navigation.onOpenMedia}
+          onLogout={navigation.onLogout}
+        />
+      );
+    }
+    
+    return (
+      <Dashboard
+        onLogout={navigation.onLogout}
+        onOpenCategories={navigation.onOpenCategories}
+        onOpenMedia={navigation.onOpenMedia}
+        onOpenPages={navigation.onOpenPages}
+      />
+    );
+}
 
 export default App;
