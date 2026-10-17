@@ -50,16 +50,28 @@ class PostController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'slug' => $request->input('slug')
+                ?: Str::slug((string) $request->input('title')),
+        ]);
+    
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:posts,slug'],
+            'slug' => ['required', 'string', 'max:255', 'unique:posts,slug'],
             'excerpt' => ['nullable', 'string'],
             'body' => ['required', 'string'],
-            'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
+            'status' => [
+                'required',
+                Rule::in(['draft', 'published', 'archived']),
+            ],
             'category_ids' => ['sometimes', 'array'],
-            'category_ids.*' => ['integer', 'distinct', 'exists:categories,id'],
+            'category_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:categories,id',
+            ],
         ]);
-
+        
         return DB::transaction(function () use ($validated) {
             $post = Post::create([
                 'title' => $validated['title'],
@@ -79,6 +91,7 @@ class PostController extends Controller
             ], 201);
         });
     }
+
 
     public function show(Post $post)
     {
