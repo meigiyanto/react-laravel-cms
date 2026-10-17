@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PageController;
+use App\Models\Tag;
 
 Route::get('/health', function () {
     return response()->json([
@@ -29,4 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('media', MediaController::class)->parameters(['media' => 'media']);
     Route::apiResource('pages', PageController::class);
+    Route::get('/tags', function () {
+        return response()->json([
+            'success' => true,
+            'data' => Tag::query()->orderBy('name')->get(['id', 'name', 'slug']),
+        ]);
+    });
 });

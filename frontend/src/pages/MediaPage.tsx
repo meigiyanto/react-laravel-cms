@@ -207,7 +207,7 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
             active="media"
             onNavigate={onNavigate}
             onLogout={onLogout}
-            title="Artikel"
+            title="Media"
             breadcrumb="Workspace / Konten / Media"
         >
             <section className="welcome-panel">

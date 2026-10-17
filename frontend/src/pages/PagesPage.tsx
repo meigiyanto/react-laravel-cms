@@ -253,7 +253,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             active="pages"
             onNavigate={onNavigate}
             onLogout={onLogout}
-            title="Artikel"
+            title="Halaman"
             breadcrumb="Workspace / Konten / Halaman"
             actions={
                 <button

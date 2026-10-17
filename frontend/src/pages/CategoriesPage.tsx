@@ -221,7 +221,7 @@ export default function CategoriesPage({
             active="categories"
             onNavigate={onNavigate}
             onLogout={onLogout}
-            title="Artikel"
+            title="Kategori"
             breadcrumb="Workspace / Konten / Kategori"
             actions={
                 <button
