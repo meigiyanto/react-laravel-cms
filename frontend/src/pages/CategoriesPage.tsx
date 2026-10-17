@@ -41,53 +41,38 @@ const emptyForm: CategoryForm = {
 function getErrorMessage(error: unknown): string {
     if (axios.isAxiosError(error)) {
         const errors = error.response?.data?.errors;
-
         if (errors && typeof errors === 'object') {
             return Object.values(errors).flat().join(' ');
         }
-
         return error.response?.data?.message || 'Gagal menghubungi API.';
-
     }
-
     return 'Terjadi kesalahan yang tidak diketahui.';
 }
 
 export default function CategoriesPage({
     onBack,
     onLogout,
+    onOpenMedia,
+    onOpenPages
 }: {
     onBack: () => void;
     onLogout: () => void;
     onOpenMedia: () => void;
     onOpenPages: () => void;
 }) {
-    const [categories,
-        setCategories] = useState < Category[] > ([]);
-    const [page,
-        setPage] = useState(1);
-    const [lastPage,
-        setLastPage] = useState(1);
-    const [total,
-        setTotal] = useState(0);
-    const [search,
-        setSearch] = useState('');
-    const [loading,
-        setLoading] = useState(true);
-    const [saving,
-        setSaving] = useState(false);
-    const [deletingId,
-        setDeletingId] = useState < number | null > (null);
-    const [error,
-        setError] = useState('');
-    const [notice,
-        setNotice] = useState('');
-    const [editing,
-        setEditing] = useState < Category | null > (null);
-    const [form,
-        setForm] = useState < CategoryForm > (emptyForm);
-    const [showForm,
-        setShowForm] = useState(false);
+    const [categories, setCategories] = useState < Category[] > ([]);
+    const [page, setPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [search, setSearch] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState < number | null > (null);
+    const [error, setError] = useState('');
+    const [notice, setNotice] = useState('');
+    const [editing, setEditing] = useState < Category | null > (null);
+    const [form, setForm] = useState < CategoryForm > (emptyForm);
+    const [showForm, setShowForm] = useState(false);
 
     const loadCategories = useCallback(async () => {
         setLoading(true);
@@ -114,7 +99,11 @@ export default function CategoriesPage({
     }, [page]);
 
     useEffect(() => {
+      const timer = window.setTimeout(() => {
         void loadCategories();
+      }, 0);
+    
+      return () => window.clearTimeout(timer);
     }, [loadCategories]);
 
     const visibleCategories = useMemo(() => {
@@ -128,8 +117,7 @@ export default function CategoriesPage({
         );
 
     },
-        [categories,
-            search]);
+        [categories, search]);
 
     function openCreateForm() {
         setEditing(null);
@@ -248,9 +236,7 @@ export default function CategoriesPage({
                     </div>
                 </div>
 
-                <div className="sidebar-label">
-                    WORKSPACE
-                </div>
+                <div className="sidebar-label">WORKSPACE</div>
 
                 <button className="nav-item" type="button" onClick={onBack}>
                     <span>▦</span> Dashboard
@@ -261,25 +247,22 @@ export default function CategoriesPage({
                 <button className="nav-item active" type="button" aria-current="page">
                     <span>▧</span> Kategori
                 </button>
-                <button className="nav-item" type="button" disabled>
+                <button className="nav-item" type="button" onClick={onOpenMedia}>
                     <span>▣</span> Media
-                    <small>Segera</small>
                 </button>
-                <button className="nav-item" type="button" disabled>
+                <button className="nav-item" type="button" onClick={onOpenPages}>
                     <span>▱</span> Halaman
-                    <small>Segera</small>
                 </button>
 
                 <div className="sidebar-bottom">
-                    <div className="sidebar-label">
-                        STATUS SISTEM
-                    </div>
+                    <div className="sidebar-label">STATUS SISTEM</div>
                     <div className="system-status">
                         <span className="status-dot" /> API terhubung
                     </div>
                     <small>React · Laravel · MariaDB</small>
                 </div>
             </aside>
+            
             <main className="cms-main">
                 <header className="topbar">
                     <div>

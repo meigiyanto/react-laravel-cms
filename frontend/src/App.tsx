@@ -8,6 +8,8 @@ import PagesPage from './pages/PagesPage';
 
 type ActiveModule = 'dashboard' | 'categories' | 'media' | 'pages';
 
+type Status = 'draft' | 'published' | 'archived';
+
 type Post = {
   id: number;
   title: string;
@@ -117,9 +119,15 @@ function Dashboard({
     }
   }, [page, search, statusFilter]);
 
-  useEffect(() => {
-    loadStats().catch((err) => setError(errorMessage(err)));
-  }, [loadStats]);
+    useEffect(() => {
+      const timer = window.setTimeout(() => {
+        void loadStats().catch((err) => {
+          setError(errorMessage(err));
+        });
+      }, 0);
+    
+      return () => window.clearTimeout(timer);
+    }, [loadStats]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -233,7 +241,11 @@ function Dashboard({
             >
                 <span>▤</span> Artikel
             </button>
-            <button className="nav-item" type="button" onClick={onOpenCategories}>
+            <button
+                className="nav-item"
+                type="button"
+                onClick={onOpenCategories}
+            >
                 <span>▧</span> Kategori
             </button>
             <button
@@ -243,7 +255,6 @@ function Dashboard({
             >
               <span>▣</span> Media
             </button>
-            
             <button
               className="nav-item"
               type="button"
@@ -276,7 +287,7 @@ function Dashboard({
                         className="btn btn-outline-secondary"
                         type="button"
                         onClick={onLogout}
-                        >
+                    >
                         Keluar
                     </button>
     
@@ -284,7 +295,7 @@ function Dashboard({
                         className="btn btn-primary"
                         type="button"
                         onClick={openCreateForm}
-                        >
+                    >
                         + Artikel Baru
                     </button>
                 </div>
@@ -312,8 +323,8 @@ function Dashboard({
     
             {notice && (
                 <div className="alert alert-success mt-3" role="status">
-                {notice}
-                <button className="btn-close float-end" onClick={()=> setNotice('')} aria-label="Tutup" />
+                    {notice}
+                    <button className="btn-close float-end" onClick={()=> setNotice('')} aria-label="Tutup" />
                 </div>
             )}
 
@@ -339,15 +350,15 @@ function Dashboard({
                     <div className="search-box">
                         <span>⌕</span>
                         <input
-                        className="form-control"
-                        type="search"
-                        placeholder="Cari judul artikel..."
-                        value={search}
-                        onChange={(event)=> {
-                        setSearch(event.target.value);
-                        setPage(1);
-                        }}
-                        aria-label="Cari artikel"
+                            className="form-control"
+                            type="search"
+                            placeholder="Cari judul artikel..."
+                            value={search}
+                            onChange={(event)=> {
+                                setSearch(event.target.value);
+                                setPage(1);
+                            }}
+                            aria-label="Cari artikel"
                         />
                     </div>
                     <select

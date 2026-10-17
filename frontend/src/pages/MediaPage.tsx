@@ -102,9 +102,13 @@ export default function MediaPage({
     }
   }, [page]);
 
-  useEffect(() => {
-    void loadMedia();
-  }, [loadMedia]);
+    useEffect(() => {
+      const timer = window.setTimeout(() => {
+        void loadMedia();
+      }, 0);
+    
+      return () => window.clearTimeout(timer);
+    }, [loadMedia]);
 
   async function uploadMedia(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

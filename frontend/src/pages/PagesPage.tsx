@@ -135,9 +135,13 @@ export default function PagesPage({
     }
   }, []);
 
-  useEffect(() => {
-    void loadMediaOptions();
-  }, [loadMediaOptions]);
+    useEffect(() => {
+      const timer = window.setTimeout(() => {
+        void loadMediaOptions();
+      }, 0);
+    
+      return () => window.clearTimeout(timer);
+    }, [loadMediaOptions]);
 
   function openCreateForm() {
     setEditing(null);
