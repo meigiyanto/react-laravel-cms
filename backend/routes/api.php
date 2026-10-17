@@ -27,6 +27,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('posts', PostController::class);
     Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('media', MediaController::class);
+    Route::apiResource('media', MediaController::class)->parameters(['media' => 'media']);
     Route::apiResource('pages', PageController::class);
 });
