@@ -1,12 +1,7 @@
-import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-    type FormEvent
-} from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
+import Sidebar, { type ActiveModule } from '../components/Sidebar';
 
 type Category = {
     id: number;
@@ -32,6 +27,14 @@ type CategoryPagination = {
     data: Category[];
 };
 
+type NavigationProps = {
+    onBack: () => void; 
+    onOpenPosts: () => void; 
+    onOpenMedia: () => void; 
+    onOpenPages: () => void; 
+    onLogout: () => void;
+}
+
 const emptyForm: CategoryForm = {
     name: '',
     slug: '',
@@ -49,29 +52,20 @@ function getErrorMessage(error: unknown): string {
     return 'Terjadi kesalahan yang tidak diketahui.';
 }
 
-export default function CategoriesPage({
-    onBack,
-    onLogout,
-    onOpenMedia,
-    onOpenPages
-}: {
-    onBack: () => void;
-    onLogout: () => void;
-    onOpenMedia: () => void;
-    onOpenPages: () => void;
-}) {
-    const [categories, setCategories] = useState < Category[] > ([]);
+export default function CategoriesPage({ onBack, onOpenPosts, onOpenMedia, onOpenPages, onLogout }: NavigationProps ) {
+
+    const [categories, setCategories] = useState <Category[]> ([]);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [deletingId, setDeletingId] = useState < number | null > (null);
+    const [deletingId, setDeletingId] = useState <number | null> (null);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
-    const [editing, setEditing] = useState < Category | null > (null);
-    const [form, setForm] = useState < CategoryForm > (emptyForm);
+    const [editing, setEditing] = useState <Category | null> (null);
+    const [form, setForm] = useState <CategoryForm> (emptyForm);
     const [showForm, setShowForm] = useState(false);
 
     const loadCategories = useCallback(async () => {
@@ -99,11 +93,11 @@ export default function CategoriesPage({
     }, [page]);
 
     useEffect(() => {
-      const timer = window.setTimeout(() => {
-        void loadCategories();
-      }, 0);
-    
-      return () => window.clearTimeout(timer);
+        const timer = window.setTimeout(() => {
+            void loadCategories();
+        }, 0);
+        
+        return () => window.clearTimeout(timer);
     }, [loadCategories]);
 
     const visibleCategories = useMemo(() => {
@@ -116,8 +110,7 @@ export default function CategoriesPage({
             .some((value) => value.toLocaleLowerCase('id-ID').includes(keyword)),
         );
 
-    },
-        [categories, search]);
+    }, [categories, search]);
 
     function openCreateForm() {
         setEditing(null);
@@ -196,9 +189,7 @@ export default function CategoriesPage({
     }
 
     async function deleteCategory(category: Category) {
-        const confirmed = window.confirm(
-            `Hapus kategori "${category.name}"? Tindakan ini tidak dapat dibatalkan.`,
-        );
+        const confirmed = window.confirm(`Hapus kategori "${category.name}"? Tindakan ini tidak dapat dibatalkan.`,);
 
         if (!confirmed) return;
 
@@ -227,43 +218,31 @@ export default function CategoriesPage({
     
     return (
         <div className="cms-shell">
-            <aside className="cms-sidebar">
-                <div className="cms-brand">
-                    <span className="brand-mark">C</span>
-                    <div>
-                        <strong>ContentHub</strong>
-                        <small>CMS Dashboard</small>
-                    </div>
-                </div>
 
-                <div className="sidebar-label">WORKSPACE</div>
-
-                <button className="nav-item" type="button" onClick={onBack}>
-                    <span>▦</span> Dashboard
-                </button>
-                <button className="nav-item" type="button" onClick={onBack}>
-                    <span>▤</span> Artikel
-                </button>
-                <button className="nav-item active" type="button" aria-current="page">
-                    <span>▧</span> Kategori
-                </button>
-                <button className="nav-item" type="button" onClick={onOpenMedia}>
-                    <span>▣</span> Media
-                </button>
-                <button className="nav-item" type="button" onClick={onOpenPages}>
-                    <span>▱</span> Halaman
-                </button>
-
-                <div className="sidebar-bottom">
-                    <div className="sidebar-label">STATUS SISTEM</div>
-                    <div className="system-status">
-                        <span className="status-dot" /> API terhubung
-                    </div>
-                    <small>React · Laravel · MariaDB</small>
-                </div>
-            </aside>
-            
             <main className="cms-main">
+                
+                <Sidebar
+                  active="categories"
+                  onNavigate={(module: ActiveModule) => {
+                    switch (module) {
+                      case 'dashboard':
+                        onBack();
+                        break;
+                      case 'posts':
+                        onOpenPosts();
+                        break;
+                      case 'media':
+                        onOpenMedia();
+                        break;
+                      case 'pages':
+                        onOpenPages();
+                        break;
+                      case 'categories':
+                        break;
+                    }
+                  }}
+                />
+                
                 <header className="topbar">
                     <div>
                         <div className="breadcrumb-text">
@@ -286,292 +265,202 @@ export default function CategoriesPage({
                     <div>
                         <span className="eyebrow">CONTENT MANAGEMENT</span>
                         <h2>Atur kategori konten.</h2>
-                        <p>
-                            Kelompokkan artikel agar konten lebih mudah dikelola.
-                        </p>
+                        <p>Kelompokkan artikel agar konten lebih mudah dikelola.</p>
                     </div>
-                    <div className="welcome-icon" aria-hidden="true">
-                        ▧
-                    </div>
+                    <div className="welcome-icon" aria-hidden="true">▧</div>
                 </section>
 
                 {error && (
-                <div className="alert alert-danger mt-3" role="alert">
-                    {error}
-                    <button
-                        className="btn-close float-end"
-                        type="button"
-                        onClick={()=> setError('')}
-                        aria-label="Tutup"
-                        />
+                    <div className="alert alert-danger mt-3" role="alert">
+                        {error}
+                        <button className="btn-close float-end" type="button" onClick={()=> setError('')} aria-label="Tutup" />
                     </div>
-                    )}
+                )}
 
-                    {notice && (
+                {notice && (
                     <div className="alert alert-success mt-3" role="status">
                         {notice}
-                        <button
-                            className="btn-close float-end"
-                            type="button"
-                            onClick={()=> setNotice('')}
-                            aria-label="Tutup"
+                        <button className="btn-close float-end" type="button" onClick={()=> setNotice('')} aria-label="Tutup" />
+                    </div>
+                )}
+
+                <section className="content-panel mt-4">
+                    <div className="panel-heading">
+                        <div>
+                            <h3>Daftar Kategori</h3>
+                            <p>
+                                Buat, edit, dan kelola kategori artikel.
+                            </p>
+                        </div>
+                        <span className="total-badge">{total} kategori</span>
+                    </div>
+
+                    <div className="toolbar">
+                        <div className="search-box">
+                            <span aria-hidden="true">⌕</span>
+                            <input
+                            className="form-control"
+                            type="search"
+                            placeholder="Cari nama, slug, atau deskripsi..."
+                            value={search}
+                            onChange={(event)=> setSearch(event.target.value)}
+                            aria-label="Cari kategori pada halaman ini"
                             />
                         </div>
-                        )}
+                    </div>
 
-                        <section className="content-panel mt-4">
-                            <div className="panel-heading">
-                                <div>
-                                    <h3>Daftar Kategori</h3>
-                                    <p>
-                                        Buat, edit, dan kelola kategori artikel.
-                                    </p>
-                                </div>
-                                <span className="total-badge">{total} kategori</span>
-                            </div>
-
-                            <div className="toolbar">
-                                <div className="search-box">
-                                    <span aria-hidden="true">⌕</span>
-                                    <input
-                                    className="form-control"
-                                    type="search"
-                                    placeholder="Cari nama, slug, atau deskripsi..."
-                                    value={search}
-                                    onChange={(event)=> setSearch(event.target.value)}
-                                    aria-label="Cari kategori pada halaman ini"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="table-responsive">
-                                <table className="table cms-table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>KATEGORI</th>
-                                            <th>DESKRIPSI</th>
-                                            <th>JUMLAH ARTIKEL</th>
-                                            <th className="text-end">AKSI</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {loading ? (
-                                        <tr>
-                                            <td colSpan={4} className="empty-state">Memuat kategori...</td>
-                                        </tr>
-                                        ) : visibleCategories.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={4} className="empty-state">
-                                                <div className="empty-icon">
-                                                    ▧
-                                                </div>
-                                                <strong>
-                                                    {search ? 'Kategori tidak ditemukan' : 'Belum ada kategori'}
-                                                </strong>
-                                                <p>
-                                                    {search
-                                                    ? 'Coba kata kunci lain.'
-                                                    : 'Buat kategori pertama untuk mengelompokkan artikel.'}
-                                                </p>
-                                                {!search && (
-                                                <button
-                                                    className="btn btn-outline-primary btn-sm"
-                                                    type="button"
-                                                    onClick={openCreateForm}
-                                                    >
-                                                    Buat kategori
-                                                </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                        ) : (
-                                        visibleCategories.map((category) => (
-                                        <tr key={category.id}>
-                                            <td>
-                                                <div className="post-title">
-                                                    {category.name}
-                                                </div>
-                                                <div className="post-slug">
-                                                    /{category.slug}
-                                                </div>
-                                            </td>
-                                            <td className="category-description">
-                                                {category.description || (
-                                                <span className="text-secondary">Belum ada deskripsi</span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <span className="total-badge">
-                                                    {category.posts_count} artikel
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className="d-flex justify-content-end gap-2">
-                                                    <button
-                                                        className="btn btn-sm btn-light"
-                                                        type="button"
-                                                        onClick={()=> openEditForm(category)}
-                                                        disabled={deletingId !== null}
-                                                        >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-sm btn-outline-danger"
-                                                        type="button"
-                                                        onClick={()=> void deleteCategory(category)}
-                                                        disabled={deletingId !== null}
-                                                        >
-                                                        {deletingId === category.id ? 'Menghapus...' : 'Hapus'}
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        ))
+                    <div className="table-responsive">
+                        <table className="table cms-table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>KATEGORI</th>
+                                    <th>DESKRIPSI</th>
+                                    <th>JUMLAH ARTIKEL</th>
+                                    <th className="text-end">AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                <tr>
+                                    <td colSpan={4} className="empty-state">Memuat kategori...</td>
+                                </tr>
+                                ) : visibleCategories.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="empty-state">
+                                        <div className="empty-icon">
+                                            ▧
+                                        </div>
+                                        <strong>
+                                            {search ? 'Kategori tidak ditemukan' : 'Belum ada kategori'}
+                                        </strong>
+                                        <p>
+                                            {search
+                                            ? 'Coba kata kunci lain.'
+                                            : 'Buat kategori pertama untuk mengelompokkan artikel.'}
+                                        </p>
+                                        {!search && (
+                                        <button
+                                            className="btn btn-outline-primary btn-sm"
+                                            type="button"
+                                            onClick={openCreateForm}
+                                            >
+                                            Buat kategori
+                                        </button>
                                         )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    </td>
+                                </tr>
+                                ) : (
+                                visibleCategories.map((category) => (
+                                <tr key={category.id}>
+                                    <td>
+                                        <div className="post-title">
+                                            {category.name}
+                                        </div>
+                                        <div className="post-slug">
+                                            /{category.slug}
+                                        </div>
+                                    </td>
+                                    <td className="category-description">
+                                        {category.description || (
+                                        <span className="text-secondary">Belum ada deskripsi</span>
+                                        )}
+                                    </td>
+                                    <td>
+                                        <span className="total-badge">
+                                            {category.posts_count} artikel
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div className="d-flex justify-content-end gap-2">
+                                            <button
+                                                className="btn btn-sm btn-light"
+                                                type="button"
+                                                onClick={()=> openEditForm(category)}
+                                                disabled={deletingId !== null}
+                                                >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="btn btn-sm btn-outline-danger"
+                                                type="button"
+                                                onClick={()=> void deleteCategory(category)}
+                                                disabled={deletingId !== null}
+                                                >
+                                                {deletingId === category.id ? 'Menghapus...' : 'Hapus'}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                            <div className="pagination-bar">
-                                <span>
-                                    Halaman {page} dari {lastPage} · {total} kategori
-                                </span>
-                                <div className="d-flex gap-2">
-                                    <button
-                                        className="btn btn-sm btn-outline-secondary"
-                                        type="button"
-                                        disabled={page <=1 || loading}
-                                        onClick={()=> setPage((current) => current - 1)}
-                                        >
-                                        Sebelumnya
-                                    </button>
-                                    <button
-                                        className="btn btn-sm btn-outline-secondary"
-                                        type="button"
-                                        disabled={page>= lastPage || loading}
-                                        onClick={() => setPage((current) => current + 1)}
-                                        >
-                                        Berikutnya
-                                    </button>
-                                </div>
-                            </div>
-                        </section>
+                    <div className="pagination-bar">
+                        <span>
+                            Halaman {page} dari {lastPage} · {total} kategori
+                        </span>
+                        <div className="d-flex gap-2">
+                            <button
+                                className="btn btn-sm btn-outline-secondary"
+                                type="button"
+                                disabled={page <=1 || loading}
+                                onClick={()=> setPage((current) => current - 1)}
+                                >
+                                Sebelumnya
+                            </button>
+                            <button
+                                className="btn btn-sm btn-outline-secondary"
+                                type="button"
+                                disabled={page>= lastPage || loading}
+                                onClick={() => setPage((current) => current + 1)}
+                                >
+                                Berikutnya
+                            </button>
+                        </div>
+                    </div>
+                </section>
 
-                        <footer className="cms-footer">
-                            ContentHub CMS · Backend Laravel API
-                        </footer>
-                    </main>
+                <footer className="cms-footer">
+                    ContentHub CMS · Backend Laravel API
+                </footer>
+            </main>
+            
             {showForm && (
-                <div
-                    className="modal-backdrop-custom"
-                    role="presentation"
-                    onMouseDown={(event) => {
-                        if (event.target === event.currentTarget && !saving) {
-                            setShowForm(false);
-                        }
-                    }}
-                >
-                    <section
-                        className="editor-modal"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="category-editor-title"
-                    >
+                <div className="modal-backdrop-custom" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) { setShowForm(false); }}}>
+                    <section className="editor-modal" role="dialog" aria-modal="true" aria-labelledby="category-editor-title">
                         <div className="modal-heading">
                             <div>
-                                <h2 id="category-editor-title">
-                                    {editing ? 'Edit Kategori' : 'Buat Kategori Baru'}
-                                </h2>
-                                <p>
-                                    Isi nama kategori dan informasi pendukungnya.
-                                </p>
+                                <h2 id="category-editor-title">{editing ? 'Edit Kategori' : 'Buat Kategori Baru'}</h2>
+                                <p>Isi nama kategori dan informasi pendukungnya.</p>    
                             </div>
-                            <button
-                                className="btn-close"
-                                type="button"
-                                aria-label="Tutup"
-                                disabled={saving}
-                                onClick={()=> setShowForm(false)}
-                                />
+                            <button className="btn-close" type="button" aria-label="Tutup" disabled={saving} onClick={()=> setShowForm(false)} />
+                        </div>
+
+                        <form onSubmit={saveCategory}>
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="category-name">Nama kategori *</label>
+                                <input id="category-name" className="form-control" required maxLength={150} autoFocus value={form.name} onChange={(event)=> setForm((current) => ({ ...current, name: event.target.value })) } />
                             </div>
 
-                            <form onSubmit={saveCategory}>
-                                <div className="mb-3">
-                                    <label className="form-label" htmlFor="category-name">
-                                        Nama kategori *
-                                    </label>
-                                    <input
-                                    id="category-name"
-                                    className="form-control"
-                                    required
-                                    maxLength={150}
-                                    autoFocus
-                                    value={form.name}
-                                    onChange={(event)=>
-                                    setForm((current) => ({ ...current, name: event.target.value }))
-                                    }
-                                    />
-                                </div>
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="category-slug">Slug (opsional)</label>
+                                <input id="category-slug" className="form-control" maxLength={180} placeholder="Dibuat otomatis jika kosong" value={form.slug} onChange={(event)=> setForm((current) => ({ ...current, slug: event.target.value })) } />
+                                <div className="form-text">Gunakan slug yang unik. Kosongkan untuk membentuk slug dari nama.</div>
+                            </div>
 
-                                <div className="mb-3">
-                                    <label className="form-label" htmlFor="category-slug">
-                                        Slug (opsional)
-                                    </label>
-                                    <input
-                                    id="category-slug"
-                                    className="form-control"
-                                    maxLength={180}
-                                    placeholder="Dibuat otomatis jika kosong"
-                                    value={form.slug}
-                                    onChange={(event)=>
-                                    setForm((current) => ({ ...current, slug: event.target.value }))
-                                    }
-                                    />
-                                    <div className="form-text">
-                                        Gunakan slug yang unik. Kosongkan untuk membentuk slug dari nama.
-                                    </div>
-                                </div>
+                            <div className="mb-4">
+                                <label className="form-label" htmlFor="category-description">Deskripsi</label>
+                                <textarea id="category-description" className="form-control" rows={4} maxLength={2000} value={form.description} onChange={(event)=> setForm((current) => ({ ...current, description: event.target.value, })) } />
+                                <div className="form-text text-end">{form.description.length}/2000 karakter</div>
+                            </div>
 
-                                <div className="mb-4">
-                                    <label className="form-label" htmlFor="category-description">
-                                        Deskripsi
-                                    </label>
-                                    <textarea
-                                        id="category-description"
-                                        className="form-control"
-                                        rows={4}
-                                        maxLength={2000}
-                                        value={form.description}
-                                        onChange={(event)=>
-                                        setForm((current) => ({
-                                        ...current,
-                                        description: event.target.value,
-                                        }))
-                                        }
-                                        />
-                                        <div className="form-text text-end">
-                                            {form.description.length}/2000 karakter
-                                        </div>
-                                    </div>
-
-                                    <div className="modal-actions">
-                                        <button
-                                            type="button"
-                                            className="btn btn-light"
-                                            disabled={saving}
-                                            onClick={()=> setShowForm(false)}
-                                            >
-                                            Batal
-                                        </button>
-                                        <button type="submit" className="btn btn-primary" disabled={saving}>
-                                            {saving
-                                            ? 'Menyimpan...'
-                                            : editing
-                                            ? 'Simpan Perubahan'
-                                            : 'Buat Kategori'}
-                                        </button>
-                                    </div>
-                                </form>
+                            <div className="modal-actions">
+                                <button type="button" className="btn btn-light" disabled={saving} onClick={()=> setShowForm(false)} >Batal</button>
+                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : editing ? 'Simpan Perubahan' : 'Buat Kategori'}</button>
+                            </div>
+                        </form>
                     </section>
                 </div>
             )}
