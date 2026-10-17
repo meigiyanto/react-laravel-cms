@@ -277,4 +277,26 @@ class PostManagementTest extends TestCase
         $this->assertDatabaseMissing('category_post', ['post_id' => $post->id]);
         $this->assertDatabaseMissing('post_tag', ['post_id' => $post->id]);
     }
+    
+    public function test_partial_update_preserves_custom_slug(): void
+    {
+        $this->actingAs(User::factory()->create(), 'sanctum');
+    
+        $post = Post::create([
+            'title' => 'Artikel Laravel',
+            'slug' => 'panduan-laravel-khusus',
+            'body' => 'Isi artikel',
+            'status' => 'draft',
+        ]);
+    
+        $this->putJson("/api/posts/{$post->id}", [
+            'status' => 'published',
+        ])->assertOk()
+          ->assertJsonPath('data.slug', 'panduan-laravel-khusus');
+    
+        $this->assertDatabaseHas('posts', [
+            'id' => $post->id,
+            'slug' => 'panduan-laravel-khusus',
+        ]);
+    }
 }

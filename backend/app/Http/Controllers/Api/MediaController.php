@@ -13,11 +13,14 @@ class MediaController extends Controller
 {
     public function index(): JsonResponse
     {
+        $data = Media::with('user')
+            ->latest()
+            ->paginate(20)
+            ->through(fn (Media $media) => $this->formatMedia($media));
+        
         return response()->json([
             'success' => true,
-            'data' => Media::with('user')
-                ->latest()
-                ->paginate(20),
+            'data' => $data,
         ]);
     }
 

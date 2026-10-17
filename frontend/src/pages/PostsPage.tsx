@@ -13,6 +13,25 @@ import {
 
 type Status = 'draft' | 'published' | 'archived';
 
+type Category = {
+    id: number;
+    name: string;
+    slug: string;
+};
+
+type Tag = {
+    id: number;
+    name: string;
+    slug: string;
+};
+
+type MediaAsset = {
+    id: number;
+    url: string;
+    original_name: string;
+    alt_text: string | null;
+};
+
 type Post = {
     id: number;
     title: string;
@@ -21,6 +40,13 @@ type Post = {
     body: string;
     status: Status;
     created_at: string;
+    published_at?: string | null;
+    categories: Category[];
+    tags: Tag[];
+    featured_image_id: number | null;
+    featured_image: MediaAsset | null;
+    meta_title: string | null;
+    meta_description: string | null;
 };
 
 type PostForm = {
@@ -29,13 +55,11 @@ type PostForm = {
     excerpt: string;
     body: string;
     status: Status;
-};
-
-type Pagination = {
-    current_page: number;
-    last_page: number;
-    total: number;
-    data: Post[];
+    category_ids: number[];
+    tag_ids: number[];
+    featured_image_id: string;
+    meta_title: string;
+    meta_description: string;
 };
 
 const emptyForm: PostForm = {
@@ -44,6 +68,18 @@ const emptyForm: PostForm = {
     excerpt: '',
     body: '',
     status: 'draft',
+    category_ids: [],
+    tag_ids: [],
+    featured_image_id: '',
+    meta_title: '',
+    meta_description: '',
+};
+
+type Pagination = {
+    current_page: number;
+    last_page: number;
+    total: number;
+    data: Post[];
 };
 
 function errorMessage(error: unknown): string {
@@ -68,32 +104,25 @@ type NavigationProps = {
 export default function PostsPage({
     onNavigate, onLogout
 }: NavigationProps) {
-    const [posts,
-        setPosts] = useState < Post[] > ([]);
-    const [page,
-        setPage] = useState(1);
-    const [lastPage,
-        setLastPage] = useState(1);
-    const [total,
-        setTotal] = useState(0);
-    const [search,
-        setSearch] = useState('');
-    const [statusFilter,
-        setStatusFilter] = useState('');
-    const [loading,
-        setLoading] = useState(true);
-    const [saving,
-        setSaving] = useState(false);
-    const [error,
-        setError] = useState('');
-    const [notice,
-        setNotice] = useState('');
-    const [editing,
-        setEditing] = useState < Post | null > (null);
-    const [form,
-        setForm] = useState < PostForm > (emptyForm);
-    const [showForm,
-        setShowForm] = useState(false);
+    const [posts, setPosts] = useState < Post[] > ([]);
+    const [page, setPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [total, setTotal] = useState(0);
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
+    const [notice, setNotice] = useState('');
+    const [editing, setEditing] = useState < Post | null > (null);
+    const [form, setForm] = useState < PostForm > (emptyForm);
+    const [showForm, setShowForm] = useState(false);
+
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [tags, setTags] = useState<Tag[]>([]);
+    const [mediaItems, setMediaItems] = useState<MediaAsset[]>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
     const loadPosts = useCallback(async () => {
         setLoading(true);
@@ -131,9 +160,11 @@ export default function PostsPage({
     function openCreateForm() {
         setEditing(null);
         setForm(emptyForm);
+        setFieldErrors({});
         setError('');
         setNotice('');
         setShowForm(true);
+        void loadEditorOptions();
     }
 
     async function openEditForm(post: Post) {
@@ -147,17 +178,27 @@ export default function PostsPage({
             setForm({
                 title: item.title,
                 slug: item.slug,
-                excerpt: item.excerpt || '',
+                excerpt: item.excerpt ?? '',
                 body: item.body,
                 status: item.status,
+                category_ids: item.categories.map((category) => category.id),
+                tag_ids: item.tags.map((tag) => tag.id),
+                featured_image_id: item.featured_image_id
+                    ? String(item.featured_image_id)
+                    : '',
+                meta_title: item.meta_title ?? '',
+                meta_description: item.meta_description ?? '',
             });
+            
+            setFieldErrors({});
             setShowForm(true);
+            void loadEditorOptions();
         } catch (err) {
             setError(errorMessage(err));
         }
     }
 
-    async function savePost(event: FormEvent < HTMLFormElement >) {
+    async function savePost(event: FormEvent <HTMLFormElement>) {
         event.preventDefault();
         setSaving(true);
         setError('');
@@ -165,10 +206,18 @@ export default function PostsPage({
 
         try {
             const payload = {
-                ...form,
                 title: form.title.trim(),
                 slug: form.slug.trim() || null,
                 excerpt: form.excerpt.trim() || null,
+                body: form.body,
+                status: form.status,
+                category_ids: form.category_ids,
+                tag_ids: form.tag_ids,
+                featured_image_id: form.featured_image_id
+                    ? Number(form.featured_image_id)
+                    : null,
+                meta_title: form.meta_title.trim() || null,
+                meta_description: form.meta_description.trim() || null,
             };
 
             if (editing) {
@@ -189,7 +238,26 @@ export default function PostsPage({
                 await loadPosts();
             }
         } catch (err) {
-            setError(errorMessage(err));
+            if (axios.isAxiosError(err)) {
+                const errors = err.response?.data?.errors;
+        
+                if (errors && typeof errors === 'object') {
+                    setFieldErrors(
+                        Object.fromEntries(
+                            Object.entries(errors).map(([key, messages]) => [
+                                key,
+                                Array.isArray(messages)
+                                    ? messages.join(' ')
+                                    : String(messages),
+                            ]),
+                        ),
+                    );
+                } else {
+                    setError(errorMessage(err));
+                }
+            } else {
+                setError(errorMessage(err));
+            }
         } finally {
             setSaving(false);
         }
@@ -218,6 +286,27 @@ export default function PostsPage({
             setError(errorMessage(err));
         }
     }
+    
+    const loadEditorOptions = useCallback(async () => {
+        setLoadingOptions(true);
+    
+        try {
+            const [categoryItems, tagResponse, mediaItemsResult] =
+                await Promise.all([
+                    loadAllPages<Category>('/categories'),
+                    api.get('/tags'),
+                    loadAllPages<MediaAsset>('/media'),
+                ]);
+    
+            setCategories(categoryItems);
+            setTags(tagResponse.data.data);
+            setMediaItems(mediaItemsResult);
+        } catch (err) {
+            setError(errorMessage(err));
+        } finally {
+            setLoadingOptions(false);
+        }
+    }, []);
 
     return (
         <AdminLayout
@@ -227,15 +316,15 @@ export default function PostsPage({
             title="Artikel"
             breadcrumb="Workspace / Konten / Artikel"
             actions={
-            <button
-                className="btn btn-primary"
-                type="button"
-                onClick={openCreateForm}
+                <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={openCreateForm}
                 >
-                + Artikel Baru
-            </button>
+                    + Artikel Baru
+                </button>
             }
-            >
+        >
             
             {error && (
                 <div className="alert alert-danger mt-3" role="alert">
@@ -245,7 +334,7 @@ export default function PostsPage({
                         type="button"
                         aria-label="Tutup"
                         onClick={() => setError('')}
-                        />
+                    />
                 </div>
             )}
 
@@ -276,9 +365,7 @@ export default function PostsPage({
                 <div className="panel-heading">
                     <div>
                         <h3>Daftar Artikel</h3>
-                        <p>
-                            Buat, edit, cari, dan kelola status publikasi artikel.
-                        </p>
+                        <p>Buat, edit, cari, dan kelola status publikasi artikel.</p>
                     </div>
                     <span className="total-badge">{total} artikel</span>
                 </div>
@@ -287,33 +374,33 @@ export default function PostsPage({
                     <div className="search-box">
                         <span aria-hidden="true">⌕</span>
                         <input
-                        className="form-control"
-                        type="search"
-                        placeholder="Cari judul atau slug artikel..."
-                        value={search}
+                            className="form-control"
+                            type="search"
+                            placeholder="Cari judul atau slug artikel..."
+                            value={search}
+                            onChange={(event) => {
+                                setSearch(event.target.value);
+                                setPage(1);
+                            }}
+                            aria-label="Cari artikel"
+                        />
+                    </div>
+    
+                    <select
+                        className="form-select status-filter"
+                        value={statusFilter}
                         onChange={(event) => {
-                            setSearch(event.target.value);
+                            setStatusFilter(event.target.value);
                             setPage(1);
                         }}
-                        aria-label="Cari artikel"
-                        />
-                </div>
-
-                <select
-                    className="form-select status-filter"
-                    value={statusFilter}
-                    onChange={(event) => {
-                        setStatusFilter(event.target.value);
-                        setPage(1);
-                    }}
-                    aria-label="Filter status artikel"
+                        aria-label="Filter status artikel"
                     >
-                    <option value="">Semua status</option>
-                    <option value="published">Dipublikasikan</option>
-                    <option value="draft">Draf</option>
-                    <option value="archived">Diarsipkan</option>
-                </select>
-            </div>
+                        <option value="">Semua status</option>
+                        <option value="published">Dipublikasikan</option>
+                        <option value="draft">Draf</option>
+                        <option value="archived">Diarsipkan</option>
+                    </select>
+                </div>
 
                 <div className="table-responsive">
                     <table className="table cms-table align-middle">
@@ -425,7 +512,7 @@ export default function PostsPage({
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="post-editor-title"
-                        >
+                    >
                         <div className="modal-heading">
                             <div>
                                 <h2 id="post-editor-title">
@@ -441,7 +528,7 @@ export default function PostsPage({
                                 aria-label="Tutup"
                                 disabled={saving}
                                 onClick={() => setShowForm(false)}
-                                />
+                            />
                         </div>
     
                         <form onSubmit={savePost}>
@@ -450,105 +537,277 @@ export default function PostsPage({
                                     Judul artikel *
                                 </label>
                                 <input
-                                id="post-title"
-                                className="form-control"
-                                required
-                                maxLength={255}
-                                value={form.title}
-                                onChange={(event) => setForm({
-                                    ...form, title: event.target.value,
-                                })}
+                                    id="post-title"
+                                    className="form-control"
+                                    required
+                                    maxLength={255}
+                                    value={form.title}
+                                    onChange={(event) => setForm({
+                                        ...form, title: event.target.value,
+                                    })}
                                 />
                         </div>
     
-                        <div className="mb-3">
-                            <label className="form-label" htmlFor="post-slug">
-                                Slug (opsional)
-                            </label>
-                            <input
-                            id="post-slug"
-                            className="form-control"
-                            maxLength={255}
-                            placeholder="Dibuat otomatis jika kosong"
-                            value={form.slug}
-                            onChange={(event) => setForm({
-                                ...form, slug: event.target.value,
-                            })}
-                            />
-                    </div>
-    
-                    <div className="mb-3">
-                        <label className="form-label" htmlFor="post-excerpt">
-                            Ringkasan
-                        </label>
-                        <textarea
-                            id="post-excerpt"
-                            className="form-control"
-                            rows={2}
-                            value={form.excerpt}
-                            onChange={(event) => setForm({
-                                ...form, excerpt: event.target.value,
-                            })}
-                            />
-                    </div>
-    
-                    <div className="mb-3">
-                        <label className="form-label" htmlFor="post-body">
-                            Isi artikel *
-                        </label>
-                        <textarea
-                            id="post-body"
-                            className="form-control editor-body"
-                            rows={7}
-                            required
-                            value={form.body}
-                            onChange={(event) => setForm({
-                                ...form, body: event.target.value,
-                            })}
-                            />
-                    </div>
-    
-                    <div className="mb-4">
-                        <label className="form-label" htmlFor="post-status">
-                            Status *
-                        </label>
-                        <select
-                            id="post-status"
-                            className="form-select"
-                            value={form.status}
-                            onChange={(event) => setForm({
-                                ...form,
-                                status: event.target.value as Status,
-                            })}
-                            >
-                            <option value="draft">Draf</option>
-                            <option value="published">Dipublikasikan</option>
-                            <option value="archived">Diarsipkan</option>
-                        </select>
-                    </div>
-    
-                    <div className="modal-actions">
-                        <button
-                            type="button"
-                            className="btn btn-light"
-                            disabled={saving}
-                            onClick={() => setShowForm(false)}
-                            >
-                            Batal
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            disabled={saving}
-                            >
-                            {saving
-                            ? 'Menyimpan...': editing
-                            ? 'Simpan Perubahan': 'Buat Artikel'}
-                        </button>
-                    </div>
-                </form>
-            </section>
-        </div>
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-slug">
+                                    Slug (opsional)
+                                </label>
+                                <input
+                                    id="post-slug"
+                                    className="form-control"
+                                    maxLength={255}
+                                    placeholder="Dibuat otomatis jika kosong"
+                                    value={form.slug}
+                                    onChange={(event) => setForm({
+                                        ...form, slug: event.target.value,
+                                    })}
+                                />
+                            </div>
+                            
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-categories">
+                                    Kategori
+                                </label>
+                                <select
+                                    id="post-categories"
+                                    className="form-select"
+                                    multiple
+                                    size={Math.min(Math.max(categories.length, 2), 6)}
+                                    disabled={loadingOptions}
+                                    value={form.category_ids.map(String)}
+                                    onChange={(event) => {
+                                        setForm({
+                                            ...form,
+                                            category_ids: Array.from(event.currentTarget.selectedOptions, (option) => Number(option.value))
+                                        });
+                                    }}
+                                >
+                                    {categories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <small className="text-muted">
+                                    Pilih satu atau beberapa kategori. Gunakan Ctrl atau Cmd
+                                    untuk memilih beberapa opsi pada desktop.
+                                </small>
+                                {fieldErrors.category_ids && (
+                                    <div className="text-danger small">
+                                        {fieldErrors.category_ids}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-tags">
+                                    Tag
+                                </label>
+                                <select
+                                    id="post-tags"
+                                    className="form-select"
+                                    multiple
+                                    size={Math.min(Math.max(tags.length, 2), 6)}
+                                    disabled={loadingOptions}
+                                    value={form.tag_ids.map(String)}
+                                    onChange={(event) => {
+                                        setForm({
+                                            ...form,
+                                            tag_ids: Array.from(
+                                                event.currentTarget.selectedOptions,
+                                                (option) => Number(option.value),
+                                            ),
+                                        });
+                                    }}
+                                >
+                                    {tags.map((tag) => (
+                                        <option key={tag.id} value={tag.id}>
+                                            {tag.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {fieldErrors.tag_ids && (
+                                    <div className="text-danger small">
+                                        {fieldErrors.tag_ids}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-featured-image">
+                                    Gambar unggulan
+                                </label>
+                                <select
+                                    id="post-featured-image"
+                                    className="form-select"
+                                    value={form.featured_image_id}
+                                    disabled={loadingOptions}
+                                    onChange={(event) => setForm({
+                                        ...form,
+                                        featured_image_id: event.target.value,
+                                    })}
+                                >
+                                    <option value="">Tanpa gambar unggulan</option>
+                                    {mediaItems.map((media) => (
+                                        <option key={media.id} value={media.id}>
+                                            {media.original_name}
+                                            {media.alt_text ? ` — ${media.alt_text}` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            
+                                {form.featured_image_id && (
+                                    <div className="mt-3">
+                                        {(() => {
+                                            const selected = mediaItems.find(
+                                                (media) =>
+                                                    String(media.id) === form.featured_image_id,
+                                            );
+                            
+                                            return selected ? (
+                                                <img
+                                                    src={selected.url}
+                                                    alt={selected.alt_text || selected.original_name}
+                                                    className="img-thumbnail"
+                                                    style={{
+                                                        maxWidth: '240px',
+                                                        maxHeight: '180px',
+                                                        objectFit: 'contain',
+                                                    }}
+                                                />
+                                            ) : null;
+                                        })()}
+                                    </div>
+                                )}
+                            
+                                {fieldErrors.featured_image_id && (
+                                    <div className="text-danger small">
+                                        {fieldErrors.featured_image_id}
+                                    </div>
+                                )}
+                            </div>
+        
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-excerpt">
+                                    Ringkasan
+                                </label>
+                                <textarea
+                                    id="post-excerpt"
+                                    className="form-control"
+                                    rows={2}
+                                    value={form.excerpt}
+                                    onChange={(event) => setForm({
+                                        ...form, excerpt: event.target.value,
+                                    })}
+                                />
+                            </div>
+            
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-body">
+                                    Isi artikel *
+                                </label>
+                                <textarea
+                                    id="post-body"
+                                    className="form-control editor-body"
+                                    rows={7}
+                                    required
+                                    value={form.body}
+                                    onChange={(event) => setForm({
+                                        ...form, body: event.target.value,
+                                    })}
+                                />
+                            </div>
+                            
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-meta-title">
+                                    Meta title
+                                </label>
+                                <input
+                                    id="post-meta-title"
+                                    className="form-control"
+                                    maxLength={255}
+                                    value={form.meta_title}
+                                    onChange={(event) => setForm({
+                                        ...form,
+                                        meta_title: event.target.value,
+                                    })}
+                                />
+                                <small className="text-muted">
+                                    {form.meta_title.length}/255 karakter
+                                </small>
+                                {fieldErrors.meta_title && (
+                                    <div className="text-danger small">
+                                        {fieldErrors.meta_title}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-meta-description">
+                                    Meta description
+                                </label>
+                                <textarea
+                                    id="post-meta-description"
+                                    className="form-control"
+                                    rows={3}
+                                    maxLength={500}
+                                    value={form.meta_description}
+                                    onChange={(event) => setForm({
+                                        ...form,
+                                        meta_description: event.target.value,
+                                    })}
+                                />
+                                <small className="text-muted">
+                                    {form.meta_description.length}/500 karakter
+                                </small>
+                                {fieldErrors.meta_description && (
+                                    <div className="text-danger small">
+                                        {fieldErrors.meta_description}
+                                    </div>
+                                )}
+                            </div>
+            
+                            <div className="mb-4">
+                                <label className="form-label" htmlFor="post-status">
+                                    Status *
+                                </label>
+                                <select
+                                    id="post-status"
+                                    className="form-select"
+                                    value={form.status}
+                                    onChange={(event) => setForm({
+                                        ...form,
+                                        status: event.target.value as Status,
+                                    })}
+                                    >
+                                    <option value="draft">Draf</option>
+                                    <option value="published">Dipublikasikan</option>
+                                    <option value="archived">Diarsipkan</option>
+                                </select>
+                            </div>
+            
+                            <div className="modal-actions">
+                                <button
+                                    type="button"
+                                    className="btn btn-light"
+                                    disabled={saving}
+                                    onClick={() => setShowForm(false)}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={saving}
+                                >
+                                    {saving
+                                    ? 'Menyimpan...': editing
+                                    ? 'Simpan Perubahan': 'Buat Artikel'}
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
             )}
         </AdminLayout>
     );
@@ -562,4 +821,23 @@ function StatusBadge({ status }: { status: Status }) {
     };
     
     return <span className={`status-badge ${status}`}>{labels[status]}</span>;
+}
+
+async function loadAllPages<T>(url: string): Promise<T[]> {
+    const first = await api.get(url, {
+        params: { page: 1 },
+    });
+
+    const paginator = first.data.data;
+    const items: T[] = [...paginator.data];
+
+    for (let page = 2; page <= paginator.last_page; page++) {
+        const response = await api.get(url, {
+            params: { page },
+        });
+
+        items.push(...response.data.data.data);
+    }
+
+    return items;
 }

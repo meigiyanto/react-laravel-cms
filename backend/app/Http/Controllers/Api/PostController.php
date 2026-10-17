@@ -63,16 +63,11 @@ class PostController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        // Jangan mengubah slug saat field slug dan title tidak dikirim.
-        if ($request->exists('slug') || $request->exists('title')) {
-            $request->merge([
-                'slug' => trim((string) $request->input('slug'))
-                    ?: Str::slug(
-                        (string) $request->input('title')
-                    ),
-            ]);
-        }
-        
+        $request->merge([
+            'slug' => trim((string) $request->input('slug'))
+                ?: Str::slug((string) $request->input('title')),
+        ]);
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:posts,slug'],
@@ -125,11 +120,16 @@ class PostController extends Controller
 
     public function update(Request $request, Post $post): JsonResponse
     {
-        $request->merge([
-            'slug' => trim((string) $request->input('slug'))
-                ?: Str::slug((string) $request->input('title', $post->title)),
-        ]);
-
+        // Jangan mengubah slug saat field slug dan title tidak dikirim.
+        if ($request->exists('slug') || $request->exists('title')) {
+            $request->merge([
+                'slug' => trim((string) $request->input('slug'))
+                    ?: Str::slug(
+                        (string) $request->input('title')
+                    ),
+            ]);
+        }
+        
         $validated = $request->validate([
             'title' => ['sometimes', 'required', 'string', 'max:255'],
             'slug' => [
