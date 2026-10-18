@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MediaController;
@@ -21,10 +22,18 @@ Route::get('/health', function () {
 
 Route::post('/auth/login', [AuthController::class, 'login'])
     ->middleware('throttle:10,1');
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+
+    Route::middleware('administrator')->group(function () {
+        Route::get('/roles', [RoleController::class, 'index']);
+    
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::put('/users/{id}', [UserController::class, 'update']);
+        Route::put('/users/{id}/role', [UserController::class, 'assignRole']);
+    });
 
     Route::get('/dashboard/stats', [PostController::class, 'stats']);
 
