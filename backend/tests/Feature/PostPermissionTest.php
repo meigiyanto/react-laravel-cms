@@ -50,6 +50,7 @@ class PostPermissionTest extends TestCase
                 'posts.view.own',
                 'posts.create',
                 'posts.update.own',
+                'categories.view',
             ],
         ]);
 
@@ -175,8 +176,16 @@ class PostPermissionTest extends TestCase
     public function test_author_cannot_manage_categories_or_pages(): void
     {
         $this->actingAs($this->author, 'sanctum');
-
-        $this->getJson('/api/categories')->assertForbidden();
+    
+        // Author boleh membaca kategori, tetapi tidak mengelolanya.
+        $this->getJson('/api/categories')->assertOk();
+    
+        $this->postJson('/api/categories', [
+            'name' => 'Kategori Terlarang',
+            'slug' => 'kategori-terlarang',
+        ])->assertForbidden();
+    
+        // Author tidak memiliki izin mengelola halaman.
         $this->getJson('/api/pages')->assertForbidden();
     }
     

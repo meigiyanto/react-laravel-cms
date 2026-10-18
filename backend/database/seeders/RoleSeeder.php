@@ -49,6 +49,7 @@ class RoleSeeder extends Seeder
                     'posts.update.own',
                     'media.view.own',
                     'media.create',
+                    'categories.view',
                 ],
             ],
             [
@@ -59,6 +60,7 @@ class RoleSeeder extends Seeder
                     'posts.create',
                     'posts.update.own',
                     'media.view.own',
+                    'categories.view',
                     'media.create',
                 ],
             ],
