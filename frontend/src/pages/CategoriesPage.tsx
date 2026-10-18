@@ -4,6 +4,8 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
+import { faTags, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 type Category = {
     id: number;
@@ -76,7 +78,8 @@ export default function CategoriesPage({
         try {
             const response = await api.get('/categories', {
                 params: {
-                    page
+                    page,
+                    search: search.trim() || undefined,
                 },
             });
 
@@ -91,28 +94,16 @@ export default function CategoriesPage({
             setLoading(false);
         }
 
-    }, [page]);
+    }, [page, search]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
             void loadCategories();
-        }, 0);
+        }, 250);
         
         return () => window.clearTimeout(timer);
     }, [loadCategories]);
-
-    const visibleCategories = useMemo(() => {
-        const keyword = search.trim().toLocaleLowerCase('id-ID');
-
-        if (!keyword) return categories;
-
-        return categories.filter((category) =>
-            [category.name, category.slug, category.description || '']
-            .some((value) => value.toLocaleLowerCase('id-ID').includes(keyword)),
-        );
-
-    }, [categories, search]);
-
+    
     function openCreateForm() {
         setEditing(null);
         setForm(emptyForm);
@@ -240,7 +231,7 @@ export default function CategoriesPage({
                     <h2>Atur kategori konten.</h2>
                     <p>Kelompokkan artikel agar konten lebih mudah dikelola.</p>
                 </div>
-                <div className="welcome-icon" aria-hidden="true">▧</div>
+                <div className="welcome-icon" aria-hidden="true"><FontAwesomeIcon icon={faTags} /></div>
             </section>
 
             {error && (
@@ -270,14 +261,16 @@ export default function CategoriesPage({
 
                 <div className="toolbar">
                     <div className="search-box">
-                        <span aria-hidden="true">⌕</span>
+                        <span aria-hidden="true">
+                            <FontAwesomeIcon icon={faSearch} size="2xs" />
+                        </span>
                         <input
-                        className="form-control"
-                        type="search"
-                        placeholder="Cari nama, slug, atau deskripsi..."
-                        value={search}
-                        onChange={(event)=> setSearch(event.target.value)}
-                        aria-label="Cari kategori pada halaman ini"
+                            className="form-control"
+                            type="search"
+                            placeholder="Cari nama, slug, atau deskripsi..."
+                            value={search}
+                            onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+                            aria-label="Cari kategori"
                         />
                     </div>
                 </div>
@@ -294,14 +287,14 @@ export default function CategoriesPage({
                         </thead>
                         <tbody>
                             {loading ? (
-                            <tr>
-                                <td colSpan={4} className="empty-state">Memuat kategori...</td>
-                            </tr>
-                            ) : visibleCategories.length === 0 ? (
-                            <tr>
+                                <tr>
+                                    <td colSpan={4} className="empty-state">Memuat kategori...</td>
+                                </tr>
+                            ) : categories.length === 0 ? (
+                                <tr>
                                 <td colSpan={4} className="empty-state">
                                     <div className="empty-icon">
-                                        ▧
+                                        <FontAwesomeIcon icon={faTags} />
                                     </div>
                                     <strong>
                                         {search ? 'Kategori tidak ditemukan' : 'Belum ada kategori'}
@@ -316,55 +309,55 @@ export default function CategoriesPage({
                                         className="btn btn-outline-primary btn-sm"
                                         type="button"
                                         onClick={openCreateForm}
-                                        >
+                                    >
                                         Buat kategori
                                     </button>
                                     )}
                                 </td>
                             </tr>
                             ) : (
-                            visibleCategories.map((category) => (
-                            <tr key={category.id}>
-                                <td>
-                                    <div className="post-title">
-                                        {category.name}
-                                    </div>
-                                    <div className="post-slug">
-                                        /{category.slug}
-                                    </div>
-                                </td>
-                                <td className="category-description">
-                                    {category.description || (
-                                    <span className="text-secondary">Belum ada deskripsi</span>
-                                    )}
-                                </td>
-                                <td>
-                                    <span className="total-badge">
-                                        {category.posts_count} artikel
-                                    </span>
-                                </td>
-                                <td>
-                                    <div className="d-flex justify-content-end gap-2">
-                                        <button
-                                            className="btn btn-sm btn-light"
-                                            type="button"
-                                            onClick={()=> openEditForm(category)}
-                                            disabled={deletingId !== null}
-                                            >
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-outline-danger"
-                                            type="button"
-                                            onClick={()=> void deleteCategory(category)}
-                                            disabled={deletingId !== null}
-                                            >
-                                            {deletingId === category.id ? 'Menghapus...' : 'Hapus'}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            ))
+                                categories.map((category) => (
+                                    <tr key={category.id}>
+                                        <td>
+                                            <div className="post-title">
+                                                {category.name}
+                                            </div>
+                                            <div className="post-slug">
+                                                /{category.slug}
+                                            </div>
+                                        </td>
+                                        <td className="category-description">
+                                            {category.description || (
+                                            <span className="text-secondary">Belum ada deskripsi</span>
+                                            )}
+                                        </td>
+                                        <td>
+                                            <span className="total-badge">
+                                                {category.posts_count} artikel
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="d-flex justify-content-end gap-2">
+                                                <button
+                                                    className="btn btn-sm btn-outline-warning"
+                                                    type="button"
+                                                    onClick={()=> openEditForm(category)}
+                                                    disabled={deletingId !== null}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm btn-outline-danger"
+                                                    type="button"
+                                                    onClick={()=> void deleteCategory(category)}
+                                                    disabled={deletingId !== null}
+                                                >
+                                                    {deletingId === category.id ? 'Menghapus...' : 'Hapus'}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
                             )}
                         </tbody>
                     </table>
@@ -376,7 +369,7 @@ export default function CategoriesPage({
                     total={total}
                     perPage={10}
                     loading={loading}
-                    itemLabel="artikel"
+                    itemLabel="kategori"
                     onPageChange={setPage}
                 />
 

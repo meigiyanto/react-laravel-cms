@@ -11,19 +11,34 @@ use Illuminate\Validation\Rule;
 
 class MediaController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $data = Media::with('user')
-            ->latest()
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+    
+        $query = Media::with('user')->latest();
+    
+        $search = trim($validated['search'] ?? '');
+    
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('original_name', 'like', "%{$search}%")
+                    ->orWhere('alt_text', 'like', "%{$search}%");
+            });
+        }
+    
+        $data = $query
             ->paginate(20)
             ->through(fn (Media $media) => $this->formatMedia($media));
-        
+    
         return response()->json([
             'success' => true,
             'data' => $data,
         ]);
     }
-
+    
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([

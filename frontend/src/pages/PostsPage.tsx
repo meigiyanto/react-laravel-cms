@@ -69,14 +69,12 @@ const emptyForm: PostForm = {
     meta_description: '',
 };
 
-/*
-type Pagination = {
+type PostsPaginationResponse = {
     current_page: number;
     last_page: number;
     total: number;
     data: Post[];
 };
-*/
 
 type MediaAsset = {
     id: number;
@@ -157,11 +155,12 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 },
             });
 
-            const result: typeof Pagination = response.data.data;
+            const result: PostsPaginationResponse = response.data.data;
 
             setPosts(result.data);
             setLastPage(result.last_page);
             setTotal(result.total);
+
         } catch (err) {
             setError(errorMessage(err));
         } finally {

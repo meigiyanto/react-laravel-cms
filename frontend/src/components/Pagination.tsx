@@ -1,6 +1,4 @@
-import {
-    FontAwesomeIcon
-} from '@fortawesome/react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faArrowLeft,
     faArrowRight
@@ -28,7 +26,10 @@ export default function Pagination({
             <span aria-live="polite">
                 Menampilkan {start}–{end} dari {total} {itemLabel}
             </span>
-
+            <span aria-current="page">
+                Halaman {currentPage} dari {safeLastPage}
+            </span>
+            
             <div className="d-flex align-items-center gap-2">
                 <button
                     className="btn btn-sm btn-outline-secondary"
@@ -38,10 +39,6 @@ export default function Pagination({
                     >
                     <FontAwesomeIcon icon={faArrowLeft} /> Sebelumnya
                 </button>
-
-                <span aria-current="page">
-                    Halaman {currentPage} dari {safeLastPage}
-                </span>
 
                 <button
                     className="btn btn-sm btn-outline-secondary"

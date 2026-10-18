@@ -4,6 +4,8 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
+import { faBookOpen } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -272,7 +274,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                     <h2>Kelola halaman situs.</h2>
                     <p>Atur isi halaman, publikasi, gambar unggulan, dan metadata SEO.</p>
                 </div>
-                <div className="welcome-icon" aria-hidden="true">▱</div>
+                <div className="welcome-icon" aria-hidden="true"><FontAwesomeIcon icon={faBookOpen} /></div>
             </section>
 
             {error && (
@@ -389,7 +391,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                         total={total}
                         perPage={10}
                         loading={loading}
-                        itemLabel="artikel"
+                        itemLabel="halaman"
                         onPageChange={setPage}
                     />
                 </section>

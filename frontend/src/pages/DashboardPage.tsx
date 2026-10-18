@@ -3,18 +3,14 @@ import {
     useState
 } from 'react';
 import axios from 'axios';
-import type {
-    IconDefinition
-} from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import {
     faNoteSticky,
     faPaperPlane,
     faPencil,
     faBoxArchive,
 } from '@fortawesome/free-solid-svg-icons';
-import {
-    FontAwesomeIcon
-} from '@fortawesome/react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';

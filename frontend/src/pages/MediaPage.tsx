@@ -4,6 +4,8 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
+import { faImages } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 type MediaItem = {
     id: number;
@@ -58,6 +60,7 @@ type NavigationProps = {
 
 export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
     const [items, setItems] = useState < MediaItem[] > ([]);
+    const [search, setSearch] = useState('')
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -74,25 +77,30 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
     const loadMedia = useCallback(async () => {
         setLoading(true);
         setError('');
-
+    
         try {
             const response = await api.get('/media', {
                 params: {
-                    page
-                }
+                    page,
+                    search: search.trim() || undefined,
+                },
             });
+    
             const result: MediaPagination = response.data.data;
-
+    
             setItems(result.data);
             setLastPage(result.last_page);
             setTotal(result.total);
+    
             setAltTexts((current) => {
-                const next = {...current};
+                const next = { ...current };
+    
                 result.data.forEach((item) => {
                     if (next[item.id] === undefined) {
                         next[item.id] = item.alt_text || '';
                     }
                 });
+    
                 return next;
             });
         } catch (err) {
@@ -100,12 +108,12 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
         } finally {
             setLoading(false);
         }
-    }, [page]);
-
+    }, [page, search]);
+    
     useEffect(() => {
         const timer = window.setTimeout(() => {
             void loadMedia();
-        }, 0);
+        }, 250);
 
         return () => window.clearTimeout(timer);
     }, [loadMedia]);
@@ -218,7 +226,7 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                     <p>Unggah gambar dan gunakan kembali pada artikel maupun halaman.</p>
                 </div>
                 <div className="welcome-icon" aria-hidden="true">
-                    ▣
+                    <FontAwesomeIcon Icon={faImages} />
                 </div>
             </section>
 
@@ -238,23 +246,23 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                 </div>
             )}
 
-            <section className="content-panel mt-4">                <div className="panel-heading">
-                        <div>
-                            <h3>Unggah Gambar</h3>
-                            <p>Format JPEG, JPG, PNG, WebP, atau GIF. Maksimum 5 MB.</p>
-                        </div>
+            <section className="content-panel mt-4">            <div className="panel-heading">
+                    <div>
+                        <h3>Unggah Gambar</h3>
+                        <p>Format JPEG, JPG, PNG, WebP, atau GIF. Maksimum 5 MB.</p>
                     </div>
-    
-                    <form className="px-4 pb-4" onSubmit={uploadMedia}>
-                        <div className="mb-3">
-                            <label className="form-label" htmlFor="media-file">File gambar *</label>
+                </div>
+
+                <form className="px-4 pb-4" onSubmit={uploadMedia}>
+                    <div className="mb-3">
+                        <label className="form-label" htmlFor="media-file">File gambar *</label>
                             <input
-                            id="media-file"
-                            className="form-control"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/gif"
-                            required
-                            onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+                                id="media-file"
+                                className="form-control"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                required
+                                onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
                             />
                         {selectedFile && (
                             <div className="form-text">
@@ -263,23 +271,23 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                         )}
                     </div>
                     <div className="mb-3">
-                        <label className="form-label" htmlFor="upload-alt">Alt text</label>
-                        <input
-                        id="upload-alt"
-                        className="form-control"
-                        maxLength={255}
-                        value={uploadAlt}
-                        placeholder="Deskripsi singkat gambar untuk aksesibilitas"
-                        onChange={(event) => setUploadAlt(event.target.value)}
-                        />
-                </div>
-                <button className="btn btn-primary" type="submit" disabled={uploading}>
-                    {uploading ? 'Mengunggah...': 'Unggah Gambar'}
-                </button>
-            </form>
+                                        <label className="form-label" htmlFor="upload-alt">Alt text</label>
+                                        <input
+                                            id="upload-alt"
+                                            className="form-control"
+                                            maxLength={255}
+                                            value={uploadAlt}
+                                            placeholder="Deskripsi singkat gambar untuk aksesibilitas"
+                                            onChange={(event) => setUploadAlt(event.target.value)}
+                                        />
+                                </div>
+                    <button className="btn btn-primary" type="submit" disabled={uploading}>
+                        {uploading ? 'Mengunggah...': 'Unggah Gambar'}
+                    </button>
+                </form>
             </section>
 
-            <section className="content-panel mt-4">                    <div className="panel-heading">
+            <section className="content-panel mt-4">            <div className="panel-heading">
                     <div>
                         <h3>Perpustakaan Media</h3>
                         <p>
@@ -289,18 +297,40 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                     <span className="total-badge">{total} file</span>
                 </div>
 
+                <div className="px-4 pb-3">
+                    <label className="form-label" htmlFor="media-search">
+                        Cari media
+                    </label>
+                    <input
+                        id="media-search"
+                        type="search"
+                        className="form-control"
+                        value={search}
+                        placeholder="Cari nama file atau alt text..."
+                        aria-label="Cari media berdasarkan nama file atau alt text"
+                        onChange={(event) => {
+                            setSearch(event.target.value);
+                            setPage(1);
+                        }}
+                    />
+                </div>
+
                 {loading ? (
                     <div className="empty-state">
                         Memuat media...
                     </div>
-                ): items.length === 0 ? (
+                ) : items.length === 0 ? (
                     <div className="empty-state">
-                        <div className="empty-icon">
-                            ▣
-                        </div>
-                        <strong>Belum ada gambar</strong>
+                        <div className="empty-icon">▣</div>
+                        <strong>
+                            {search.trim()
+                                ? 'Media tidak ditemukan'
+                                : 'Belum ada gambar'}
+                        </strong>
                         <p>
-                            Unggah gambar pertama menggunakan formulir di atas.
+                            {search.trim()
+                                ? 'Coba kata kunci nama file atau alt text yang lain.'
+                                : 'Unggah gambar pertama menggunakan formulir di atas.'}
                         </p>
                     </div>
                 ): (
@@ -362,15 +392,15 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                         </article>
                     ))}
                 </div>
-            )}
+                )}
                 
                 <Pagination
                     currentPage={page}
                     lastPage={lastPage}
                     total={total}
-                    perPage={10}
+                    perPage={20}
                     loading={loading}
-                    itemLabel="artikel"
+                    itemLabel="file"
                     onPageChange={setPage}
                 />
 

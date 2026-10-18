@@ -17,10 +17,12 @@ final class ArticleHtmlSanitizer
             'strong,b,em,i,u,s,ul,ol,li,' .
             'blockquote,pre,code,a[href|title|target|rel],' .
             'img[src|alt|title|width|height],' .
-            'figure,figcaption,' .
+            'img[src|alt|title|width|height],' .
             'table,thead,tbody,tr,th[colspan|rowspan],td[colspan|rowspan],' .
             'sub,sup'
         );
+
+
 
         $config->set('URI.AllowedSchemes', [
             'http' => true,

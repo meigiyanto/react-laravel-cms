@@ -83,7 +83,7 @@ class PostController extends Controller
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
-        $validated['body'] = ArticleHtmlSanitize::sanitize($validated['body']);
+        $validated['body'] = ArticleHtmlSanitizer::sanitize($validated['body']);
 
         $post = DB::transaction(function () use ($request, $validated) {
             $post = Post::create([
