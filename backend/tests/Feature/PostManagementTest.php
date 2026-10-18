@@ -35,13 +35,21 @@ class PostManagementTest extends TestCase
 
     public function test_create_post_saves_categories_tags_featured_image_and_seo_metadata(): void
     {
-        $user = User::factory()->create();
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
+
+        $user = User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]);
+        
         $this->actingAs($user, 'sanctum');
 
         $categoryA = Category::create(['name' => 'Teknologi', 'slug' => 'teknologi']);
         $categoryB = Category::create(['name' => 'Tutorial', 'slug' => 'tutorial']);
         $tagA = Tag::create(['name' => 'Laravel', 'slug' => 'laravel']);
         $tagB = Tag::create(['name' => 'PHP', 'slug' => 'php']);
+        
         $media = Media::create([
             'user_id' => $user->id,
             'disk' => 'public',
@@ -95,7 +103,10 @@ class PostManagementTest extends TestCase
 
     public function test_show_returns_editor_relations_and_seo_fields(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
+        
         $category = Category::create(['name' => 'Teknologi', 'slug' => 'teknologi']);
         $tag = Tag::create(['name' => 'Laravel', 'slug' => 'laravel']);
         $post = Post::create([
@@ -120,7 +131,10 @@ class PostManagementTest extends TestCase
 
     public function test_update_changes_relations_and_metadata_but_omitted_relations_remain_unchanged(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
+        
         $oldCategory = Category::create(['name' => 'Lama', 'slug' => 'lama']);
         $newCategory = Category::create(['name' => 'Baru', 'slug' => 'baru']);
         $oldTag = Tag::create(['name' => 'Old', 'slug' => 'old']);
@@ -176,7 +190,9 @@ class PostManagementTest extends TestCase
 
     public function test_update_can_clear_categories_tags_and_seo_values(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
         $category = Category::create(['name' => 'Teknologi', 'slug' => 'teknologi']);
         $tag = Tag::create(['name' => 'Laravel', 'slug' => 'laravel']);
         $post = Post::create([
@@ -211,7 +227,9 @@ class PostManagementTest extends TestCase
 
     public function test_invalid_foreign_ids_duplicate_ids_status_and_seo_lengths_are_rejected(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
 
         $this->postJson('/api/posts', [
             'title' => 'Artikel',
@@ -235,7 +253,9 @@ class PostManagementTest extends TestCase
 
     public function test_duplicate_category_or_tag_ids_are_rejected(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
         $category = Category::create(['name' => 'Teknologi', 'slug' => 'teknologi']);
         $tag = Tag::create(['name' => 'Laravel', 'slug' => 'laravel']);
 
@@ -251,7 +271,9 @@ class PostManagementTest extends TestCase
 
     public function test_published_at_is_set_on_publish_and_cleared_when_unpublished(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
         $post = Post::create([
             'title' => 'Artikel',
             'slug' => 'artikel',
@@ -270,7 +292,10 @@ class PostManagementTest extends TestCase
 
     public function test_delete_removes_post_and_pivot_relations(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
+        
         $category = Category::create(['name' => 'Teknologi', 'slug' => 'teknologi']);
         $tag = Tag::create(['name' => 'Laravel', 'slug' => 'laravel']);
         $post = Post::create([
@@ -293,8 +318,10 @@ class PostManagementTest extends TestCase
     
     public function test_partial_update_preserves_custom_slug(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
-    
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');    
+        
         $post = Post::create([
             'title' => 'Artikel Laravel',
             'slug' => 'panduan-laravel-khusus',

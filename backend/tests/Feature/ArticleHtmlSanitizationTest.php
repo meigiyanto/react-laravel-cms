@@ -26,7 +26,11 @@ class ArticleHtmlSanitizationTest extends TestCase
     
     public function test_create_post_sanitizes_unsafe_html(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $user = User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]);
+        
+        $this->actingAs($user, 'sanctum');
 
         $response = $this->postJson('/api/posts', [
             'title' => 'Tes keamanan HTML',
@@ -58,7 +62,11 @@ HTML,
 
     public function test_update_post_sanitizes_unsafe_html(): void
     {
-        $this->actingAs(User::factory()->create(), 'sanctum');
+        $user = User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]);
+        
+        $this->actingAs($user, 'sanctum');
 
         $post = Post::create([
             'title' => 'Artikel uji',

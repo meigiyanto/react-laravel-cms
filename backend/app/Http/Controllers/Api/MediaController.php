@@ -13,7 +13,28 @@ class MediaController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+        
         $query = Media::with('user')->latest();
+        
+        $search = trim($validated['search'] ?? '');
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where(
+                    'original_name',
+                    'like',
+                    "%{$search}%"
+                )->orWhere(
+                    'alt_text',
+                    'like',
+                    "%{$search}%"
+                );
+            });
+        }
     
         $permissions = $request->user()->role?->permissions ?? [];
     
