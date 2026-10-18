@@ -467,7 +467,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                 <tr>
                                     <td colSpan={4} className="empty-state">
                                         <div className="empty-icon">
-                                            ▤
+                                            <FontAwesomeIcon icon={faPaperPlane} />
                                         </div>
                                         <strong>Belum ada artikel</strong>
                                         <p>

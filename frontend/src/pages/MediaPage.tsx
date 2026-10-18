@@ -226,7 +226,7 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                     <p>Unggah gambar dan gunakan kembali pada artikel maupun halaman.</p>
                 </div>
                 <div className="welcome-icon" aria-hidden="true">
-                    <FontAwesomeIcon Icon={faImages} />
+                    <FontAwesomeIcon icon={faImages} />
                 </div>
             </section>
 
@@ -321,7 +321,9 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                     </div>
                 ) : items.length === 0 ? (
                     <div className="empty-state">
-                        <div className="empty-icon">▣</div>
+                        <div className="empty-icon">
+                            <FontAwesomeIcon icon={faImages} />
+                        </div>
                         <strong>
                             {search.trim()
                                 ? 'Media tidak ditemukan'

@@ -52,6 +52,21 @@ class PostController extends Controller
                 filled($validated['status'] ?? null),
                 fn ($query) => $query->where('status', $validated['status'])
             )
+            ->when(
+                ! in_array(
+                    '*',
+                    $request->user()->role?->permissions ?? [],
+                    true
+                ) && ! in_array(
+                    'posts.view',
+                    $request->user()->role?->permissions ?? [],
+                    true
+                ),
+                fn ($query) => $query->where(
+                    'user_id',
+                    $request->user()->id
+                )
+            )
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -85,6 +100,16 @@ class PostController extends Controller
 
         $validated['body'] = ArticleHtmlSanitizer::sanitize($validated['body']);
 
+        $permissions = $request->user()->role?->permissions ?? [];
+        
+        if (
+            ! in_array('*', $permissions, true)
+            && ! in_array('posts.publish', $permissions, true)
+            && ($validated['status'] ?? 'draft') !== 'draft'
+        ) {
+            abort(403, 'Artikel harus tetap berstatus draft.');
+        }
+
         $post = DB::transaction(function () use ($request, $validated) {
             $post = Post::create([
                 'user_id' => $request->user()->id,
@@ -104,7 +129,7 @@ class PostController extends Controller
 
             return $post;
         });
-
+        
         return response()->json([
             'success' => true,
             'message' => 'Artikel berhasil dibuat.',
@@ -112,8 +137,17 @@ class PostController extends Controller
         ], 201);
     }
 
-    public function show(Post $post): JsonResponse
-    {
+    public function show(Request $request, Post $post): JsonResponse    {
+        $permissions = $request->user()->role?->permissions ?? [];
+
+        if (
+            ! in_array('*', $permissions, true)
+            && ! in_array('posts.view', $permissions, true)
+            && $post->user_id !== $request->user()->id
+        ) {
+            abort(403, 'Anda tidak dapat melihat artikel milik pengguna lain.');
+        }
+        
         return response()->json([
             'success' => true,
             'data' => $post->load(['user', 'categories', 'tags', 'featuredImage']),
@@ -122,7 +156,6 @@ class PostController extends Controller
 
     public function update(Request $request, Post $post): JsonResponse
     {
-        // Jangan mengubah slug saat field slug dan title tidak dikirim.
         if ($request->exists('slug') || $request->exists('title')) {
             $request->merge([
                 'slug' => trim((string) $request->input('slug'))
@@ -130,6 +163,16 @@ class PostController extends Controller
                         (string) $request->input('title')
                     ),
             ]);
+        }
+        
+        $permissions = $request->user()->role?->permissions ?? [];
+
+        if (
+            ! in_array('*', $permissions, true)
+            && ! in_array('posts.update', $permissions, true)
+            && $post->user_id !== $request->user()->id
+        ) {
+            abort(403, 'Anda tidak dapat mengubah artikel milik pengguna lain.');
         }
         
         $validated = $request->validate([
@@ -149,6 +192,15 @@ class PostController extends Controller
             'meta_title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
+
+        if (
+            isset($validated['status'])
+            && ! in_array('*', $permissions, true)
+            && ! in_array('posts.publish', $permissions, true)
+            && $validated['status'] !== 'draft'
+        ) {
+            abort(403, 'Anda tidak memiliki izin untuk mengubah status publikasi.');
+        }
 
         if (array_key_exists('body', $validated)) {
             $validated['body'] = ArticleHtmlSanitizer::sanitize(
