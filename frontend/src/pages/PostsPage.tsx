@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, lazy, Suspense, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 // import { dummyArticles } from '../data/posts';
 import PostDetailPage from './PostDetailPage';
-import RichTextEditor from '../components/RichTextEditor';
 import { sanitizeArticleHtml } from '../utils/sanitizeHtml';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+
+const RichTextEditor = lazy(() => import('../components/RichTextEditor'));
+const Pagination = lazy(() => import('../components/Pagination'));
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -65,12 +69,14 @@ const emptyForm: PostForm = {
     meta_description: '',
 };
 
+/*
 type Pagination = {
     current_page: number;
     last_page: number;
     total: number;
     data: Post[];
 };
+*/
 
 type MediaAsset = {
     id: number;
@@ -151,7 +157,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 },
             });
 
-            const result: Pagination = response.data.data;
+            const result: typeof Pagination = response.data.data;
 
             setPosts(result.data);
             setLastPage(result.last_page);
@@ -360,7 +366,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     type="button"
                     onClick={openCreateForm}
                 >
-                    + Artikel Baru
+                    <FontAwesomeIcon icon={faPlus} /> Artikel Baru
                 </button>
             }
         >
@@ -396,7 +402,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     <p>Buat konten artikel yang menarik dan menginspirasi</p>
                 </div>
                 <div className="welcome-icon" aria-hidden="true">
-                    ▤
+                    <FontAwesomeIcon icon={faPaperPlane} />
                 </div>
             </section>
             
@@ -527,28 +533,16 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                         </tbody>
                     </table>
                 </div>
-    
-                <div className="pagination-bar">
-                    <span>Halaman {page} dari {lastPage}</span>
-                    <div className="d-flex gap-2">
-                        <button
-                            className="btn btn-sm btn-outline-secondary"
-                            type="button"
-                            disabled={page <= 1 || loading}
-                            onClick={() => setPage((current) => current - 1)}
-                        >
-                            Sebelumnya
-                        </button>
-                        <button
-                            className="btn btn-sm btn-outline-secondary"
-                            type="button"
-                            disabled={page >= lastPage || loading}
-                            onClick={() => setPage((current) => current + 1)}
-                        >
-                            Berikutnya
-                        </button>
-                    </div>
-                </div>
+                
+                <Pagination
+                    currentPage={page}
+                    lastPage={lastPage}
+                    total={total}
+                    perPage={10}
+                    loading={loading}
+                    itemLabel="artikel"
+                    onPageChange={setPage}
+                />
             </section>
 
             {showForm && (
@@ -619,30 +613,32 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             
                             <div className="mb-3">
                                 <label className="form-label" htmlFor="post-body">Isi artikel *</label>
-                                <RichTextEditor
-                                    value={form.body}
-                                    onChange={(html) => {
-                                        setForm((current) => ({
-                                            ...current,
-                                            body: html,
-                                        }));
-                            
-                                        setFieldErrors((current) => {
-                                            const remaining = { ...current };
-                                            delete remaining.body;
-                                            return remaining;
-                                        });
-                                    }}
-                                    mediaItems={mediaItems}
-                                    disabled={saving}
-                                />
-                            
-                                {fieldErrors.body && (
-                                    <div className="text-danger small mt-1" role="alert">
-                                        {fieldErrors.body}
-                                    </div>
-                                )}
-                            
+                                <Suspense
+                                    fallback={
+                                        <div className="form-control py-3" role="status">
+                                            Memuat editor artikel...
+                                        </div>
+                                    }
+                                >
+                                    <RichTextEditor
+                                        value={form.body}
+                                        onChange={(html) => {
+                                            setForm((current) => ({
+                                                ...current,
+                                                body: html,
+                                            }));
+                                
+                                            setFieldErrors((current) => {
+                                                const remaining = { ...current };
+                                                delete remaining.body;
+                                                return remaining;
+                                            });
+                                        }}
+                                        mediaItems={mediaItems}
+                                        disabled={saving}
+                                    />
+                                </Suspense>
+
                                 <small className="text-muted d-block mt-2">
                                     Gunakan toolbar untuk heading, format teks, tautan, daftar,
                                     dan gambar. Unggah gambar terlebih dahulu melalui menu Media

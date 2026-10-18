@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, lazy, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
+const Pagination = lazy(() => import('../components/Pagination'));
 
 type Category = {
     id: number;
@@ -369,29 +370,16 @@ export default function CategoriesPage({
                     </table>
                 </div>
 
-                <div className="pagination-bar">
-                    <span>
-                        Halaman {page} dari {lastPage} · {total} kategori
-                    </span>
-                    <div className="d-flex gap-2">
-                        <button
-                            className="btn btn-sm btn-outline-secondary"
-                            type="button"
-                            disabled={page <=1 || loading}
-                            onClick={()=> setPage((current) => current - 1)}
-                            >
-                            Sebelumnya
-                        </button>
-                        <button
-                            className="btn btn-sm btn-outline-secondary"
-                            type="button"
-                            disabled={page>= lastPage || loading}
-                            onClick={() => setPage((current) => current + 1)}
-                            >
-                            Berikutnya
-                        </button>
-                    </div>
-                </div>
+                <Pagination
+                    currentPage={page}
+                    lastPage={lastPage}
+                    total={total}
+                    perPage={10}
+                    loading={loading}
+                    itemLabel="artikel"
+                    onPageChange={setPage}
+                />
+
             </section>
             {showForm && (
                 <div className="modal-backdrop-custom" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) { setShowForm(false); }}}>

@@ -1,21 +1,22 @@
 import {
+    lazy,
+    Suspense,
     useCallback,
     useEffect,
-    useState
+    useState,
 } from 'react';
 import api, {
     AUTH_EXPIRED_EVENT,
     TOKEN_KEY
 } from './api/client';
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
+const MediaPage = lazy(() => import('./pages/MediaPage'));
+const PagesPage = lazy(() => import('./pages/PagesPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const PostsPage = lazy(() => import('./pages/PostsPage'));
+
 import LoginPage from './pages/LoginPage';
-import CategoriesPage from './pages/CategoriesPage';
-import MediaPage from './pages/MediaPage';
-import PagesPage from './pages/PagesPage';
-import DashboardPage from './pages/DashboardPage';
-import PostsPage from './pages/PostsPage';
-import type {
-    ActiveModule
-} from './components/Sidebar';
+import type { ActiveModule } from './components/Sidebar';
 
 import 'bootstrap-icons/font/bootstrap-icons.min.css';
 
@@ -124,45 +125,61 @@ function App() {
     switch (activeModule) {
         case 'posts':
             return (
-                <PostsPage
-                    onNavigate={navigation.onNavigate}
-                    onLogout={navigation.onLogout}
-                />
+                <Suspense fallback={<PageLoading />}>
+                    <PostsPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
             );
-
         case 'categories':
             return (
-                <CategoriesPage
-                    onNavigate={navigation.onNavigate}
-                    onLogout={navigation.onLogout}
-                />
+                <Suspense fallback={<PageLoading />}>
+                    <CategoriesPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
             );
-
         case 'media':
             return (
-                <MediaPage
-                    onNavigate={navigation.onNavigate}
-                    onLogout={navigation.onLogout}
-                />
+                <Suspense fallback={<PageLoading />}>
+                    <MediaPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
             );
-
         case 'pages':
             return (
-                <PagesPage
-                    onNavigate={navigation.onNavigate}
-                    onLogout={navigation.onLogout}
-                />
+                <Suspense fallback={<PageLoading />}>
+                    <PagesPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
             );
         case 'dashboard':
         default:
             return (
-                <DashboardPage
-                    onNavigate={navigation.onNavigate}
-                    onLogout={navigation.onLogout}
-                />
+                <Suspense fallback={<PageLoading />}>
+                    <DashboardPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
             );
     }
 
+}
+
+function PageLoading() {
+    return (
+        <div className="container py-5 text-center" role="status">
+            <div className="spinner-border text-primary" />
+            <p className="mt-3">Memuat halaman...</p>
+        </div>
+    );
 }
 
 export default App;

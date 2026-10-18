@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import Sidebar, { type ActiveModule } from './Sidebar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSignOut } from '@fortawesome/free-solid-svg-icons';
 
 type AdminLayoutProps = { active: ActiveModule; onNavigate: (module: ActiveModule) => void; onLogout: () => void; title: string; breadcrumb: string; actions?: ReactNode; children: ReactNode;
 };
@@ -17,7 +19,9 @@ export default function AdminLayout({ active, onNavigate, onLogout, title, bread
                     </div>
                 
                     <div className="d-flex align-items-center gap-2">
-                        <button className="btn btn-outline-secondary" type="button" onClick={onLogout}>Keluar</button>
+                        <button className="btn btn-outline-secondary" type="button" onClick={onLogout}>
+                            <FontAwesomeIcon icon={faSignOut} /> Keluar
+                            </button>
                         {actions}
                     </div>
                 </header>
