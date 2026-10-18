@@ -14,6 +14,7 @@ const MediaPage = lazy(() => import('./pages/MediaPage'));
 const PagesPage = lazy(() => import('./pages/PagesPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
+const UserManagementPage = lazy(() => import('./pages/UserManagementPage'));
 
 import LoginPage from './pages/LoginPage';
 import type { ActiveModule } from './components/Sidebar';
@@ -21,12 +22,9 @@ import type { ActiveModule } from './components/Sidebar';
 import 'bootstrap-icons/font/bootstrap-icons.min.css';
 
 function App() {
-    const [authenticated,
-        setAuthenticated] = useState(false);
-    const [checkingAuth,
-        setCheckingAuth] = useState(true);
-    const [activeModule,
-        setActiveModule] = useState < ActiveModule > ('dashboard');
+    const [authenticated, setAuthenticated] = useState(false);
+    const [checkingAuth, setCheckingAuth] = useState(true);
+    const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
 
     const handleLogout = useCallback(async () => {
         try {
@@ -43,55 +41,40 @@ function App() {
 
     useEffect(() => {
         let active = true;
-
         const expireSession = () => {
             localStorage.removeItem(TOKEN_KEY);
-
             if (active) {
                 setAuthenticated(false);
                 setCheckingAuth(false);
             }
         };
-
         window.addEventListener(AUTH_EXPIRED_EVENT, expireSession);
 
         async function verifySession() {
             const token = localStorage.getItem(TOKEN_KEY);
-
             if (!token) {
                 if (active) setCheckingAuth(false);
                 return;
             }
-
             try {
                 await api.get('/auth/me');
-
-                if (active) {
-                    setAuthenticated(true);
-                }
+                if (active) setAuthenticated(true);
             } catch {
                 localStorage.removeItem(TOKEN_KEY);
-
-                if (active) {
-                    setAuthenticated(false);
-                }
+                if (active) setAuthenticated(false);
             } finally {
                 if (active) setCheckingAuth(false);
             }
         }
-
         void verifySession();
-
         return () => {
             active = false;
             window.removeEventListener(AUTH_EXPIRED_EVENT, expireSession);
         };
-    },
-        []);
+    }, []);
 
     function handleLogin(token: string) {
-        localStorage.setItem(TOKEN_KEY,
-            token);
+        localStorage.setItem(TOKEN_KEY, token);
         setActiveModule('dashboard');
         setAuthenticated(true);
     }
@@ -103,18 +86,13 @@ function App() {
                     <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden">Memeriksa autentikasi...</span>
                     </div>
-                    <p className="mt-3 text-secondary">
-                        Memeriksa sesi login...
-                    </p>
+                    <p className="mt-3 text-secondary">Memeriksa sesi login...</p>
                 </div>
             </main>
         );
     }
 
-    if (!authenticated) {
-        return <LoginPage onLogin={handleLogin} />;
-    }
-
+    if (!authenticated) return <LoginPage onLogin={handleLogin} />;
 
     const navigation = {
         onNavigate: (module: ActiveModule) => setActiveModule(module),
@@ -124,53 +102,19 @@ function App() {
 
     switch (activeModule) {
         case 'posts':
-            return (
-                <Suspense fallback={<PageLoading />}>
-                    <PostsPage
-                        onNavigate={navigation.onNavigate}
-                        onLogout={navigation.onLogout}
-                    />
-                </Suspense>
-            );
+            return <Suspense fallback={<PageLoading />}><PostsPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
         case 'categories':
-            return (
-                <Suspense fallback={<PageLoading />}>
-                    <CategoriesPage
-                        onNavigate={navigation.onNavigate}
-                        onLogout={navigation.onLogout}
-                    />
-                </Suspense>
-            );
+            return <Suspense fallback={<PageLoading />}><CategoriesPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
         case 'media':
-            return (
-                <Suspense fallback={<PageLoading />}>
-                    <MediaPage
-                        onNavigate={navigation.onNavigate}
-                        onLogout={navigation.onLogout}
-                    />
-                </Suspense>
-            );
+            return <Suspense fallback={<PageLoading />}><MediaPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
         case 'pages':
-            return (
-                <Suspense fallback={<PageLoading />}>
-                    <PagesPage
-                        onNavigate={navigation.onNavigate}
-                        onLogout={navigation.onLogout}
-                    />
-                </Suspense>
-            );
+            return <Suspense fallback={<PageLoading />}><PagesPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
+        case 'users':
+            return <Suspense fallback={<PageLoading />}><UserManagementPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
         case 'dashboard':
         default:
-            return (
-                <Suspense fallback={<PageLoading />}>
-                    <DashboardPage
-                        onNavigate={navigation.onNavigate}
-                        onLogout={navigation.onLogout}
-                    />
-                </Suspense>
-            );
+            return <Suspense fallback={<PageLoading />}><DashboardPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
     }
-
 }
 
 function PageLoading() {

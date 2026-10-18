@@ -5,6 +5,7 @@ import {
 import axios from 'axios';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import {
+    faTachometerAlt,
     faNoteSticky,
     faPaperPlane,
     faPencil,
@@ -179,6 +180,15 @@ export default function DashboardPage({ onNavigate, onLogout }: NavigationProps)
                     />
                 </div>
             )}
+            
+            <section className="welcome-panel">
+                <div>
+                    <span className="eyebrow">SELAMAT DATANG KEMBALI</span>
+                    <h2>Hallo, ?</h2>
+                    <p></p>
+                </div>
+                <div className="welcome-icon" aria-hidden="true"><FontAwesomeIcon icon={faTachometerAlt} /></div>
+            </section>
 
             <section
                 className="stats-grid"
