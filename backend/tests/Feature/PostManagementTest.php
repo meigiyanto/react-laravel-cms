@@ -7,13 +7,26 @@ use App\Models\Media;
 use App\Models\Post;
 use App\Models\Tag;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PostManagementTest extends TestCase
 {
     use RefreshDatabase;
+    private Role $administratorRole;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+    
+        $this->administratorRole = Role::create([
+            'name' => 'Administrator',
+            'slug' => 'administrator',
+            'permissions' => ['*'],
+        ]);
+    }
+    
     public function test_unauthenticated_user_cannot_access_posts(): void
     {
         $this->getJson('/api/posts')->assertUnauthorized();

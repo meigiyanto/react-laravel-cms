@@ -5,20 +5,32 @@ namespace Tests\Feature;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class MediaAndPageIndexValidationTest extends TestCase
 {
     use RefreshDatabase;
+    private Role $administratorRole;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->actingAs(User::factory()->create(), 'sanctum');
+    
+        $this->administratorRole = Role::create([
+            'name' => 'Administrator',
+            'slug' => 'administrator',
+            'permissions' => ['*'],
+        ]);
+        
+        $user = User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]);
+        
+        $this->actingAs($user, 'sanctum');
     }
-
+    
     private function createMedia(
         string $filename,
         ?string $altText = null

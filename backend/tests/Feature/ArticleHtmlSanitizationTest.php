@@ -4,13 +4,26 @@ namespace Tests\Feature;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ArticleHtmlSanitizationTest extends TestCase
 {
     use RefreshDatabase;
-
+    private Role $administratorRole;
+    
+    protected function setUp(): void
+    {
+        parent::setUp();
+    
+        $this->administratorRole = Role::create([
+            'name' => 'Administrator',
+            'slug' => 'administrator',
+            'permissions' => ['*'],
+        ]);
+    }
+    
     public function test_create_post_sanitizes_unsafe_html(): void
     {
         $this->actingAs(User::factory()->create(), 'sanctum');

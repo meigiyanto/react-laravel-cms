@@ -14,6 +14,14 @@ class EnsurePermission
         string $permission
     ): Response {
         $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
         $permissions = $user?->role?->permissions ?? [];
 
         $allowed = is_array($permissions) && (
