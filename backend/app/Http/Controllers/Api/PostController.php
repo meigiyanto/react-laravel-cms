@@ -43,7 +43,7 @@ class PostController extends Controller
                     $search = trim($validated['search']);
                     $query->where(function ($builder) use ($search) {
                         $builder->where('title', 'like', "%{$search}%")
-                            ->orWhere('slug', 'like', "%{$search}%");
+                        ->orWhere('slug', 'like', "%{$search}%");
                     });
                 }
             )
@@ -64,8 +64,7 @@ class PostController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->merge([
-            'slug' => trim((string) $request->input('slug'))
-                ?: Str::slug((string) $request->input('title')),
+            'slug' => trim((string) $request->input('slug')) ?: Str::slug((string) $request->input('title')),
         ]);
 
         $validated = $request->validate([

@@ -1,15 +1,9 @@
-import {
-    useCallback,
-    useEffect,
-    useState,
-    type FormEvent
-} from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
-import {
-    type ActiveModule
-} from '../components/Sidebar';
+import { type ActiveModule } from '../components/Sidebar';
+// import { dummyArticles } from '../data/posts';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -49,7 +43,7 @@ type Post = {
     meta_description: string | null;
 };
 
-type PostForm = {
+export type PostForm = {
     title: string;
     slug: string;
     excerpt: string;
@@ -101,10 +95,8 @@ type NavigationProps = {
     onLogout: () => void;
 };
 
-export default function PostsPage({
-    onNavigate, onLogout
-}: NavigationProps) {
-    const [posts, setPosts] = useState < Post[] > ([]);
+export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
+    const [posts, setPosts] = useState <Post[]> ([]);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -114,8 +106,8 @@ export default function PostsPage({
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
-    const [editing, setEditing] = useState < Post | null > (null);
-    const [form, setForm] = useState < PostForm > (emptyForm);
+    const [editing, setEditing] = useState <Post | null> (null);
+    const [form, setForm] = useState <PostForm> (emptyForm);
     const [showForm, setShowForm] = useState(false);
 
     const [categories, setCategories] = useState<Category[]>([]);
@@ -183,9 +175,7 @@ export default function PostsPage({
                 status: item.status,
                 category_ids: item.categories.map((category) => category.id),
                 tag_ids: item.tags.map((tag) => tag.id),
-                featured_image_id: item.featured_image_id
-                    ? String(item.featured_image_id)
-                    : '',
+                featured_image_id: item.featured_image_id ? String(item.featured_image_id) : '',
                 meta_title: item.meta_title ?? '',
                 meta_description: item.meta_description ?? '',
             });
@@ -213,9 +203,7 @@ export default function PostsPage({
                 status: form.status,
                 category_ids: form.category_ids,
                 tag_ids: form.tag_ids,
-                featured_image_id: form.featured_image_id
-                    ? Number(form.featured_image_id)
-                    : null,
+                featured_image_id: form.featured_image_id ? Number(form.featured_image_id) : null,
                 meta_title: form.meta_title.trim() || null,
                 meta_description: form.meta_description.trim() || null,
             };
@@ -433,7 +421,7 @@ export default function PostsPage({
                                             className="btn btn-outline-primary btn-sm"
                                             type="button"
                                             onClick={openCreateForm}
-                                            >
+                                        >
                                             Buat artikel
                                         </button>
                                     </td>
@@ -454,23 +442,26 @@ export default function PostsPage({
                                             {new Date(post.created_at).toLocaleDateString('id-ID', {
                                                 day: '2-digit',
                                                 month: 'short',
-                                                year: 'numeric',
+                                                year: 'numeric'
                                             })}
                                         </td>
                                         <td>
                                             <div className="d-flex justify-content-end gap-2">
+                                                <a href={`/${post.slug}`} className="btn btn-sm btn-outline-info">
+                                                    Detail
+                                                </a>
                                                 <button
-                                                    className="btn btn-sm btn-light"
+                                                    className="btn btn-sm btn-outline-warning"
                                                     type="button"
                                                     onClick={() => void openEditForm(post)}
-                                                    >
+                                                >
                                                     Edit
                                                 </button>
                                                 <button
                                                     className="btn btn-sm btn-outline-danger"
                                                     type="button"
                                                     onClick={() => void deletePost(post)}
-                                                    >
+                                                >
                                                     Hapus
                                                 </button>
                                             </div>
@@ -490,7 +481,7 @@ export default function PostsPage({
                             type="button"
                             disabled={page <= 1 || loading}
                             onClick={() => setPage((current) => current - 1)}
-                            >
+                        >
                             Sebelumnya
                         </button>
                         <button
@@ -498,7 +489,7 @@ export default function PostsPage({
                             type="button"
                             disabled={page >= lastPage || loading}
                             onClick={() => setPage((current) => current + 1)}
-                            >
+                        >
                             Berikutnya
                         </button>
                     </div>
@@ -518,9 +509,7 @@ export default function PostsPage({
                                 <h2 id="post-editor-title">
                                     {editing ? 'Edit Artikel': 'Buat Artikel Baru'}
                                 </h2>
-                                <p>
-                                    Lengkapi informasi artikel di bawah ini.
-                                </p>
+                                <p>Lengkapi informasi artikel di bawah ini.</p>
                             </div>
                             <button
                                 className="btn-close"
@@ -533,9 +522,7 @@ export default function PostsPage({
     
                         <form onSubmit={savePost}>
                             <div className="mb-3">
-                                <label className="form-label" htmlFor="post-title">
-                                    Judul artikel *
-                                </label>
+                                <label className="form-label" htmlFor="post-title">Judul artikel *</label>
                                 <input
                                     id="post-title"
                                     className="form-control"
@@ -546,12 +533,10 @@ export default function PostsPage({
                                         ...form, title: event.target.value,
                                     })}
                                 />
-                        </div>
+                            </div>
     
                             <div className="mb-3">
-                                <label className="form-label" htmlFor="post-slug">
-                                    Slug (opsional)
-                                </label>
+                                <label className="form-label" htmlFor="post-slug">Slug (opsional)</label>
                                 <input
                                     id="post-slug"
                                     className="form-control"
@@ -565,9 +550,51 @@ export default function PostsPage({
                             </div>
                             
                             <div className="mb-3">
-                                <label className="form-label" htmlFor="post-categories">
-                                    Kategori
-                                </label>
+                                <label className="form-label" htmlFor="post-excerpt">Ringkasan</label>
+                                <textarea
+                                    id="post-excerpt"
+                                    className="form-control"
+                                    rows={2}
+                                    value={form.excerpt}
+                                    onChange={(event) => setForm({
+                                        ...form, excerpt: event.target.value,
+                                    })}
+                                />
+                            </div>
+            
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-body">Isi artikel *</label>
+                                <textarea
+                                    id="post-body"
+                                    className="form-control editor-body"
+                                    rows={7}
+                                    required
+                                    value={form.body}
+                                    onChange={(event) => setForm({
+                                        ...form, body: event.target.value,
+                                    })}
+                                />
+                            </div>
+                            
+                            <div className="mb-4">
+                                <label className="form-label" htmlFor="post-status">Status *</label>
+                                <select
+                                    id="post-status"
+                                    className="form-select"
+                                    value={form.status}
+                                    onChange={(event) => setForm({
+                                        ...form,
+                                        status: event.target.value as Status,
+                                    })}
+                                >
+                                    <option value="draft">Draf</option>
+                                    <option value="published">Dipublikasikan</option>
+                                    <option value="archived">Diarsipkan</option>
+                                </select>
+                            </div>
+                            
+                            <div className="mb-3">
+                                <label className="form-label" htmlFor="post-categories">Kategori</label>
                                 <select
                                     id="post-categories"
                                     className="form-select"
@@ -600,9 +627,7 @@ export default function PostsPage({
                             </div>
                             
                             <div className="mb-3">
-                                <label className="form-label" htmlFor="post-tags">
-                                    Tag
-                                </label>
+                                <label className="form-label" htmlFor="post-tags">Tag</label>
                                 <select
                                     id="post-tags"
                                     className="form-select"
@@ -634,9 +659,7 @@ export default function PostsPage({
                             </div>
                             
                             <div className="mb-3">
-                                <label className="form-label" htmlFor="post-featured-image">
-                                    Gambar unggulan
-                                </label>
+                                <label className="form-label" htmlFor="post-featured-image">Gambar unggulan</label>
                                 <select
                                     id="post-featured-image"
                                     className="form-select"
@@ -659,10 +682,7 @@ export default function PostsPage({
                                 {form.featured_image_id && (
                                     <div className="mt-3">
                                         {(() => {
-                                            const selected = mediaItems.find(
-                                                (media) =>
-                                                    String(media.id) === form.featured_image_id,
-                                            );
+                                            const selected = mediaItems.find((media) => String(media.id) === form.featured_image_id,);
                             
                                             return selected ? (
                                                 <img
@@ -688,40 +708,7 @@ export default function PostsPage({
                             </div>
         
                             <div className="mb-3">
-                                <label className="form-label" htmlFor="post-excerpt">
-                                    Ringkasan
-                                </label>
-                                <textarea
-                                    id="post-excerpt"
-                                    className="form-control"
-                                    rows={2}
-                                    value={form.excerpt}
-                                    onChange={(event) => setForm({
-                                        ...form, excerpt: event.target.value,
-                                    })}
-                                />
-                            </div>
-            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-body">
-                                    Isi artikel *
-                                </label>
-                                <textarea
-                                    id="post-body"
-                                    className="form-control editor-body"
-                                    rows={7}
-                                    required
-                                    value={form.body}
-                                    onChange={(event) => setForm({
-                                        ...form, body: event.target.value,
-                                    })}
-                                />
-                            </div>
-                            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-meta-title">
-                                    Meta title
-                                </label>
+                                <label className="form-label" htmlFor="post-meta-title">Meta title</label>
                                 <input
                                     id="post-meta-title"
                                     className="form-control"
@@ -743,9 +730,7 @@ export default function PostsPage({
                             </div>
 
                             <div className="mb-3">
-                                <label className="form-label" htmlFor="post-meta-description">
-                                    Meta description
-                                </label>
+                                <label className="form-label" htmlFor="post-meta-description">Meta description</label>
                                 <textarea
                                     id="post-meta-description"
                                     className="form-control"
@@ -766,26 +751,7 @@ export default function PostsPage({
                                     </div>
                                 )}
                             </div>
-            
-                            <div className="mb-4">
-                                <label className="form-label" htmlFor="post-status">
-                                    Status *
-                                </label>
-                                <select
-                                    id="post-status"
-                                    className="form-select"
-                                    value={form.status}
-                                    onChange={(event) => setForm({
-                                        ...form,
-                                        status: event.target.value as Status,
-                                    })}
-                                    >
-                                    <option value="draft">Draf</option>
-                                    <option value="published">Dipublikasikan</option>
-                                    <option value="archived">Diarsipkan</option>
-                                </select>
-                            </div>
-            
+
                             <div className="modal-actions">
                                 <button
                                     type="button"
