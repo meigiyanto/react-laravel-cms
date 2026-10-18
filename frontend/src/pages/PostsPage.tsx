@@ -5,6 +5,8 @@ import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 // import { dummyArticles } from '../data/posts';
 import PostDetailPage from './PostDetailPage';
+import RichTextEditor from '../components/RichTextEditor';
+import { sanitizeArticleHtml } from '../utils/sanitizeHtml';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -210,16 +212,30 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
 
     async function savePost(event: FormEvent <HTMLFormElement>) {
         event.preventDefault();
+        
+        const parsedBody = new DOMParser().parseFromString(form.body, 'text/html');
+        const hasText = Boolean(parsedBody.body.textContent?.trim());
+        const hasImage = parsedBody.body.querySelector('img[src]') !== null;
+    
+        if (!hasText && !hasImage) {
+            setFieldErrors((current) => ({
+                ...current,
+                body: 'Isi artikel wajib diisi.',
+            }));
+            return;
+        }
+    
         setSaving(true);
         setError('');
         setNotice('');
+        setFieldErrors({});
 
         try {
             const payload = {
                 title: form.title.trim(),
                 slug: form.slug.trim() || null,
                 excerpt: form.excerpt.trim() || null,
-                body: form.body,
+                body: sanitizeArticleHtml(form.body),
                 status: form.status,
                 category_ids: form.category_ids,
                 tag_ids: form.tag_ids,
@@ -603,16 +619,35 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             
                             <div className="mb-3">
                                 <label className="form-label" htmlFor="post-body">Isi artikel *</label>
-                                <textarea
-                                    id="post-body"
-                                    className="form-control editor-body"
-                                    rows={7}
-                                    required
+                                <RichTextEditor
                                     value={form.body}
-                                    onChange={(event) => setForm({
-                                        ...form, body: event.target.value,
-                                    })}
+                                    onChange={(html) => {
+                                        setForm((current) => ({
+                                            ...current,
+                                            body: html,
+                                        }));
+                            
+                                        setFieldErrors((current) => {
+                                            const remaining = { ...current };
+                                            delete remaining.body;
+                                            return remaining;
+                                        });
+                                    }}
+                                    mediaItems={mediaItems}
+                                    disabled={saving}
                                 />
+                            
+                                {fieldErrors.body && (
+                                    <div className="text-danger small mt-1" role="alert">
+                                        {fieldErrors.body}
+                                    </div>
+                                )}
+                            
+                                <small className="text-muted d-block mt-2">
+                                    Gunakan toolbar untuk heading, format teks, tautan, daftar,
+                                    dan gambar. Unggah gambar terlebih dahulu melalui menu Media
+                                    agar dapat dipilih dari Media Library.
+                                </small>
                             </div>
                             
                             <div className="mb-4">

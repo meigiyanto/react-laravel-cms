@@ -17,6 +17,8 @@ import type {
     ActiveModule
 } from './components/Sidebar';
 
+import 'bootstrap-icons/font/bootstrap-icons.min.css';
+
 function App() {
     const [authenticated,
         setAuthenticated] = useState(false);

@@ -3,6 +3,7 @@ import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
+import RichContent from '../components/RichContent';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -277,16 +278,7 @@ export default function PostDetailPage({ onNavigate, postId, onLogout, onBack, o
 
                             <section>
                                 <h3 className="h5 mb-3">Isi Artikel</h3>
-                                <div
-                                    className="post-detail-body"
-                                    style={{
-                                        whiteSpace: 'pre-wrap',
-                                        overflowWrap: 'anywhere',
-                                        lineHeight: 1.8,
-                                    }}
-                                >
-                                    {post.body || 'Artikel belum memiliki isi.'}
-                                </div>
+                                <RichContent content={post.body || 'Artikel belum memiliki isi.'} />
                             </section>
                         </article>
                     </div>

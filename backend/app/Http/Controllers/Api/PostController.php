@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Support\ArticleHtmlSanitizer;
 
 class PostController extends Controller
 {
@@ -82,6 +83,8 @@ class PostController extends Controller
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
+        $validated['body'] = ArticleHtmlSanitize::sanitize($validated['body']);
+
         $post = DB::transaction(function () use ($request, $validated) {
             $post = Post::create([
                 'user_id' => $request->user()->id,
@@ -95,7 +98,7 @@ class PostController extends Controller
                 'meta_title' => $this->nullableTrim($validated['meta_title'] ?? null),
                 'meta_description' => $this->nullableTrim($validated['meta_description'] ?? null),
             ]);
-
+            
             $post->categories()->sync($validated['category_ids'] ?? []);
             $post->tags()->sync($validated['tag_ids'] ?? []);
 
@@ -146,6 +149,12 @@ class PostController extends Controller
             'meta_title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
+
+        if (array_key_exists('body', $validated)) {
+            $validated['body'] = ArticleHtmlSanitizer::sanitize(
+                $validated['body']
+            );
+        }
 
         DB::transaction(function () use ($validated, $post) {
             $wasPublished = $post->status === 'published';

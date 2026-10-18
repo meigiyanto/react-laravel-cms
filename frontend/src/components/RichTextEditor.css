@@ -1,0 +1,156 @@
+.rich-text-editor {
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    background: var(--bs-body-bg);
+}
+
+.rich-text-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
+}
+
+.rich-text-toolbar .toolbar-heading {
+    width: auto;
+    min-width: 125px;
+    max-width: 155px;
+}
+
+.rich-text-toolbar .btn {
+    min-height: 32px;
+}
+
+.rich-text-toolbar .btn:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+.rich-text-area {
+    min-height: 260px;
+    padding: 1rem 1.1rem;
+    outline: none;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+}
+
+.rich-text-area > :first-child {
+    margin-top: 0;
+}
+
+.rich-text-area > :last-child {
+    margin-bottom: 0;
+}
+
+.rich-text-area h1,
+.rich-text-area h2,
+.rich-text-area h3 {
+    margin: 1.25rem 0 0.65rem;
+    line-height: 1.35;
+    font-weight: 700;
+}
+
+.rich-text-area h1 {
+    font-size: 1.8rem;
+}
+
+.rich-text-area h2 {
+    font-size: 1.5rem;
+}
+
+.rich-text-area h3 {
+    font-size: 1.25rem;
+}
+
+.rich-text-area p {
+    margin-bottom: 0.9rem;
+}
+
+.rich-text-area ul,
+.rich-text-area ol {
+    padding-left: 1.75rem;
+    margin-bottom: 1rem;
+}
+
+.rich-text-area li {
+    margin-bottom: 0.35rem;
+}
+
+.rich-text-area blockquote {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--bs-primary);
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-secondary-color);
+}
+
+.rich-text-area a {
+    color: var(--bs-link-color);
+    text-decoration: underline;
+}
+
+.rich-text-area img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 1rem auto;
+    border-radius: 0.35rem;
+}
+
+.rich-text-area img.ProseMirror-selectednode {
+    outline: 3px solid var(--bs-primary);
+}
+
+.rich-text-area pre {
+    padding: 1rem;
+    overflow-x: auto;
+    border-radius: 0.35rem;
+    background: var(--bs-tertiary-bg);
+}
+
+.rich-text-area code {
+    overflow-wrap: anywhere;
+}
+
+.rich-text-area p.is-editor-empty:first-child::before {
+    content: 'Mulai menulis artikel di sini...';
+    float: left;
+    height: 0;
+    color: var(--bs-secondary-color);
+    pointer-events: none;
+}
+
+.rich-text-footer {
+    padding: 0.6rem 0.85rem;
+    border-top: 1px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    font-size: 0.8rem;
+}
+
+.rich-text-editor.is-disabled {
+    opacity: 0.65;
+}
+
+.rich-text-editor.is-disabled .rich-text-area {
+    cursor: not-allowed;
+}
+
+@media (max-width: 576px) {
+    .rich-text-toolbar {
+        gap: 0.35rem;
+    }
+
+    .rich-text-toolbar .toolbar-heading {
+        width: 100%;
+        max-width: none;
+    }
+
+    .rich-text-area {
+        min-height: 220px;
+        padding: 0.85rem;
+    }
+}
