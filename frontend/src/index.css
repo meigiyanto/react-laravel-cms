@@ -231,6 +231,7 @@ button, input, textarea, select {
     border: 1px solid #e9edf4;
     border-radius: 14px;
     overflow: hidden;
+    padding: 20px;
 }
 .panel-heading {
     display: flex;

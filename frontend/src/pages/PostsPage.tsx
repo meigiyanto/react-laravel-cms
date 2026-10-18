@@ -4,6 +4,7 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 // import { dummyArticles } from '../data/posts';
+import PostDetailPage from './PostDetailPage';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -17,13 +18,6 @@ type Tag = {
     id: number;
     name: string;
     slug: string;
-};
-
-type MediaAsset = {
-    id: number;
-    url: string;
-    original_name: string;
-    alt_text: string | null;
 };
 
 type Post = {
@@ -76,6 +70,31 @@ type Pagination = {
     data: Post[];
 };
 
+type MediaAsset = {
+    id: number;
+    url: string;
+    path?: string;
+    original_name: string;
+    alt_text: string | null;
+};
+
+function getMediaUrl(media: MediaAsset): string {
+    const url = media.url ||
+        (media.path ? `/storage/${media.path.replace(/^\/+/, '')}` : '');
+
+    if (!url) return '';
+
+    if (/^https?:\/\//i.test(url)) {
+        return url;
+    }
+
+    const base = (api.defaults.baseURL || window.location.origin)
+        .replace(/\/api\/?$/, '')
+        .replace(/\/+$/, '');
+
+    return new URL(url, `${base}/`).toString();
+}
+
 function errorMessage(error: unknown): string {
     if (axios.isAxiosError(error)) {
         const errors = error.response?.data?.errors;
@@ -97,6 +116,7 @@ type NavigationProps = {
 
 export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     const [posts, setPosts] = useState <Post[]> ([]);
+    const [detailPostId, setDetailPostId] = useState<number | null>(null);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -159,7 +179,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         void loadEditorOptions();
     }
 
-    async function openEditForm(post: Post) {
+    async function openEditForm(post: Pick<Post, 'id'>) {
         setError('');
 
         try {
@@ -295,6 +315,21 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             setLoadingOptions(false);
         }
     }, []);
+
+    if (detailPostId !== null) {
+        return (
+            <PostDetailPage
+                postId={detailPostId}
+                onNavigate={onNavigate}
+                onLogout={onLogout}
+                onBack={() => setDetailPostId(null)}
+                onEdit={(postId) => {
+                    setDetailPostId(null);
+                    void openEditForm({ id: postId });
+                }}
+            />
+        );
+    }
 
     return (
         <AdminLayout
@@ -447,9 +482,13 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                         </td>
                                         <td>
                                             <div className="d-flex justify-content-end gap-2">
-                                                <a href={`/${post.slug}`} className="btn btn-sm btn-outline-info">
+                                                <button
+                                                    className="btn btn-sm btn-outline-primary"
+                                                    type="button"
+                                                    onClick={() => setDetailPostId(post.id)}
+                                                >
                                                     Detail
-                                                </a>
+                                                </button>
                                                 <button
                                                     className="btn btn-sm btn-outline-warning"
                                                     type="button"
@@ -686,13 +725,16 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                             
                                             return selected ? (
                                                 <img
-                                                    src={selected.url}
+                                                    src={getMediaUrl(selected)}
                                                     alt={selected.alt_text || selected.original_name}
                                                     className="img-thumbnail"
                                                     style={{
                                                         maxWidth: '240px',
                                                         maxHeight: '180px',
                                                         objectFit: 'contain',
+                                                    }}
+                                                    onError={(event) => {
+                                                        event.currentTarget.style.display = 'none';
                                                     }}
                                                 />
                                             ) : null;
