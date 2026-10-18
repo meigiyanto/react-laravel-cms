@@ -330,7 +330,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                     <tr>
                                         <td colSpan={4} className="empty-state">
                                             <div className="empty-icon">
-                                                ▱
+                                                <FontAwesomeIcon icon={faBookOpen} />
                                             </div>
                                             <strong>Belum ada halaman</strong>
                                             <p>

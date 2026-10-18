@@ -15,8 +15,18 @@ class RolesReadTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->seed();
+    
+        Role::create([
+            'name' => 'Administrator',
+            'slug' => 'administrator',
+            'permissions' => ['*'],
+        ]);
+    
+        Role::create([
+            'name' => 'Editor',
+            'slug' => 'editor',
+            'permissions' => ['posts.view'],
+        ]);
     }
 
     public function test_roles_endpoint_requires_authentication(): void
