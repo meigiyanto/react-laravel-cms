@@ -50,14 +50,21 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user();
-
+        $user = $request->user()->loadMissing('role');
+        $role = $user->role;
+    
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'role' => $role ? [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'slug' => $role->slug,
+                ] : null,
+                'permissions' => $role?->permissions ?? [],
             ],
         ]);
     }

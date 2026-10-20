@@ -13,25 +13,34 @@ class PageController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => [
+                'nullable',
+                'string',
+                Rule::in(['draft', 'published', 'archived']),
+            ],
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+    
         $query = Page::with(['user', 'featuredImage'])
             ->latest();
-
-        if ($request->filled('search')) {
-            $search = $request->string('search')->toString();
-
+    
+        $search = trim($validated['search'] ?? '');
+    
+        if ($search !== '') {
             $query->where(function ($builder) use ($search) {
                 $builder->where('title', 'like', "%{$search}%")
                     ->orWhere('slug', 'like', "%{$search}%");
             });
         }
-
-        if ($request->filled('status')) {
-            $query->where(
-                'status',
-                $request->string('status')->toString()
-            );
+    
+        $status = $validated['status'] ?? null;
+    
+        if ($status !== null && $status !== '') {
+            $query->where('status', $status);
         }
-
+    
         return response()->json([
             'success' => true,
             'data' => $query->paginate(15),

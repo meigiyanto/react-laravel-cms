@@ -11,11 +11,28 @@ use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+    
+        $query = Category::withCount('posts');
+    
+        if (!empty($validated['search'])) {
+            $search = trim($validated['search']);
+    
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+    
         return response()->json([
             'success' => true,
-            'data' => Category::withCount('posts')
+            'data' => $query
                 ->orderBy('name')
                 ->paginate(15),
         ]);

@@ -1,0 +1,103 @@
+.media-picker-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgb(0 0 0 / 55%);
+}
+
+.media-picker {
+    width: min(900px, 100%);
+    max-height: min(85vh, 760px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border-radius: 0.75rem;
+    box-shadow: 0 1rem 3rem rgb(0 0 0 / 20%);
+}
+
+.media-picker-header,
+.media-picker-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.media-picker-header h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.25rem;
+}
+
+.media-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 0.85rem;
+    padding: 0 1rem 1rem;
+    overflow-y: auto;
+}
+
+.media-picker-item {
+    min-width: 0;
+    padding: 0.5rem;
+    text-align: left;
+    color: inherit;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+}
+
+.media-picker-item:hover,
+.media-picker-item:focus-visible {
+    border-color: var(--bs-primary);
+    outline-color: var(--bs-primary);
+}
+
+.media-picker-image {
+    display: grid;
+    place-items: center;
+    height: 115px;
+    overflow: hidden;
+    background: var(--bs-tertiary-bg);
+    border-radius: 0.35rem;
+}
+
+.media-picker-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.media-picker-name,
+.media-picker-alt {
+    display: block;
+    overflow-wrap: anywhere;
+    margin-top: 0.5rem;
+}
+
+.media-picker-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.media-picker-alt {
+    color: var(--bs-secondary-color);
+    font-size: 0.75rem;
+}
+
+.media-picker-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--bs-secondary-color);
+}
+
+.media-picker-footer {
+    border-top: 1px solid var(--bs-border-color);
+    border-bottom: 0;
+}

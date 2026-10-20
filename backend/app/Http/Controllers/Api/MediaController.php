@@ -11,16 +11,49 @@ use Illuminate\Validation\Rule;
 
 class MediaController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+        
+        $query = Media::with('user')->latest();
+        
+        $search = trim($validated['search'] ?? '');
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where(
+                    'original_name',
+                    'like',
+                    "%{$search}%"
+                )->orWhere(
+                    'alt_text',
+                    'like',
+                    "%{$search}%"
+                );
+            });
+        }
+    
+        $permissions = $request->user()->role?->permissions ?? [];
+    
+        if (
+            ! in_array('*', $permissions, true)
+            && ! in_array('media.view', $permissions, true)
+        ) {
+            $query->where('user_id', $request->user()->id);
+        }
+    
+        $data = $query->paginate(20)
+            ->through(fn (Media $media) => $this->formatMedia($media));
+    
         return response()->json([
             'success' => true,
-            'data' => Media::with('user')
-                ->latest()
-                ->paginate(20),
+            'data' => $data,
         ]);
     }
-
+    
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -67,8 +100,18 @@ class MediaController extends Controller
         ], 201);
     }
 
-    public function show(Media $media): JsonResponse
+    public function show(Request $request, Media $media): JsonResponse
     {
+        $permissions = $request->user()->role?->permissions ?? [];
+    
+        if (
+            ! in_array('*', $permissions, true)
+            && ! in_array('media.view', $permissions, true)
+            && $media->user_id !== $request->user()->id
+        ) {
+            abort(403, 'Anda tidak dapat melihat media milik pengguna lain.');
+        }
+    
         return response()->json([
             'success' => true,
             'data' => $this->formatMedia($media),
