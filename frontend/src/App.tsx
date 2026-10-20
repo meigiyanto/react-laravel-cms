@@ -1,21 +1,12 @@
-import {
-    lazy,
-    Suspense,
-    useCallback,
-    useEffect,
-    useState,
-} from 'react';
-import api, {
-    AUTH_EXPIRED_EVENT,
-    TOKEN_KEY
-} from './api/client';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import api, { AUTH_EXPIRED_EVENT, TOKEN_KEY } from './api/client';
+import { AuthProfileContext, type AuthProfile } from './auth/AuthProfileContext';
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
 const MediaPage = lazy(() => import('./pages/MediaPage'));
 const PagesPage = lazy(() => import('./pages/PagesPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
 const UserManagementPage = lazy(() => import('./pages/UserManagementPage'));
-
 import LoginPage from './pages/LoginPage';
 import type { ActiveModule } from './components/Sidebar';
 
@@ -25,7 +16,8 @@ function App() {
     const [authenticated, setAuthenticated] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
     const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
-
+    const [profile, setProfile] = useState<AuthProfile | null>(null);
+    
     const handleLogout = useCallback(async () => {
         try {
             await api.post('/auth/logout');
@@ -44,6 +36,7 @@ function App() {
         const expireSession = () => {
             localStorage.removeItem(TOKEN_KEY);
             if (active) {
+                setProfile(null);
                 setAuthenticated(false);
                 setCheckingAuth(false);
             }
@@ -57,11 +50,14 @@ function App() {
                 return;
             }
             try {
-                await api.get('/auth/me');
-                if (active) setAuthenticated(true);
+                const response = await api.get('/auth/me');
+                if (active) {
+                    setProfile(response.data?.data ?? null);
+                    setAuthenticated(true);
+                }
             } catch {
-                localStorage.removeItem(TOKEN_KEY);
-                if (active) setAuthenticated(false);
+                setProfile(null);
+                setAuthenticated(false);
             } finally {
                 if (active) setCheckingAuth(false);
             }
@@ -73,10 +69,19 @@ function App() {
         };
     }, []);
 
-    function handleLogin(token: string) {
+    async function handleLogin(token: string) {
         localStorage.setItem(TOKEN_KEY, token);
-        setActiveModule('dashboard');
-        setAuthenticated(true);
+    
+        try {
+            const response = await api.get('/auth/me');
+            setProfile(response.data?.data ?? null);
+            setActiveModule('dashboard');
+            setAuthenticated(true);
+        } catch {
+            localStorage.removeItem(TOKEN_KEY);
+            setProfile(null);
+            setAuthenticated(false);
+        }
     }
 
     if (checkingAuth) {
@@ -99,22 +104,124 @@ function App() {
         onBack: () => setActiveModule('dashboard'),
         onLogout: () => void handleLogout(),
     };
+    
+    const permissions = profile?.permissions ?? [];
 
+    const can = (permission: string) =>
+        permissions.includes('*') ||
+        permissions.includes(permission) ||
+        permissions.includes(`${permission}.own`);
+    
+    const isAdministrator = profile?.role?.slug === 'administrator';
+    
+    const modulePermission: Record<ActiveModule, string | null> = {
+        dashboard: 'posts.view',
+        posts: 'posts.view',
+        categories: 'categories.view',
+        media: 'media.view',
+        pages: 'pages.view',
+        users: null,
+    };
+    
+    const hasPageAccess = activeModule === 'users' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!);
+    
+    let page: React.ReactNode;
+    
     switch (activeModule) {
         case 'posts':
-            return <Suspense fallback={<PageLoading />}><PostsPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <PostsPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
+            );
+            break;
+    
         case 'categories':
-            return <Suspense fallback={<PageLoading />}><CategoriesPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <CategoriesPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
+            );
+            break;
+    
         case 'media':
-            return <Suspense fallback={<PageLoading />}><MediaPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <MediaPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
+            );
+            break;
+    
         case 'pages':
-            return <Suspense fallback={<PageLoading />}><PagesPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <PagesPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
+            );
+            break;
+    
         case 'users':
-            return <Suspense fallback={<PageLoading />}><UserManagementPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <UserManagementPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
+            );
+            break;
+    
         case 'dashboard':
         default:
-            return <Suspense fallback={<PageLoading />}><DashboardPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <DashboardPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
+            );
+            break;
     }
+    
+    if (!profile || !hasPageAccess) {
+        return (
+            <AuthProfileContext.Provider value={profile}>
+                <main className="container py-5">
+                    <div className="alert alert-danger" role="alert">
+                        Anda tidak memiliki izin untuk membuka halaman ini.
+                    </div>
+    
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => setActiveModule('dashboard')}
+                    >
+                        Kembali ke Dashboard
+                    </button>
+                </main>
+            </AuthProfileContext.Provider>
+        );
+    }
+    
+    return (
+        <AuthProfileContext.Provider value={profile}>
+            {page}
+        </AuthProfileContext.Provider>
+    );
+
 }
 
 function PageLoading() {

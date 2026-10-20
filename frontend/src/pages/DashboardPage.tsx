@@ -1,23 +1,13 @@
-import {
-    useEffect,
-    useState
-} from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import {
-    faTachometerAlt,
-    faNoteSticky,
-    faPaperPlane,
-    faPencil,
-    faBoxArchive,
-} from '@fortawesome/free-solid-svg-icons';
+import { faTachometerAlt, faNoteSticky, faPaperPlane, faPencil, faBoxArchive } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
-import type {
-    ActiveModule
-} from '../components/Sidebar';
+import type { ActiveModule } from '../components/Sidebar';
+import { useAuthProfile } from '../auth/AuthProfileContext';
 
 type Stats = {
     total: number;
@@ -99,7 +89,7 @@ function StatCard({ label, value, icon, tone, loading }: StatCardProps) {
 }
 
 export default function DashboardPage({ onNavigate, onLogout }: NavigationProps) {
-    
+    const profile = useAuthProfile();
     const [stats, setStats] = useState <Stats> (initialStats);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -183,11 +173,13 @@ export default function DashboardPage({ onNavigate, onLogout }: NavigationProps)
             
             <section className="welcome-panel">
                 <div>
-                    <span className="eyebrow">SELAMAT DATANG KEMBALI</span>
-                    <h2>Hallo, ?</h2>
-                    <p></p>
+                    <h2>Halo, {profile.name}?</h2>
+                    <h3>Selamat datang kembali</h3>
+                    <p>Kelola dashboardmu sekarang dan buat sesuatu yang fantastis!</p>
                 </div>
-                <div className="welcome-icon" aria-hidden="true"><FontAwesomeIcon icon={faTachometerAlt} /></div>
+                <div className="welcome-icon" aria-hidden="true">
+                    <FontAwesomeIcon icon={faTachometerAlt} />
+                </div>
             </section>
 
             <section

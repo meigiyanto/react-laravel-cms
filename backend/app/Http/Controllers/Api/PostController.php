@@ -15,18 +15,38 @@ class PostController extends Controller
 {
     private const STATUSES = ['draft', 'published', 'archived'];
 
-    public function stats(): JsonResponse
+    public function stats(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $permissions = $user->role?->permissions ?? [];
+    
+        $canViewAll = in_array('*', $permissions, true)
+            || in_array('posts.view', $permissions, true);
+    
+        $query = Post::query();
+    
+        if (! $canViewAll) {
+            // Role dengan posts.view.own hanya menghitung artikelnya sendiri.
+            $query->where('user_id', $user->id);
+        }
+    
         return response()->json([
             'success' => true,
             'data' => [
-                'total' => Post::count(),
-                'published' => Post::where('status', 'published')->count(),
-                'draft' => Post::where('status', 'draft')->count(),
-                'archived' => Post::where('status', 'archived')->count(),
+                'total' => (clone $query)->count(),
+                'published' => (clone $query)
+                    ->where('status', 'published')
+                    ->count(),
+                'draft' => (clone $query)
+                    ->where('status', 'draft')
+                    ->count(),
+                'archived' => (clone $query)
+                    ->where('status', 'archived')
+                    ->count(),
             ],
         ]);
     }
+
 
     public function index(Request $request): JsonResponse
     {

@@ -1,15 +1,7 @@
-import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-    faTachometerAlt,
-    faPaperPlane,
-    faTags,
-    faImages,
-    faBookOpen,
-    faUsers,
-} from '@fortawesome/free-solid-svg-icons';
+import { faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import api from '../api/client';
+import { useAuthProfile } from '../auth/AuthProfileContext';
 
 export type ActiveModule =
     | 'dashboard'
@@ -30,13 +22,6 @@ type SidebarItem = {
     label: string;
     permission?: string;
     adminOnly?: boolean;
-};
-
-type AuthProfile = {
-    role: {
-        slug: string;
-    } | null;
-    permissions: string[];
 };
 
 const items: SidebarItem[] = [
@@ -74,47 +59,12 @@ const items: SidebarItem[] = [
 ];
 
 export default function Sidebar({ active, onNavigate }: SidebarProps) {
-    const [profile, setProfile] = useState<AuthProfile | null>(null);
-    const [loadingProfile, setLoadingProfile] = useState(true);
-
-    useEffect(() => {
-        let mounted = true;
-
-        async function loadProfile() {
-            try {
-                const response = await api.get('/auth/me');
-                const data = response.data?.data;
-
-                if (!mounted) return;
-
-                setProfile({
-                    role: data?.role ?? null,
-                    permissions: Array.isArray(data?.permissions)
-                        ? data.permissions
-                        : [],
-                });
-            } catch {
-                if (mounted) setProfile(null);
-            } finally {
-                if (mounted) setLoadingProfile(false);
-            }
-        }
-
-        void loadProfile();
-
-        return () => {
-            mounted = false;
-        };
-    }, []);
-
+    const profile = useAuthProfile();
+    const loadingProfile = profile === null;
+    
+    const can = (permission: string): boolean => permissions.includes('*') || permissions.includes(permission) || permissions.includes(`${permission}.own`);
     const permissions = profile?.permissions ?? [];
     const isAdministrator = profile?.role?.slug === 'administrator';
-
-    const can = (permission: string): boolean =>
-        permissions.includes('*') ||
-        permissions.includes(permission) ||
-        permissions.includes(`${permission}.own`);
-
     const visibleItems = items.filter((item) => {
         if (item.adminOnly) return isAdministrator;
         if (!item.permission) return true;

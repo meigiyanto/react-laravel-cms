@@ -22,6 +22,7 @@ Route::get('/health', function () {
 
 Route::post('/auth/login', [AuthController::class, 'login'])
     ->middleware('throttle:10,1');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
@@ -35,7 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/users/{id}/role', [UserController::class, 'assignRole']);
     });
 
-    Route::get('/dashboard/stats', [PostController::class, 'stats']);
+    Route::get('/dashboard/stats', [PostController::class, 'stats'])->middleware('permission:posts.view');
 
     // ARTIKEL
     Route::middleware('permission:posts.view')->group(function () {
