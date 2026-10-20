@@ -173,7 +173,7 @@ export default function DashboardPage({ onNavigate, onLogout }: NavigationProps)
             
             <section className="welcome-panel">
                 <div>
-                    <h2>Halo, {profile.name}?</h2>
+                    <h2>Halo, {profile?.name ?? 'Pengguna'}!</h2>
                     <h3>Selamat datang kembali</h3>
                     <p>Kelola dashboardmu sekarang dan buat sesuatu yang fantastis!</p>
                 </div>

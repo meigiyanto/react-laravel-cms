@@ -18,6 +18,27 @@ function App() {
     const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
     const [profile, setProfile] = useState<AuthProfile | null>(null);
     
+    async function loadProfile(): Promise<AuthProfile> {
+        const response = await api.get('/auth/me');
+        const data = response.data?.data;
+    
+        if (
+            !data ||
+            !Array.isArray(data.permissions) ||
+            !data.role?.slug
+        ) {
+            throw new Error('Profil atau hak akses tidak valid.');
+        }
+    
+        return {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            role: data.role,
+            permissions: data.permissions,
+        };
+    }
+    
     const handleLogout = useCallback(async () => {
         try {
             await api.post('/auth/logout');
@@ -26,6 +47,7 @@ function App() {
             // atau server tidak dapat dijangkau.
         } finally {
             localStorage.removeItem(TOKEN_KEY);
+            setProfile(null);
             setAuthenticated(false);
             setActiveModule('dashboard');
         }
@@ -45,24 +67,33 @@ function App() {
 
         async function verifySession() {
             const token = localStorage.getItem(TOKEN_KEY);
+        
             if (!token) {
                 if (active) setCheckingAuth(false);
                 return;
             }
+        
             try {
-                const response = await api.get('/auth/me');
+                const nextProfile = await loadProfile();
+        
                 if (active) {
-                    setProfile(response.data?.data ?? null);
+                    setProfile(nextProfile);
                     setAuthenticated(true);
                 }
             } catch {
-                setProfile(null);
-                setAuthenticated(false);
+                localStorage.removeItem(TOKEN_KEY);
+        
+                if (active) {
+                    setProfile(null);
+                    setAuthenticated(false);
+                }
             } finally {
                 if (active) setCheckingAuth(false);
             }
         }
+        
         void verifySession();
+        
         return () => {
             active = false;
             window.removeEventListener(AUTH_EXPIRED_EVENT, expireSession);
@@ -73,8 +104,9 @@ function App() {
         localStorage.setItem(TOKEN_KEY, token);
     
         try {
-            const response = await api.get('/auth/me');
-            setProfile(response.data?.data ?? null);
+            const nextProfile = await loadProfile();
+    
+            setProfile(nextProfile);
             setActiveModule('dashboard');
             setAuthenticated(true);
         } catch {
@@ -98,27 +130,6 @@ function App() {
     }
 
     if (!authenticated) return <LoginPage onLogin={handleLogin} />;
-
-    async function loadProfile(): Promise<AuthProfile> {
-            const response = await api.get('/auth/me');
-            const data = response.data?.data;
-        
-            if (
-                !data ||
-                !Array.isArray(data.permissions) ||
-                !data.role?.slug
-            ) {
-                throw new Error('Profil atau hak akses tidak valid.');
-            }
-        
-            return {
-                id: data.id,
-                name: data.name,
-                email: data.email,
-                role: data.role,
-                permissions: data.permissions,
-            };
-        }
 
     const navigation = {
         onNavigate: (module: ActiveModule) => setActiveModule(module),
