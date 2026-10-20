@@ -277,11 +277,28 @@ class PostController extends Controller
             'data' => $post->fresh()->load(['user', 'categories', 'tags', 'featuredImage']),
         ]);
     }
-
-    public function destroy(Post $post): JsonResponse
+    
+    public function destroy(Request $request, Post $post): JsonResponse
     {
+        $permissions = $request->user()->role?->permissions ?? [];
+    
+        $canDeleteAll = in_array('*', $permissions, true)
+            || in_array('posts.delete', $permissions, true);
+    
+        $canDeleteOwn = in_array('posts.delete.own', $permissions, true);
+    
+        if (
+            ! $canDeleteAll
+            && (
+                ! $canDeleteOwn
+                || (int) $post->user_id !== (int) $request->user()->id
+            )
+        ) {
+            abort(403, 'Anda tidak memiliki izin untuk menghapus artikel ini.');
+        }
+    
         $post->delete();
-
+    
         return response()->json([
             'success' => true,
             'message' => 'Artikel berhasil dihapus.',
