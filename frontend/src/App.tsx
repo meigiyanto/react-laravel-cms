@@ -99,6 +99,27 @@ function App() {
 
     if (!authenticated) return <LoginPage onLogin={handleLogin} />;
 
+    async function loadProfile(): Promise<AuthProfile> {
+            const response = await api.get('/auth/me');
+            const data = response.data?.data;
+        
+            if (
+                !data ||
+                !Array.isArray(data.permissions) ||
+                !data.role?.slug
+            ) {
+                throw new Error('Profil atau hak akses tidak valid.');
+            }
+        
+            return {
+                id: data.id,
+                name: data.name,
+                email: data.email,
+                role: data.role,
+                permissions: data.permissions,
+            };
+        }
+
     const navigation = {
         onNavigate: (module: ActiveModule) => setActiveModule(module),
         onBack: () => setActiveModule('dashboard'),

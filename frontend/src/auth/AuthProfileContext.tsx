@@ -12,7 +12,8 @@ export type AuthProfile = {
     permissions: string[];
 };
 
-export const AuthProfileContext = createContext<AuthProfile | null>(null);
+export const AuthProfileContext =
+    createContext<AuthProfile | null>(null);
 
 export function useAuthProfile() {
     return useContext(AuthProfileContext);
