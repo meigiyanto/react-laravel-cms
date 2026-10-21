@@ -103,10 +103,10 @@ class MediaController extends Controller
     public function show(Request $request, Media $media): JsonResponse
     {
         $permissions = $request->user()->role?->permissions ?? [];
-    
+        
         if (! in_array('*', $permissions, true)
             && ! in_array('media.view', $permissions, true)
-            && $media->user_id !== $request->user()->id
+            && (int) $media->user_id !== (int) $request->user()->id
         ) {
             abort(403, 'Anda tidak dapat melihat media milik pengguna lain.');
         }

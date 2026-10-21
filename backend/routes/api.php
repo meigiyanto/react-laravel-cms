@@ -58,7 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // MEDIA
     Route::get('/media', [MediaController::class, 'index'])->middleware('permission:media.view');
     Route::get('/media/{media}', [MediaController::class, 'show'])->middleware('permission:media.view');
-    Route::post('/media', [MediaController::class, 'store'])->middleware('permission:media.create');
+    Route::post('/media', [MediaController::class, 'store'])->middleware('permission:media.create,exact');
     Route::match(['put', 'patch'], '/media/{media}', [MediaController::class, 'update'])->middleware('permission:media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->middleware('permission:media.delete');
 

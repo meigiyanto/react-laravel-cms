@@ -285,4 +285,27 @@ class MediaPermissionTest extends TestCase
             'user_id' => $user->id,
         ]);
     }
+    
+    public function test_user_with_create_own_permission_cannot_upload_media(): void
+    {
+        $role = Role::create([
+            'name' => 'Media Create Own',
+            'slug' => 'media-create-own',
+            'permissions' => ['media.create.own'],
+        ]);
+    
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+        ]);
+    
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/media', [
+                'file' => UploadedFile::fake()->image('gambar.jpg'),
+            ])
+            ->assertForbidden();
+    
+        $this->assertDatabaseMissing('media', [
+            'user_id' => $user->id,
+        ]);
+    }
 }
