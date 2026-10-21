@@ -104,8 +104,7 @@ class MediaController extends Controller
     {
         $permissions = $request->user()->role?->permissions ?? [];
     
-        if (
-            ! in_array('*', $permissions, true)
+        if (! in_array('*', $permissions, true)
             && ! in_array('media.view', $permissions, true)
             && $media->user_id !== $request->user()->id
         ) {
@@ -201,12 +200,10 @@ class MediaController extends Controller
             return false;
         }
     
-        if (in_array('*', $permissions, true)
-            || in_array($globalPermission, $permissions, true)) {
+        if (in_array('*', $permissions, true) || in_array($globalPermission, $permissions, true)) {
             return true;
         }
     
-        return in_array($ownPermission, $permissions, true)
-            && (int) $media->user_id === (int) $request->user()->id;
+        return in_array($ownPermission, $permissions, true) && (int) $media->user_id === (int) $request->user()->id;
     }
 }

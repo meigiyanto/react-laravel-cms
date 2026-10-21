@@ -157,11 +157,11 @@ class PostController extends Controller
         ], 201);
     }
 
-    public function show(Request $request, Post $post): JsonResponse    {
+    public function show(Request $request, Post $post): JsonResponse    
+    {
         $permissions = $request->user()->role?->permissions ?? [];
 
-        if (
-            ! in_array('*', $permissions, true)
+        if (! in_array('*', $permissions, true)
             && ! in_array('posts.view', $permissions, true)
             && $post->user_id !== $request->user()->id
         ) {
@@ -178,20 +178,17 @@ class PostController extends Controller
     {
         if ($request->exists('slug') || $request->exists('title')) {
             $request->merge([
-                'slug' => trim((string) $request->input('slug'))
-                    ?: Str::slug(
-                        (string) $request->input('title')
-                    ),
+                'slug' => trim((string) $request->input('slug')) ?: Str::slug((string) $request->input('title'))
             ]);
         }
         
         $permissions = $request->user()->role?->permissions ?? [];
         
         if (! in_array('*', $permissions, true)
-            && ! in_array('posts.update', $permissions, true)
-            && (int) $post->user_id !== (int) $request->user()->id
+            && ! in_array('posts.view', $permissions, true)
+            && $post->user_id !== $request->user()->id
         ) {
-            abort(403, 'Anda tidak dapat mengubah artikel milik pengguna lain.');
+            abort(403, 'Anda tidak dapat melihat artikel milik pengguna lain.');
         }
         
         $validated = $request->validate([
@@ -280,17 +277,11 @@ class PostController extends Controller
     {
         $permissions = $request->user()->role?->permissions ?? [];
     
-        $canDeleteAll = in_array('*', $permissions, true)
-            || in_array('posts.delete', $permissions, true);
+        $canDeleteAll = in_array('*', $permissions, true) || in_array('posts.delete', $permissions, true);
     
         $canDeleteOwn = in_array('posts.delete.own', $permissions, true);
-    
-        if (
-            ! $canDeleteAll
-            && (
-                ! $canDeleteOwn
-                || (int) $post->user_id !== (int) $request->user()->id
-            )
+
+        if (! $canDeleteAll && (! $canDeleteOwn || $post->user_id !== $request->user()->id)
         ) {
             abort(403, 'Anda tidak memiliki izin untuk menghapus artikel ini.');
         }

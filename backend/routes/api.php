@@ -27,9 +27,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 
+    // USER && ROLE
     Route::middleware('administrator')->group(function () {
         Route::get('/roles', [RoleController::class, 'index']);
-    
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{id}', [UserController::class, 'update']);
@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // KATEGORI: hanya role yang memiliki permission terkait
     Route::get('/categories', [CategoryController::class, 'index'])->middleware('permission:categories.view,exact');
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->middleware('permission:categories.view,exact');
-    Route::post('/categories', [CategoryController::class, 'store'])->middleware('permission:categories.create');
+    Route::post('/categories', [CategoryController::class, 'store'])->middleware('permission:categories.create,exact');
     Route::match(['put', 'patch'], '/categories/{category}', [CategoryController::class, 'update'])->middleware('permission:categories.update,exact');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:categories.delete,exact');
 
@@ -64,7 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // HALAMAN
     Route::get('/pages', [PageController::class, 'index'])->middleware('permission:pages.view,exact');
-    Route::get('/pages/{page}', [PageController::class, 'show'])->middleware('permission:pages.view');
+    Route::get('/pages/{page}', [PageController::class, 'show'])->middleware('permission:pages.view,exact');
     Route::post('/pages', [PageController::class, 'store'])->middleware('permission:pages.create,exact');
     Route::match(['put', 'patch'], '/pages/{page}', [PageController::class, 'update'])->middleware('permission:pages.update,exact');
     Route::delete('/pages/{page}', [PageController::class, 'destroy'])->middleware('permission:pages.delete,exact');
