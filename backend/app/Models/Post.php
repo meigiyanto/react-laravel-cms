@@ -13,11 +13,16 @@ class Post extends Model
         'user_id', 'featured_image_id', 'title', 'slug',
         'excerpt', 'body', 'status', 'published_at',
         'meta_title', 'meta_description',
+        'is_featured', 'allow_comments',
     ];
 
     protected function casts(): array
     {
-        return ['published_at' => 'datetime'];
+        return [
+            'is_featured' => 'boolean',
+            'published_at' => 'datetime',
+            'allow_comments' => 'boolean',
+        ];
     }
 
     public function user(): BelongsTo

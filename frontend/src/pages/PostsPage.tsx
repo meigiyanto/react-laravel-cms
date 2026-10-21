@@ -37,6 +37,17 @@ type Post = {
     published_at?: string | null;
     categories: Category[];
     tags: Tag[];
+    is_featured: boolean;
+    allow_comments: boolean;
+    user?: {
+        id: number;
+        name: string;
+        role?: {
+            id: number;
+            name: string;
+            slug: string;
+        } | null;
+    } | null;
     featured_image_id: number | null;
     featured_image: MediaAsset | null;
     meta_title: string | null;
@@ -51,6 +62,8 @@ export type PostForm = {
     status: Status;
     category_ids: number[];
     tag_ids: number[];
+    is_featured: boolean;
+    allow_comments: boolean;
     featured_image_id: string;
     meta_title: string;
     meta_description: string;
@@ -64,6 +77,8 @@ const emptyForm: PostForm = {
     status: 'draft',
     category_ids: [],
     tag_ids: [],
+    is_featured: false,
+    allow_comments: true,
     featured_image_id: '',
     meta_title: '',
     meta_description: '',
@@ -202,6 +217,8 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 status: item.status,
                 category_ids: item.categories.map((category) => category.id),
                 tag_ids: item.tags.map((tag) => tag.id),
+                is_featured: item.is_featured ?? false,
+                allow_comments: item.allow_comments ?? true,
                 featured_image_id: item.featured_image_id ? String(item.featured_image_id) : '',
                 meta_title: item.meta_title ?? '',
                 meta_description: item.meta_description ?? '',
@@ -244,6 +261,8 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 status: form.status,
                 category_ids: form.category_ids,
                 tag_ids: form.tag_ids,
+                is_featured: form.is_featured,
+                allow_comments: form.allow_comments,
                 featured_image_id: form.featured_image_id ? Number(form.featured_image_id) : null,
                 meta_title: form.meta_title.trim() || null,
                 meta_description: form.meta_description.trim() || null,
@@ -491,6 +510,25 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                             </div>
                                             <div className="post-slug">
                                                 /{post.slug}
+                                            </div>
+                                            
+                                            <div className="small text-muted mt-1">
+                                                Penulis: {post.user?.name ?? 'Pengguna tidak tersedia'}
+                                                {' · '}
+                                                Role: {post.user?.role?.name ?? 'Tanpa role'}
+                                            </div>
+                                            
+                                            <div className="d-flex flex-wrap gap-1 mt-1">
+                                                {post.is_featured && (
+                                                    <span className="badge text-bg-warning">Unggulan</span>
+                                                )}
+                                                <span
+                                                    className={`badge ${
+                                                        post.allow_comments ? 'text-bg-success' : 'text-bg-secondary'
+                                                    }`}
+                                                >
+                                                    {post.allow_comments ? 'Komentar aktif' : 'Komentar nonaktif'}
+                                                </span>
                                             </div>
                                         </td>
                                         <td><StatusBadge status={post.status} /></td>
@@ -817,6 +855,53 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                                 {fieldErrors.tag_ids}
                                             </div>
                                         )}
+                                    </div>
+                                    <div className="mb-3">
+                                        <div className="form-check">
+                                            <input
+                                                id="post-is-featured"
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                checked={form.is_featured}
+                                                disabled={saving}
+                                                onChange={(event) =>
+                                                    setForm((current) => ({
+                                                        ...current,
+                                                        is_featured: event.target.checked,
+                                                    }))
+                                                }
+                                            />
+                                            <label className="form-check-label" htmlFor="post-is-featured">
+                                                Artikel unggulan
+                                            </label>
+                                        </div>
+                                        <small className="text-muted">
+                                            Tampilkan artikel ini di kelompok Featured Posts pada halaman publik.
+                                        </small>
+                                    </div>
+                                    
+                                    <div className="mb-3">
+                                        <div className="form-check">
+                                            <input
+                                                id="post-allow-comments"
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                checked={form.allow_comments}
+                                                disabled={saving}
+                                                onChange={(event) =>
+                                                    setForm((current) => ({
+                                                        ...current,
+                                                        allow_comments: event.target.checked,
+                                                    }))
+                                                }
+                                            />
+                                            <label className="form-check-label" htmlFor="post-allow-comments">
+                                                Izinkan komentar publik
+                                            </label>
+                                        </div>
+                                        <small className="text-muted">
+                                            Jika dinonaktifkan, pengunjung tidak dapat mengirim komentar baru.
+                                        </small>
                                     </div>
                                 </div>
                             </div>

@@ -109,4 +109,42 @@ class PublicPostCommentTest extends TestCase
             ->assertOk();
         $this->assertDatabaseHas('comments', ['id' => $comment->id, 'status' => 'approved']);
     }
+    
+    public function test_public_cannot_comment_when_post_disables_comments(): void
+    {
+        $this->published->update(['allow_comments' => false]);
+    
+        $this->postJson('/api/public/posts/artikel-terbit/comments', [
+            'name' => 'Pengunjung',
+            'email' => 'pengunjung@example.com',
+            'body' => 'Saya ingin berkomentar.',
+        ])->assertForbidden()
+            ->assertJsonPath('success', false);
+    
+        $this->assertDatabaseMissing('comments', [
+            'post_id' => $this->published->id,
+            'email' => 'pengunjung@example.com',
+        ]);
+    }
+    
+    public function test_featured_public_posts_only_returns_featured_published_posts(): void
+    {
+        $this->published->update(['is_featured' => true]);
+    
+        Post::create([
+            'user_id' => $this->author->id,
+            'title' => 'Artikel Biasa',
+            'slug' => 'artikel-biasa',
+            'body' => 'Isi artikel biasa.',
+            'status' => 'published',
+            'published_at' => now(),
+            'is_featured' => false,
+        ]);
+    
+        $this->getJson('/api/public/posts?featured=1')
+            ->assertOk()
+            ->assertJsonPath('data.total', 1)
+            ->assertJsonPath('data.data.0.slug', 'artikel-terbit')
+            ->assertJsonPath('data.data.0.is_featured', true);
+    }
 }

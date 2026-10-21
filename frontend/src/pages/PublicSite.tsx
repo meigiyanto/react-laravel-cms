@@ -3,6 +3,12 @@ import type { FormEvent } from 'react';
 import '../public-site.css';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
+import Swiper from 'swiper';
+import { Navigation, Pagination } from 'swiper/modules';
+
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 type Category = {
     id: number; 
@@ -86,9 +92,11 @@ function excerpt(post: Post): string {
 
 export default function PublicSite() {
     const [pathname, setPathname] = useState(window.location.pathname);
-    const [posts, setPosts] = useState < Page < Post > | null > (null);
-    const [post, setPost] = useState < Post | null > (null);
-    const [comments, setComments] = useState < Page < CommentItem > | null > (null);
+    const [posts, setPosts] = useState <Page <Post> | null> (null);
+    const [latestPosts, setLatestPosts] = useState<Post[]>([]);
+    const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
+    const [post, setPost] = useState <Post | null> (null);
+    const [comments, setComments] = useState <Page <CommentItem> | null > (null);
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
@@ -99,11 +107,29 @@ export default function PublicSite() {
     const [commentBusy, setCommentBusy] = useState(false);
     const [commentMessage, setCommentMessage] = useState('');
     const [commentError, setCommentError] = useState('');
+    
+    function initSwiper() {
+        document.querySelectorAll(".init-swiper").forEach(function(swiperElement) {
+            let config = JSON.parse(
+                swiperElement.querySelector(".swiper-config").innerHTML.trim()
+            );
+
+            if (swiperElement.classList.contains("swiper-tab")) {
+                initSwiperWithCustomPagination(swiperElement, config);
+            } else {
+                new Swiper(swiperElement, config);
+            }
+        });
+    }
 
     useEffect(() => {
         const onPop = () => setPathname(window.location.pathname);
         window.addEventListener('popstate', onPop);
-        return () => window.removeEventListener('popstate', onPop);
+        window.addEventListener('load', initSwiper);
+        return () => {
+            window.removeEventListener('popstate', onPop);
+            window.removeEventListener('load', initSwiper);
+        }
     }, []);
 
     const slug = useMemo(() => {
@@ -154,17 +180,26 @@ export default function PublicSite() {
                 }
             } else {
                 setPosts(null);
-    
                 try {
-                    const response = await publicApi.get('/public/posts', {
-                        params: {
-                            page,
-                            search: search || undefined,
-                            category: category || undefined,
-                        },
-                    });
-    
-                    if (active) setPosts(response.data.data);
+                    const [response, featuredResponse] = await Promise.all([
+                        publicApi.get('/public/posts', {
+                            params: {
+                                page,
+                                search: search || undefined,
+                                category: category || undefined,
+                            },
+                        }),
+                        publicApi.get('/public/posts', {
+                            params: { featured: 1, page: 1 },
+                        }),
+                    ]);
+                    
+                    if (active) {
+                        setPosts(response.data.data.posts.data);
+                        setFeaturedPosts(featuredResponse.data.data.posts.data);
+                        setLatestPosts(response.data.data.latestposts);
+                    }
+                    
                 } catch (err: unknown) {
                     if (active) setError(errorText(err));
                 } finally {
@@ -202,7 +237,7 @@ export default function PublicSite() {
     }
 
     const allCategories = useMemo(() => {
-        const unique = new Map < string, Category > ();
+        const unique = new Map <string, Category> ();
         (posts?.data || []).forEach((item) => item.categories.forEach((cat) => unique.set(cat.slug, cat)));
         return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
     }, [posts]);
@@ -323,9 +358,7 @@ export default function PublicSite() {
                     <div className="container section-title" data-aos="fade-up">
                         <span className="description-title">Featured Posts</span>
                         <h2>Featured Posts</h2>
-                        <p>
-                            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
-                        </p>
+                        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
                     </div>
                     {/* End Section Title */}
         
@@ -362,42 +395,65 @@ export default function PublicSite() {
                             */}
         
                             <div className="swiper-wrapper">
-                                <div className="swiper-slide">
-                                    <article className="blog-card">
-                                        <div className="blog-image">
-                                            <img src="assets/img/blog/blog-post-square-3.webp" alt="Blog Image" loading="lazy"/>
-                                            <div className="category-badge">
-                                                Technology
-                                            </div>
-                                        </div>
-                                        <div className="blog-content">
-                                            <div className="author-info">
-                                                <img src="assets/img/person/person-f-8.webp" alt="Author" className="author-avatar"/>
-                                                <div className="author-details">
-                                                    <span className="author-name">Rebecca Martinez</span>
-                                                    <span className="publish-date">February 8, 2025</span>
+                                {featuredPosts.map((item) => (
+                                    <div className="mb-3 swiper-slide" key={item.id}>
+                                        <article className="blog-card">
+                                            <div className="blog-image">
+                                                {item.featured_image && imageUrl(item.featured_image) ? (
+                                                    <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} loading="lazy" />
+                                                ) : (
+                                                    <div className="post-image-placeholder">
+                                                        <span>JURNAL<br />IDE</span>
+                                                    </div>
+                                                )}
+                                                <div className="category-badge">
+                                                    {item.categories[0]?.name || 'Artikel'}
                                                 </div>
                                             </div>
-                                            <h3><a href="#">Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod</a></h3>
-                                            <p>
-                                                Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae.
-                                            </p>
-                                            <div className="blog-footer">
-                                                <div className="reading-time">
-                                                    <i className="bi bi-clock"></i>
-                                                    <span>5 min read</span>
+                            
+                                            <div className="blog-content">
+                                                <div className="author-info">
+                                                    <div className="author-details">
+                                                        <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
+                                                        <span className="publish-date">{dateLabel(item.published_at || item.created_at)}</span>
+                                                    </div>
                                                 </div>
-                                                <a href="#" className="btn-read-more">
-                                                    <span>Continue Reading</span>
-                                                    <i className="bi bi-arrow-right"></i>
-                                                </a>
+                            
+                                                <h3>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-link p-0 text-start"
+                                                        onClick={() =>
+                                                            navigate(`/artikel/${encodeURIComponent(item.slug)}`)
+                                                        }
+                                                    >
+                                                        {item.title}
+                                                    </button>
+                                                </h3>
+                            
+                                                <p>{excerpt(item)}</p>
+                            
+                                                <div className="blog-footer">
+                                                    <span>{item.approved_comments_count ?? 0} komentar</span>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-read-more"
+                                                        onClick={() =>
+                                                            navigate(`/artikel/${encodeURIComponent(item.slug)}`)
+                                                        }
+                                                    >
+                                                        <span>Baca artikel</span>
+                                                        <i className="bi bi-arrow-right" />
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </article>
-                                </div>
-                                {/* End slide item */}
-        
-        
+                                        </article>
+                                    </div>
+                                ))}
+                            
+                                {featuredPosts.length === 0 && (
+                                    <p className="text-muted">Belum ada artikel unggulan.</p>
+                                )}
                             </div>
         
                             <div className="swiper-pagination"></div>
@@ -422,7 +478,7 @@ export default function PublicSite() {
                     {/* End Section Title */}
         
                     <div className="container" data-aos="fade-up" data-aos-delay="100">
-                        {/* Main Featured Post */}
+                        {/* Main Featured Post
                         <div className="row gy-4 mb-5">
                             <div className="col-lg-8">
                                 <article className="hero-post" data-aos="zoom-out" data-aos-delay="200">
@@ -472,13 +528,14 @@ export default function PublicSite() {
                                 </div>
                             </div>
                         </div>
+                        */}
                         
                         {loading ? (
                             <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
-                        ) : posts?.data.length ? (
+                        ) : posts?.length ? (
                             <div className="posts-grid">
                                 <div className="row gy-4">
-                                {posts.data.map((item, index) => (
+                                {posts.map((item, index) => (
                                     <div className="col-md-6" data-aos="fade-up" data-aos-delay="200">
                                         <article className="grid-post">
                                             <div className="post-img">
@@ -500,7 +557,7 @@ export default function PublicSite() {
                                                 <div className="post-footer">
                                                     <div className="author-info">
                                                         <img src="assets/img/person/person-f-7.webp" alt="" className="author-img"/>
-                                                        <span className="author-name">Sarah K.</span>
+                                                        <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
                                                     </div>
                                                     {/* <span className="read-time">3 min read</span> */}
                                                     <time>{dateLabel(item.published_at || item.created_at)}</time>
@@ -532,9 +589,7 @@ export default function PublicSite() {
                     <div className="container section-title" data-aos="fade-up">
                         <span className="description-title">Latest Posts</span>
                         <h2>Latest Posts</h2>
-                        <p>
-                            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
-                        </p>
+                        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
                     </div>
                     {/* End Section Title */}
         
@@ -579,6 +634,7 @@ export default function PublicSite() {
         
                             <div className="col-lg-5">
                                 <div className="row gy-4">
+                                    
                                     <div className="col-12" data-aos="fade-left" data-aos-delay="200">
                                         <article className="compact-post h-100">
                                             <div className="thumb">
@@ -601,29 +657,49 @@ export default function PublicSite() {
                                 </div>
                             </div>
                             {/* End Right Column */}
-        
-                            <div className="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-                                <article className="card-post h-100">
-                                    <div className="post-img position-relative overflow-hidden">
-                                        <img src="assets/img/blog/blog-post-2.webp" className="img-fluid w-100" alt="Post image" loading="lazy"/>
-                                    </div>
-                                    <div className="content">
-                                        <div className="meta d-flex align-items-center flex-wrap gap-2">
-                                            <span className="cat-badge">Economics</span>
-                                            <div className="d-flex align-items-center ms-auto">
-                                                <i className="bi bi-person"></i><span className="ps-2">Robert Fox</span>
-                                            </div>
+                            
+                            {/* loading ? (
+                                <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
+                            ) : latestposts?.data.length ? (
+                            ) : !error ? (
+                                <div className="public-empty">
+                                    <span>✳</span>
+                                    <h3>Belum ada artikel untuk ditampilkan</h3>
+                                    <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
+                                </div> ) : null
+                            */}
+                            
+                            {latestPosts?.map((post) => (
+                                <div key={post.id} className="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                                    <article className="card-post h-100">
+                                        <div className="post-img position-relative overflow-hidden">
+                                            {post.featured_image && imageUrl(post.featured_image) ? (
+                                                <img className="img-fluid w-100" src={imageUrl(post.featured_image)} alt={post.featured_image.alt_text || post.title} loading="lazy"
+                                                />
+                                            ) : (
+                                                <div className="post-image-placeholder">
+                                                    <span>JURNAL<br />IDE</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        <h3 className="title">Quam impedit minus, cumque aliquam deleniti inventore</h3>
-                                        <a href="blog-details" className="readmore"><span>Read More</span><i className="bi bi-arrow-right"></i></a>
-                                    </div>
-                                </article>
-                            </div>
-                            {/* End Grid Post */}
-        
+                                        <div className="content">
+                                            <div className="meta d-flex align-items-center flex-wrap gap-2">
+                                                <span className="cat-badge">{post?.categories[0]?.name}</span>
+                                                <div className="d-flex align-items-center ms-auto">
+                                                    <i className="bi bi-person"></i> <span className="ps-2">{post.user?.name || 'Tim Redaksi'}</span>
+                                                </div>
+                                            </div>
+                                            <h3 className="title">{post.title}</h3>
+                                            <a href={`${post.slug}`} className="readmore">
+                                                <span>Read More</span>
+                                                <i className="bi bi-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </article>
+                                </div>
+                            ))}
         
                         </div>
-        
                     </div>
         
                 </section>

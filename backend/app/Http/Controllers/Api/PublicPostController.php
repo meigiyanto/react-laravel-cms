@@ -17,34 +17,81 @@ class PublicPostController extends Controller
             'search' => ['sometimes', 'nullable', 'string', 'max:120'],
             'category' => ['sometimes', 'nullable', 'string', 'max:120'],
             'page' => ['sometimes', 'integer', 'min:1'],
+            'featured' => ['sometimes', 'boolean'],
         ]);
-
+    
         $posts = Post::query()
             ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->when(
+                filter_var(
+                    $validated['featured'] ?? false,
+                    FILTER_VALIDATE_BOOLEAN
+                ),
+                fn ($query) => $query->where('is_featured', true)
+            )
             ->with([
                 'user:id,name',
                 'categories:id,name,slug',
                 'featuredImage',
             ])
-            ->withCount(['comments as approved_comments_count' => fn ($query) => $query->where('status', 'approved')])
+            ->withCount([
+                'comments as approved_comments_count' =>
+                    fn ($query) => $query->where('status', 'approved'),
+            ])
             ->when(filled($validated['search'] ?? null), function ($query) use ($validated) {
                 $term = trim($validated['search']);
+    
                 $query->where(function ($builder) use ($term) {
                     $builder->where('title', 'like', "%{$term}%")
                         ->orWhere('excerpt', 'like', "%{$term}%");
                 });
             })
             ->when(filled($validated['category'] ?? null), function ($query) use ($validated) {
-                $query->whereHas('categories', fn ($categoryQuery) =>
-                    $categoryQuery->where('slug', $validated['category'])
+                $query->whereHas(
+                    'categories',
+                    fn ($categoryQuery) =>
+                        $categoryQuery->where('slug', $validated['category'])
                 );
             })
             ->orderByDesc('published_at')
             ->orderByDesc('id')
-            ->paginate(9)
+            ->paginate(6)
             ->withQueryString();
-
-        return response()->json(['success' => true, 'data' => $posts]);
+    
+        $latestposts = Post::query()
+            ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->with([
+                'user:id,name',
+                'categories:id,name,slug',
+                'featuredImage',
+            ])
+            ->withCount([
+                'comments as approved_comments_count' =>
+                    fn ($query) => $query->where('status', 'approved'),
+            ])
+            ->when(filled($validated['category'] ?? null), function ($query) use ($validated) {
+                $query->whereHas(
+                    'categories',
+                    fn ($categoryQuery) =>
+                        $categoryQuery->where('slug', $validated['category'])
+                );
+            })
+            ->latest('published_at')
+            ->latest('id')
+            ->limit(6)
+            ->get();
+    
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'posts' => $posts,
+                'latestposts' => $latestposts,
+            ],
+        ]);
     }
 
     public function show(string $slug): JsonResponse
@@ -85,6 +132,14 @@ class PublicPostController extends Controller
             ->where('slug', $slug)
             ->where('status', 'published')
             ->firstOrFail();
+
+        
+        if (! $post->allow_comments) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Komentar untuk artikel ini telah dinonaktifkan.',
+            ], 403);
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:80'],
