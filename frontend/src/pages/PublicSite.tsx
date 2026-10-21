@@ -123,47 +123,65 @@ export default function PublicSite() {
         const timer = window.setTimeout(() => setSearch(searchInput.trim()), 250);
         return () => window.clearTimeout(timer);
     }, [searchInput]);
-
+    
     useEffect(() => {
         let active = true;
-        setLoading(true);
-        setError('');
-        if (slug) {
-            setPost(null); setComments(null); setCommentMessage(''); setCommentError('');
-            Promise.all([
-                publicApi.get(`/public/posts/${encodeURIComponent(slug)}`),
-                publicApi.get(`/public/posts/${encodeURIComponent(slug)}/comments`),
-            ]).then(([postResponse, commentsResponse]) => {
-                if (!active) return;
-                setPost(postResponse.data.data);
-                setComments(commentsResponse.data.data);
-            }).catch((err: unknown) => {
-                if (active) setError(errorText(err));
-            })
-            .finally(() => {
-                if (active) setLoading(false);
-            });
-        } else {
-            setPosts(null);
-            publicApi.get('/public/posts', {
-                params: {
-                    page, search: search || undefined, category: category || undefined
+    
+        const loadData = async () => {
+            setLoading(true);
+            setError('');
+    
+            if (slug) {
+                setPost(null);
+                setComments(null);
+                setCommentMessage('');
+                setCommentError('');
+    
+                try {
+                    const [postResponse, commentsResponse] = await Promise.all([
+                        publicApi.get(`/public/posts/${encodeURIComponent(slug)}`),
+                        publicApi.get(`/public/posts/${encodeURIComponent(slug)}/comments`),
+                    ]);
+    
+                    if (!active) return;
+    
+                    setPost(postResponse.data.data);
+                    setComments(commentsResponse.data.data);
+                } catch (err: unknown) {
+                    if (active) setError(errorText(err));
+                } finally {
+                    if (active) setLoading(false);
                 }
-            })
-            .then((response) => {
-                if (active) setPosts(response.data.data);
-            })
-            .catch((err: unknown) => {
-                if (active) setError(errorText(err));
-            })
-            .finally(() => {
-                if (active) setLoading(false);
-            });
-        }
+            } else {
+                setPosts(null);
+    
+                try {
+                    const response = await publicApi.get('/public/posts', {
+                        params: {
+                            page,
+                            search: search || undefined,
+                            category: category || undefined,
+                        },
+                    });
+    
+                    if (active) setPosts(response.data.data);
+                } catch (err: unknown) {
+                    if (active) setError(errorText(err));
+                } finally {
+                    if (active) setLoading(false);
+                }
+            }
+        };
+    
+        queueMicrotask(() => {
+            if (active) void loadData();
+        });
+    
         return () => {
             active = false;
         };
     }, [slug, page, search, category]);
+
 
     async function submitComment(event: FormEvent < HTMLFormElement >) {
         event.preventDefault();
@@ -190,218 +208,511 @@ export default function PublicSite() {
     }, [posts]);
 
     return (
-        <div className="public-site">
-            <header className="public-header">
-                <div className="public-header-inner">
-                    <button className="public-brand" onClick={() => { setPage(1); setSearchInput(''); setSearch(''); setCategory(''); navigate('/'); }} aria-label="Kembali ke beranda">
-                        <span className="public-brand-mark">K</span><span>Kabar<span className="brand-light">CMS</span><small>IDE, CERITA, WAWASAN</small></span>
-                    </button>
-                    <nav aria-label="Navigasi utama">
-                        <button onClick={() => navigate('/')}>Beranda</button><a href="/login">Masuk Admin</a>
-                    </nav>
-                </div>
-            </header>
-            {!slug ? (
-                <>
-                    <section className="public-hero">
-                        <div className="public-hero-copy">
-                            <span className="public-kicker">RUANG UNTUK IDE DAN CERITA</span>
-                            <h1>Cerita yang baik<br /> <em>layak dibagikan.</em></h1>
-                             <p>Temukan artikel, wawasan, dan gagasan terbaru dari para penulis kami.</p>
+        <>
+            <header id="header" class="header d-flex align-items-center position-relative">
+        <div class="container position-relative d-flex align-items-center justify-content-between">
 
-                            <form className="public-search" onSubmit={(event) => { event.preventDefault(); setPage(1); setSearch(searchInput.trim()); }}>
-                                <span aria-hidden="true">⌕</span>
-                                <input aria-label="Cari artikel" placeholder="Cari topik atau artikel…" value={searchInput} onChange={(event) => { setSearchInput(event.target.value); setPage(1); }} />
-                                <button type="submit">Cari artikel</button>
-                            </form>
-                        </div>
-                        
-                        <div className="public-hero-art" aria-hidden="true">
-                            <div className="hero-orbit orbit-one" />
-                            <div className="hero-orbit orbit-two" />
-                            <div className="hero-paper">
-                                <span>CATATAN HARI INI</span>
-                                <strong>Temukan<br />perspektif<br /><i>baru.</i></strong>
-                                <div className="paper-lines" />
-                                <div className="paper-sun" />
-                            </div>
-                            <div className="hero-sticker">
-                                BACA<br />DAN<br />BERTUMBUH ↗
-                            </div>
-                        </div>
-                    </section>
-                    <main className="public-main">
-                        <div className="public-section-heading">
-                            <div>
-                                <span className="public-kicker">DARI RUANG REDAKSI</span><h2>{search ? `Hasil untuk “${search}”`: category ? 'Artikel pilihan kategori': 'Artikel terbaru'}</h2>
-                            </div>
-                            <span className="public-result-count">{posts ? `${posts.total} artikel`: 'Memuat artikel'}</span>
-                        </div>
-                        
-                        {allCategories.length > 0 && (
-                            <div className="public-categories">
-                                <button className={!category ? 'selected': ''} onClick={() => { setCategory(''); setPage(1); }}>Semua topik</button>{allCategories.map((cat) => <button key={cat.id} className={category === cat.slug ? 'selected': ''} onClick={() => { setCategory(cat.slug); setPage(1); }}>{cat.name}</button>)}
-                            </div>
-                        )}
-                        
-                        {error && (
-                            <div className="public-alert" role="alert">
-                                {error} <button onClick={() => window.location.reload()}>Coba lagi</button>
-                            </div>
-                        )}
-                    
-                    {loading ? (
-                        <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
-                    ) : posts?.data.length ? (
-                        <div className="public-post-grid">
-                            {posts.data.map((item, index) => (
-                                <article className={`public-post-card ${index === 0 && page === 1 && !search && !category ? 'featured-card': ''}`} key={item.id}>
-                                    <button className="post-card-image" onClick={() => navigate(`/artikel/${encodeURIComponent(item.slug)}`)} aria-label={`Baca ${item.title}`}>
-                                        {item.featured_image && imageUrl(item.featured_image) ? (
-                                            <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} loading="lazy" /> 
-                                        ) : (
-                                            <span className={`post-image-placeholder placeholder-${index % 4}`}><span>JURNAL<br />IDE</span><b>✳</b></span>
-                                        )}
-                                    </button>
-                                    
-                                    <div className="post-card-copy">
-                                        <div className="post-card-meta">
-                                            <span>{item.categories[0]?.name || 'Artikel'}</span><time>{dateLabel(item.published_at || item.created_at)}</time>
+            <a href="index" class="logo d-flex align-items-center me-auto me-xl-0">
+                {/* Uncomment the line below if you also wish to use an image logo */}
+                {/* <img src="assets/img/logo.webp" alt="" /> */}
+                <h1 class="sitename">Story</h1>
+            </a>
+
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <li><a href="index" class="active">Home</a></li>
+                    <li><a href="about">About</a></li>
+                    <li><a href="category">Category</a></li>
+                    <li><a href="blog-details">Blog Details</a></li>
+                    <li><a href="author-profile">Author Profile</a></li>
+                    <li class="dropdown"><a href="#"><span>Pages</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                        <ul>
+                            <li><a href="about">About</a></li>
+                            <li><a href="category">Category</a></li>
+                            <li><a href="blog-details">Blog Details</a></li>
+                            <li><a href="author-profile">Author Profile</a></li>
+                            <li><a href="search-results">Search Results</a></li>
+                            <li><a href="404">404 Not Found Page</a></li>
+
+                            <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                                <ul>
+                                    <li><a href="#">Deep Dropdown 1</a></li>
+                                    <li><a href="#">Deep Dropdown 2</a></li>
+                                    <li><a href="#">Deep Dropdown 3</a></li>
+                                    <li><a href="#">Deep Dropdown 4</a></li>
+                                    <li><a href="#">Deep Dropdown 5</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li><a href="contact">Contact</a></li>
+                </ul>
+                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+            </nav>
+
+            <div class="header-social-links">
+                <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
+                <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
+                <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+            </div>
+
+        </div>
+    </header>
+
+            <main class="main">
+        
+                {/* Blog Hero Section */}
+                <section id="blog-hero" class="blog-hero section">
+        
+                    <div class="container-fluid p-0" data-aos="fade">
+        
+                        <div class="blog-hero-slider swiper init-swiper">
+                            {/*
+                            <script type="application/json" class="swiper-config">
+                                {
+                                    "loop": true,
+                                    "speed": 1000,
+                                    "effect": "fade",
+                                    "autoplay": {
+                                        "delay": 5000
+                                    },
+                                    "slidesPerView": 1,
+                                    "navigation": {
+                                        "nextEl": ".swiper-button-next",
+                                        "prevEl": ".swiper-button-prev"
+                                    }
+                                }
+                            </script>
+                            */}
+        
+                            <div class="swiper-wrapper">
+        
+                                <div class="swiper-slide">
+                                    <div class="blog-hero-item">
+                                        <img src="assets/img/blog/blog-hero-1.webp" alt="Blog Hero Image" class="img-fluid"/>
+                                        <div class="blog-hero-content">
+                                            <span class="category">Lifestyle</span>
+                                            <h1>5 Efficient Rules How to Organize Working Place Relationship</h1>
+                                            <div class="meta">
+                                                <span class="author">BY <a href="#">Dary Smith</a></span>
+                                                <span class="date">02 Jan, 2024</span>
+                                                <span class="read-time">3 Minute Read</span>
+                                                <span class="views">1.9k views</span>
+                                            </div>
+                                            <a href="blog-details" class="read-more">Continue Reading <i class="bi bi-arrow-right"></i></a>
                                         </div>
-                                        <h3>
-                                            <button onClick={() => navigate(`/artikel/${encodeURIComponent(item.slug)}`)}>{item.title}</button>
-                                        </h3>
-                                        <p>{excerpt(item)}</p>
-                                        <div className="post-card-bottom">
-                                            <span>Oleh {item.user?.name || 'Redaksi'}</span>
-                                            <button onClick={() => navigate(`/artikel/${encodeURIComponent(item.slug)}`)} aria-label={`Baca artikel ${item.title}`}>Baca cerita ↗</button>
+                                    </div>
+                                </div>
+                                {/* End slide item */}
+        
+        
+                            </div>
+        
+                            <div class="swiper-button-prev"></div>
+                            <div class="swiper-button-next"></div>
+        
+                        </div>
+        
+                    </div>
+        
+                </section>
+                {/* /Blog Hero Section */}
+        
+                {/* Featured Posts Section */}
+                <section id="featured-posts" class="featured-posts section">
+        
+                    {/* Section Title */}
+                    <div class="container section-title" data-aos="fade-up">
+                        <span class="description-title">Featured Posts</span>
+                        <h2>Featured Posts</h2>
+                        <p>
+                            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
+                        </p>
+                    </div>
+                    {/* End Section Title */}
+        
+                    <div class="container" data-aos="fade-up" data-aos-delay="100">
+        
+                        <div class="blog-posts-slider swiper init-swiper">
+                            {/*
+                            <script type="application/json" class="swiper-config">
+                                {
+                                    "loop": true,
+                                    "speed": 600,
+                                    "autoplay": {
+                                        "delay": 4500
+                                    },
+                                    "slidesPerView": 1,
+                                    "spaceBetween": 40,
+                                    "centeredSlides": true,
+                                    "breakpoints": {
+                                        "768": {
+                                            "slidesPerView": 1.5,
+                                            "spaceBetween": 30
+                                        },
+                                        "1200": {
+                                            "slidesPerView": 2.2,
+                                            "spaceBetween": 40
+                                        }
+                                    },
+                                    "pagination": {
+                                        "el": ".swiper-pagination",
+                                        "clickable": true
+                                    }
+                                }
+                            </script>
+                            */}
+        
+                            <div class="swiper-wrapper">
+                                <div class="swiper-slide">
+                                    <article class="blog-card">
+                                        <div class="blog-image">
+                                            <img src="assets/img/blog/blog-post-square-3.webp" alt="Blog Image" loading="lazy"/>
+                                            <div class="category-badge">
+                                                Technology
+                                            </div>
+                                        </div>
+                                        <div class="blog-content">
+                                            <div class="author-info">
+                                                <img src="assets/img/person/person-f-8.webp" alt="Author" class="author-avatar"/>
+                                                <div class="author-details">
+                                                    <span class="author-name">Rebecca Martinez</span>
+                                                    <span class="publish-date">February 8, 2025</span>
+                                                </div>
+                                            </div>
+                                            <h3><a href="#">Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod</a></h3>
+                                            <p>
+                                                Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae.
+                                            </p>
+                                            <div class="blog-footer">
+                                                <div class="reading-time">
+                                                    <i class="bi bi-clock"></i>
+                                                    <span>5 min read</span>
+                                                </div>
+                                                <a href="#" class="btn-read-more">
+                                                    <span>Continue Reading</span>
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </article>
+                                </div>
+                                {/* End slide item */}
+        
+        
+                            </div>
+        
+                            <div class="swiper-pagination"></div>
+                        </div>
+        
+                    </div>
+        
+                </section>
+                {/* /Featured Posts Section */}
+        
+                {/* Category Section Section */}
+                <section id="category-section" class="category-section section">
+        
+                    {/* Section Title */}
+                    <div class="container section-title" data-aos="fade-up">
+                        <span class="description-title">Category Section</span>
+                        <h2>Category Section</h2>
+                        <p>
+                            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
+                        </p>
+                    </div>
+                    {/* End Section Title */}
+        
+                    <div class="container" data-aos="fade-up" data-aos-delay="100">
+                        {/* Main Featured Post */}
+                        <div class="row gy-4 mb-5">
+                            <div class="col-lg-8">
+                                <article class="hero-post" data-aos="zoom-out" data-aos-delay="200">
+                                    <div class="post-img">
+                                        <img src="assets/img/blog/blog-post-5.webp" alt="" class="img-fluid" loading="lazy"/>
+                                    </div>
+                                    <div class="post-content">
+                                        <div class="author-info">
+                                            <img src="assets/img/person/person-m-8.webp" alt="" class="author-avatar"/>
+                                            <div class="author-details">
+                                                <span class="author-name">Michael R.</span>
+                                                <span class="post-date">15 March 2024</span>
+                                            </div>
+                                        </div>
+                                        <h2 class="post-title">
+                                            <a href="blog-details">Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore</a>
+                                        </h2>
+                                        <p class="post-excerpt">
+                                            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+                                        </p>
+                                        <div class="post-stats">
+                                            <span class="read-time"><i class="bi bi-clock"></i> 5 min read</span>
+                                            <span class="comments"><i class="bi bi-chat-dots"></i> 12 comments</span>
                                         </div>
                                     </div>
                                 </article>
-                            ))}
-                        </div>
-                    ) : !error ? (
-                        <div className="public-empty">
-                            <span>✳</span>
-                            <h3>Belum ada artikel untuk ditampilkan</h3>
-                            <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
-                        </div>) : null
-                    }
-                    
-                    {posts && posts.last_page > 1 && (
-                        <div className="public-pagination">
-                            <button disabled={page <= 1} onClick={() => { setPage((p) => p - 1); window.scrollTo({ top: 500, behavior: 'smooth' }); }}>← Sebelumnya</button><span>Halaman {posts.current_page} dari {posts.last_page}</span><button disabled={page >= posts.last_page} onClick={() => { setPage((p) => p + 1); window.scrollTo({ top: 500, behavior: 'smooth' }); }}>Berikutnya →</button>
-                        </div>
-                    )}
-                    </main>
-                </>
-            ) : (
-                <main className="public-article-wrap">
-                    <button className="article-back" onClick={() => navigate('/')}>← Kembali ke artikel</button>
-                    {loading ? (
-                        <div className="public-loading">Memuat artikel…</div> 
-                        ) : error ? (
-                                <div className="public-alert" role="alert">
-                                    {error}
-                                    <button onClick={() => navigate('/')}>Kembali ke beranda</button>
-                                </div>
-                            )
-                    : post && (
-                        <>
-                            <article className="public-article">
-                                <div className="article-topline">
-                                    {post.categories.map((cat) => (
-                                            <span key={cat.id}>{cat.name}</span>)
-                                        )
-                                    }
-                                    <time>{dateLabel(post.published_at || post.created_at)}</time>
-                                </div>
-                                
-                                <h1>{post.title}</h1>
-                                <p className="article-deck">{post.excerpt}</p>
-                                
-                                <div className="article-byline">
-                                    <span className="author-avatar">{(post.user?.name || 'R').slice(0, 1).toUpperCase()}</span>
-                                    <span>
-                                        <strong>{post.user?.name || 'Redaksi'}</strong>
-                                        <small>Dipublikasikan {dateLabel(post.published_at || post.created_at)}</small>
-                                    </span>
-                                </div>
-                                
-                                {post.featured_image && imageUrl(post.featured_image) && (
-                                    <img className="article-featured-image" src={imageUrl(post.featured_image)} alt={post.featured_image.alt_text || post.title} />
-                                )}
-                                
-                                <div className="article-body" dangerouslySetInnerHTML={ { __html: DOMPurify.sanitize(post.body || '') }} />
-                            </article>
-                            
-                            <section className="public-comments">
-                                <div className="comments-heading">
-                                    <span className="public-kicker">RUANG DISKUSI</span>
-                                    <h2>Bagikan pemikiranmu.</h2>
-                                    <p>Diskusi yang baik dimulai dengan saling menghargai.</p>
-                                </div>
-                                
-                                <div className="comments-layout">
-                                    <div className="comment-list">
-                                        <h3>Komentar {comments ? `(${comments.total})`: ''}</h3>
-                                        
-                                        {comments?.data.length ? comments.data.map((comment) =>
-                                            (<article className="comment-item" key={comment.id}>
-                                                <div className="comment-avatar">
-                                                {comment.name.slice(0, 1).toUpperCase()}
-                                                </div>
-                                                <div>
-                                                    <div className="comment-author">
-                                                        <strong>{comment.name}</strong><time>{dateLabel(comment.created_at)}</time>
-                                                    </div>
-                                                    <p>{comment.body}</p>
-                                                </div>
-                                            </article>)
-                                        ) :
-                                        (<p className="no-comments">Belum ada komentar yang ditampilkan. Jadilah yang pertama memulai diskusi.</p>)
-                                    }
-                                    </div>
-                                    
-                                    <form className="comment-form" onSubmit={submitComment}>
-                                        <h3>Tulis komentar</h3>
-                                        <p>Komentar akan tampil setelah disetujui moderator.</p>
-                            
-                                        {commentMessage && (
-                                            <div className="comment-success" role="status">
-                                                {commentMessage}
-                                            </div>
-                                        )}
-                                        
-                                        {commentError && (
-                                            <div className="public-alert" role="alert">
-                                                {commentError}
-                                            </div>
-                                        )}
-                                        <div className="honeypot" aria-hidden="true">
-                                            <label>Website<input tabIndex={-1} autoComplete="off" value={commentForm.website} onChange={(e) => setCommentForm({ ...commentForm, website: e.target.value })} /></label>
+                            </div>
+        
+                            <div class="col-lg-4">
+                                <div class="sidebar-posts">
+                                    <article class="sidebar-post" data-aos="fade-left" data-aos-delay="300">
+                                        <div class="post-img">
+                                            <img src="assets/img/blog/blog-post-8.webp" alt="" class="img-fluid" loading="lazy"/>
                                         </div>
-                                        
-                                        <label>Nama<input required minLength={2} maxLength={80} value={commentForm.name} onChange={(e) => setCommentForm({ ...commentForm, name: e.target.value })} placeholder="Nama yang ditampilkan" /></label>
-                                        <label>Email<input required type="email" maxLength={254} value={commentForm.email} onChange={(e) => setCommentForm({ ...commentForm, email: e.target.value })} placeholder="email@contoh.com" /></label>
-                                        <label>Komentar<textarea required minLength={3} maxLength={3000} rows={5} value={commentForm.body} onChange={(e) => setCommentForm({ ...commentForm, body: e.target.value })} placeholder="Tulis tanggapanmu dengan sopan…" /></label>
-                                        <button disabled={commentBusy} type="submit">{commentBusy ? 'Mengirim…': 'Kirim komentar ↗'}</button>
-                                    </form>
+                                        <div class="post-content">
+                                            <span class="post-category">Design</span>
+                                            <h4 class="title">
+                                                <a href="blog-details">Neque porro quisquam est qui dolorem ipsum quia dolor sit amet</a>
+                                            </h4>
+                                            <div class="post-meta">
+                                                <span class="post-date">22 February 2024</span>
+                                            </div>
+                                        </div>
+                                    </article>
                                 </div>
-                            </section>
-                        </>
-                    )}
-                </main>
-            )}
-            <footer className="public-footer">
-                <div className="public-footer-inner">
-                    <div className="public-brand footer-brand">
-                        <span className="public-brand-mark">K</span><span>Kabar<span className="brand-light">CMS</span><small>IDE, CERITA, WAWASAN</small></span>
+                            </div>
+                        </div>
+        
+                        {/* Grid Posts */}
+                        <div class="posts-grid">
+                            <div class="row gy-4">
+                                <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
+                                    <article class="grid-post">
+                                        <div class="post-img">
+                                            <img src="assets/img/blog/blog-post-6.webp" alt="" class="img-fluid" loading="lazy"/>
+                                            <div class="post-overlay">
+                                                <span class="category-tag">Travel</span>
+                                            </div>
+                                        </div>
+                                        <div class="post-content">
+                                            <h3 class="title">
+                                                <a href="blog-details">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum</a>
+                                            </h3>
+                                            <p class="excerpt">
+                                                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.
+                                            </p>
+                                            <div class="post-footer">
+                                                <div class="author-info">
+                                                    <img src="assets/img/person/person-f-7.webp" alt="" class="author-img"/>
+                                                    <span class="author-name">Sarah K.</span>
+                                                </div>
+                                                <span class="read-time">3 min read</span>
+                                            </div>
+                                        </div>
+                                    </article>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <p>Tempat gagasan bertemu cerita.</p>
-                    <span>© {new Date().getFullYear()} KabarCMS</span>
+        
+                </section>
+                {/* /Category Section Section */}
+        
+                {/* Latest Posts Section */}
+                <section id="latest-posts" class="latest-posts section">
+        
+                    {/* Section Title */}
+                    <div class="container section-title" data-aos="fade-up">
+                        <span class="description-title">Latest Posts</span>
+                        <h2>Latest Posts</h2>
+                        <p>
+                            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
+                        </p>
+                    </div>
+                    {/* End Section Title */}
+        
+                    <div class="container" data-aos="fade-up" data-aos-delay="100">
+        
+                        <div class="row gy-4 align-items-stretch">
+        
+                            <div class="col-lg-7" data-aos="zoom-in" data-aos-delay="150">
+                                <article class="featured-post position-relative h-100">
+                                    <figure class="featured-media m-0">
+                                        <img src="assets/img/blog/blog-hero-4.webp" alt="Featured post image" class="img-fluid w-100" loading="lazy"/>
+                                    </figure>
+        
+                                    <div class="featured-content">
+                                        <div class="date-badge">
+                                            <span class="day">12</span>
+                                            <span class="mon">Dec</span>
+                                        </div>
+        
+                                        <span class="cat-badge inverse">Politics</span>
+        
+                                        <h3 class="title">Veritatis maiores natus officiis sit, temporibus alias dicta voluptatum</h3>
+                                        <p class="excerpt d-none d-md-block">
+                                            Quisquam perferendis officiis incidunt, facilisis aliquet consectetur lorem luctus. Ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                                        </p>
+        
+                                        <div class="meta d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person"></i><span class="ps-2">Jane Cooper</span>
+                                            </div>
+                                            <span class="sep">/</span>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-folder2"></i><span class="ps-2">Editorial</span>
+                                            </div>
+                                        </div>
+        
+                                        <a href="blog-details" class="readmore stretched-link"><span>Continue</span><i class="bi bi-arrow-right"></i></a>
+                                    </div>
+                                </article>
+                            </div>
+                            {/* End Featured Post */}
+        
+                            <div class="col-lg-5">
+                                <div class="row gy-4">
+                                    <div class="col-12" data-aos="fade-left" data-aos-delay="200">
+                                        <article class="compact-post h-100">
+                                            <div class="thumb">
+                                                <img src="assets/img/blog/blog-post-square-2.webp" class="img-fluid" alt="Post thumbnail" loading="lazy"/>
+                                            </div>
+                                            <div class="content">
+                                                <div class="meta">
+                                                    <span class="date">05 Aug</span>
+                                                    <span class="dot">•</span>
+                                                    <span class="category">Sports</span>
+                                                </div>
+                                                <h4 class="title">Officia recusandae cumque, dolore asperiores ducimus</h4>
+                                                <a href="blog-details" class="readmore"><span>Read Article</span><i class="bi bi-arrow-right"></i></a>
+                                            </div>
+                                        </article>
+                                    </div>
+                                    {/* End Compact Post */}
+        
+        
+                                </div>
+                            </div>
+                            {/* End Right Column */}
+        
+                            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                                <article class="card-post h-100">
+                                    <div class="post-img position-relative overflow-hidden">
+                                        <img src="assets/img/blog/blog-post-2.webp" class="img-fluid w-100" alt="Post image" loading="lazy"/>
+                                    </div>
+                                    <div class="content">
+                                        <div class="meta d-flex align-items-center flex-wrap gap-2">
+                                            <span class="cat-badge">Economics</span>
+                                            <div class="d-flex align-items-center ms-auto">
+                                                <i class="bi bi-person"></i><span class="ps-2">Robert Fox</span>
+                                            </div>
+                                        </div>
+                                        <h3 class="title">Quam impedit minus, cumque aliquam deleniti inventore</h3>
+                                        <a href="blog-details" class="readmore"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+                                    </div>
+                                </article>
+                            </div>
+                            {/* End Grid Post */}
+        
+        
+                        </div>
+        
+                    </div>
+        
+                </section>
+                {/* /Latest Posts Section */}
+        
+            </main>
+        
+            <footer id="footer" class="footer position-relative light-background">
+        
+                <div class="container">
+                    <div class="row gy-5">
+        
+                        <div class="col-lg-4">
+                            <div class="footer-brand">
+                                <a href="index" class="logo d-flex align-items-center mb-3">
+                                    <span class="sitename">Story</span>
+                                </a>
+                                <p class="tagline">
+                                    Innovating the digital landscape with elegant solutions and timeless design.
+                                </p>
+        
+                                <div class="social-links mt-4">
+                                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                                    <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                                    <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+                                    <a href="#" aria-label="Dribbble"><i class="bi bi-dribbble"></i></a>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <div class="col-lg-6">
+                            <div class="footer-links-grid">
+                                <div class="row">
+                                    <div class="col-6 col-md-4">
+                                        <h5>Company</h5>
+                                        <ul class="list-unstyled">
+                                            <li><a href="#">About Us</a></li>
+                                            <li><a href="#">Our Team</a></li>
+                                            <li><a href="#">Careers</a></li>
+                                            <li><a href="#">Newsroom</a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <h5>Services</h5>
+                                        <ul class="list-unstyled">
+                                            <li><a href="#">Web Development</a></li>
+                                            <li><a href="#">UI/UX Design</a></li>
+                                            <li><a href="#">Digital Strategy</a></li>
+                                            <li><a href="#">Branding</a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <h5>Support</h5>
+                                        <ul class="list-unstyled">
+                                            <li><a href="#">Help Center</a></li>
+                                            <li><a href="#">Contact Us</a></li>
+                                            <li><a href="#">Privacy Policy</a></li>
+                                            <li><a href="#">Terms of Service</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <div class="col-lg-2">
+                            <div class="footer-cta">
+                                <h5>Let's Connect</h5>
+                                <a href="contact" class="btn btn-outline">Get in Touch</a>
+                            </div>
+                        </div>
+        
+                    </div>
                 </div>
+        
+                <div class="footer-bottom">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="footer-bottom-content">
+                                    <p class="mb-0">
+                                        © <strong>Story</strong>. All rights reserved.
+                                    </p>
+                                    <div class="credits">
+                                        {/* All the links in the footer should remain intact. */}
+                                        {/* You can delete the links only if you've purchased the pro version. */}
+                                        {/* Licensing information: https://bootstrapmade.com/license/ */}
+                                        {/* Purchase the pro version with working PHP/AJAX contact form: [buy-url] */}
+                                        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a> | <a href="https://bootstrapmade.com/tools/">DevTools</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
             </footer>
-        </div>
+        
+            {/* Scroll Top */}
+            <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+        
+            {/* 
+            Preloader
+                <div id="preloader"></div>
+            */}
+        </>
     );
 }
