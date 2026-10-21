@@ -185,7 +185,7 @@ class PostController extends Controller
         $permissions = $request->user()->role?->permissions ?? [];
         
         if (! in_array('*', $permissions, true)
-            && ! in_array('posts.view', $permissions, true)
+            && ! in_array('posts.update', $permissions, true)
             && $post->user_id !== $request->user()->id
         ) {
             abort(403, 'Anda tidak dapat melihat artikel milik pengguna lain.');
