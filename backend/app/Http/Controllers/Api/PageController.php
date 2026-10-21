@@ -64,12 +64,9 @@ class PageController extends Controller
         );
 
         $validated['user_id'] = $request->user()->id;
-        $validated['status'] = $validated['status'] ?? 'draft';
-        $validated['published_at'] =
-            $validated['status'] === 'published' ? now() : null;
-
+        
         $status = $validated['status'] ?? 'draft';
-
+        
         if ($status === 'published') {
             $this->ensureCanPublish($request);
         }
