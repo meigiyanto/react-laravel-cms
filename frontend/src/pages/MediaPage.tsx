@@ -6,9 +6,11 @@ import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
 import { faImages } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useAuthProfile } from '../auth/AuthProfileContext';
 
 type MediaItem = {
     id: number;
+    user_id: number;
     path: string;
     url?: string;
     original_name: string;
@@ -73,6 +75,34 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
     const [savingAltId, setSavingAltId] = useState <number | null> (null);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
+    
+    const profile = useAuthProfile();
+
+    const canEditMedia = (media: MediaItem) => {
+        const permissions = profile?.permissions ?? [];
+    
+        return (
+            permissions.includes('*') ||
+            permissions.includes('media.update') ||
+            (
+                permissions.includes('media.update.own') &&
+                media.user_id === profile?.id
+            )
+        );
+    };
+    
+    const canDeleteMedia = (media: MediaItem) => {
+        const permissions = profile?.permissions ?? [];
+    
+        return (
+            permissions.includes('*') ||
+            permissions.includes('media.delete') ||
+            (
+                permissions.includes('media.delete.own') &&
+                media.user_id === profile?.id
+            )
+        );
+    };
 
     const loadMedia = useCallback(async () => {
         setLoading(true);
@@ -345,11 +375,11 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                                     target="_blank"
                                     rel="noreferrer"
                                     aria-label={`Buka gambar ${media.original_name} di tab baru`}
-                                    >
+                                >
                                     <img
-                                    src={getMediaUrl(media)}
-                                    alt={media.alt_text || media.original_name}
-                                    loading="lazy"
+                                        src={getMediaUrl(media)}
+                                        alt={media.alt_text || media.original_name}
+                                        loading="lazy"
                                     />
                             </a>
                             <div className="media-card-body">
@@ -363,32 +393,36 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                                     Alt text
                                 </label>
                                 <input
-                                id={`alt-${media.id}`}
-                                className="form-control form-control-sm"
-                                maxLength={255}
-                                value={altTexts[media.id] ?? ''}
-                                onChange={(event) => setAltTexts((current) => ({
-                                    ...current,
-                                    [media.id]: event.target.value,
-                                }))}
+                                    id={`alt-${media.id}`}
+                                    className="form-control form-control-sm"
+                                    maxLength={255}
+                                    value={altTexts[media.id] ?? ''}
+                                    onChange={(event) => setAltTexts((current) => ({
+                                        ...current,
+                                        [media.id]: event.target.value,
+                                    }))}
                                 />
                             <div className="d-flex gap-2 mt-3">
+                                {canEditMedia(media) && (
                                 <button
                                     className="btn btn-sm btn-primary flex-grow-1"
                                     type="button"
                                     disabled={savingAltId !== null || deletingId !== null}
                                     onClick={() => void saveAltText(media)}
-                                    >
+                                >
                                     {savingAltId === media.id ? 'Menyimpan...': 'Simpan Alt'}
                                 </button>
+                                )}
+                                {canDeleteMedia(media) && (
                                 <button
                                     className="btn btn-sm btn-outline-danger"
                                     type="button"
                                     disabled={deletingId !== null || savingAltId !== null}
                                     onClick={() => void deleteMedia(media)}
-                                    >
+                                >
                                     {deletingId === media.id ? '...': 'Hapus'}
                                 </button>
+                                )}
                             </div>
                         </div>
                         </article>

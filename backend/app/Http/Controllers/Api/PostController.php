@@ -186,11 +186,10 @@ class PostController extends Controller
         }
         
         $permissions = $request->user()->role?->permissions ?? [];
-
-        if (
-            ! in_array('*', $permissions, true)
+        
+        if (! in_array('*', $permissions, true)
             && ! in_array('posts.update', $permissions, true)
-            && $post->user_id !== $request->user()->id
+            && (int) $post->user_id !== (int) $request->user()->id
         ) {
             abort(403, 'Anda tidak dapat mengubah artikel milik pengguna lain.');
         }
@@ -213,8 +212,7 @@ class PostController extends Controller
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
-        if (
-            isset($validated['status'])
+        if (isset($validated['status'])
             && ! in_array('*', $permissions, true)
             && ! in_array('posts.publish', $permissions, true)
             && $validated['status'] !== 'draft'

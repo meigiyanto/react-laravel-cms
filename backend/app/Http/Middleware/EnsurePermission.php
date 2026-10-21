@@ -11,7 +11,8 @@ class EnsurePermission
     public function handle(
         Request $request,
         Closure $next,
-        string $permission
+        string $permission,
+        string $scope = 'allow-own'
     ): Response {
         $user = $request->user();
 
@@ -22,19 +23,21 @@ class EnsurePermission
             ], 401);
         }
 
-        $permissions = $user?->role?->permissions ?? [];
+        $permissions = $user->role?->permissions ?? [];
 
-        $allowed = is_array($permissions) && (
-            in_array('*', $permissions, true)
+        if (! is_array($permissions)) {
+            abort(403, 'Anda tidak memiliki izin untuk mengakses resource ini.');
+        }
+
+        $allowed = in_array('*', $permissions, true)
             || in_array($permission, $permissions, true)
-            || in_array($permission . '.own', $permissions, true)
-        );
+            || (
+                $scope === 'allow-own'
+                && in_array($permission . '.own', $permissions, true)
+            );
 
         if (! $allowed) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki izin untuk melakukan tindakan ini.',
-            ], 403);
+            abort(403, 'Anda tidak memiliki izin untuk mengakses resource ini.');
         }
 
         return $next($request);

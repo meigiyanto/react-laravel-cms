@@ -4,12 +4,12 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 
 export type ActiveModule =
-    | 'dashboard'
-    | 'posts'
-    | 'categories'
-    | 'media'
-    | 'pages'
-    | 'users';
+| 'dashboard'
+| 'posts'
+| 'categories'
+| 'media'
+| 'pages'
+| 'users';
 
 type SidebarProps = {
     active: ActiveModule;
@@ -18,42 +18,54 @@ type SidebarProps = {
 
 type SidebarItem = {
     id: ActiveModule;
-    icon: IconDefinition;
     label: string;
+    module: string;
+    icon: IconDefinition;
     permission?: string;
     adminOnly?: boolean;
 };
 
 const items: SidebarItem[] = [
-    { id: 'dashboard', icon: faTachometerAlt, label: 'Dashboard' },
     {
-        id: 'posts',
+        id: "dashboard",
+        label: "Dashboard",
+        module: "dashboard",
+        icon: faTachometerAlt,
+        permission: "posts.view",
+    },
+    {
+        id: "posts",
+        label: "Posts",
+        module: "posts",
         icon: faPaperPlane,
-        label: 'Artikel',
-        permission: 'posts.view',
+        permission: "posts.view",
     },
     {
-        id: 'categories',
+        id: "categories",
+        label: "Categories",
+        module: "categories",
         icon: faTags,
-        label: 'Kategori',
-        permission: 'categories.view',
+        permission: "categories.view",
     },
     {
-        id: 'media',
+        id: "media",
+        label: "Media",
+        module: "media",
         icon: faImages,
-        label: 'Media',
-        permission: 'media.view',
+        permission: "media.view",
     },
     {
-        id: 'pages',
+        id: "pages",
+        label: "Pages",
+        module: "pages",
         icon: faBookOpen,
-        label: 'Halaman',
-        permission: 'pages.view',
+        permission: "pages.view",
     },
     {
-        id: 'users',
+        id: "users",
+        label: "Users & Roles",
+        module: "users",
         icon: faUsers,
-        label: 'Pengguna & Role',
         adminOnly: true,
     },
 ];
@@ -61,13 +73,32 @@ const items: SidebarItem[] = [
 export default function Sidebar({ active, onNavigate }: SidebarProps) {
     const profile = useAuthProfile();
     const loadingProfile = profile === null;
-    
-    const can = (permission: string): boolean => permissions.includes('*') || permissions.includes(permission) || permissions.includes(`${permission}.own`);
+
     const permissions = profile?.permissions ?? [];
     const isAdministrator = profile?.role?.slug === 'administrator';
+    
+    const can = (permission: string): boolean =>
+        permissions.includes('*') ||
+        permissions.includes(permission) ||
+        permissions.includes(`${permission}.own`);
+    
+    const canExact = (permission: string): boolean =>
+        permissions.includes('*') ||
+        permissions.includes(permission);
+    
     const visibleItems = items.filter((item) => {
-        if (item.adminOnly) return isAdministrator;
-        if (!item.permission) return true;
+        if (item.adminOnly) {
+            return isAdministrator;
+        }
+    
+        if (!item.permission) {
+            return item.id === 'dashboard' ? can('posts.view') : true;
+        }
+    
+        if (item.id === 'pages') {
+            return canExact(item.permission);
+        }
+    
         return can(item.permission);
     });
 
@@ -81,23 +112,17 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
                 </div>
             </div>
 
-            <div className="sidebar-label">WORKSPACE</div>
+            <div className="sidebar-label">
+                WORKSPACE
+            </div>
             <nav aria-label="Navigasi utama">
                 {loadingProfile ? (
                     <p className="px-3 text-secondary">
                         Memuat hak akses...
                     </p>
-                ) : (
+                ): (
                     visibleItems.map((item) => (
-                        <button
-                            key={item.id}
-                            type="button"
-                            className={`nav-item ${active === item.id ? 'active' : ''}`}
-                            aria-current={
-                                active === item.id ? 'page' : undefined
-                            }
-                            onClick={() => onNavigate(item.id)}
-                        >
+                        <button key={item.id} type="button" className={`nav-item ${active === item.id ? 'active': ''}`} aria-current={active === item.id ? 'page': undefined } onClick={() => onNavigate(item.id)}>
                             <span aria-hidden="true">
                                 <FontAwesomeIcon icon={item.icon} />
                             </span>
@@ -108,7 +133,9 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
             </nav>
 
             <div className="sidebar-bottom">
-                <div className="sidebar-label">STATUS SISTEM</div>
+                <div className="sidebar-label">
+                    STATUS SISTEM
+                </div>
                 <div className="system-status">
                     <span className="status-dot" />
                     API terhubung
