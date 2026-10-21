@@ -40,7 +40,7 @@ type CommentItem = {
     body: string; 
     created_at: string
 };
-type Page < T > = {
+type Page <T> = {
     data: T[]; 
     current_page: number; 
     last_page: number; 
@@ -209,67 +209,64 @@ export default function PublicSite() {
 
     return (
         <>
-            <header id="header" class="header d-flex align-items-center position-relative">
-        <div class="container position-relative d-flex align-items-center justify-content-between">
-
-            <a href="index" class="logo d-flex align-items-center me-auto me-xl-0">
-                {/* Uncomment the line below if you also wish to use an image logo */}
-                {/* <img src="assets/img/logo.webp" alt="" /> */}
-                <h1 class="sitename">Story</h1>
-            </a>
-
-            <nav id="navmenu" class="navmenu">
-                <ul>
-                    <li><a href="index" class="active">Home</a></li>
-                    <li><a href="about">About</a></li>
-                    <li><a href="category">Category</a></li>
-                    <li><a href="blog-details">Blog Details</a></li>
-                    <li><a href="author-profile">Author Profile</a></li>
-                    <li class="dropdown"><a href="#"><span>Pages</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <header id="header" className="header d-flex align-items-center position-relative">
+                <div className="container position-relative d-flex align-items-center justify-content-between">
+        
+                    <a href="index" className="logo d-flex align-items-center me-auto me-xl-0">
+                        {/* Uncomment the line below if you also wish to use an image logo */}
+                        {/* <img src="assets/img/logo.webp" alt="" /> */}
+                        <h1 className="sitename">Story</h1>
+                    </a>
+        
+                    <nav id="navmenu" className="navmenu">
                         <ul>
+                            <li><a href="index" className="active">Home</a></li>
                             <li><a href="about">About</a></li>
                             <li><a href="category">Category</a></li>
                             <li><a href="blog-details">Blog Details</a></li>
                             <li><a href="author-profile">Author Profile</a></li>
-                            <li><a href="search-results">Search Results</a></li>
-                            <li><a href="404">404 Not Found Page</a></li>
-
-                            <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                            <li className="dropdown"><a href="#"><span>Pages</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
                                 <ul>
-                                    <li><a href="#">Deep Dropdown 1</a></li>
-                                    <li><a href="#">Deep Dropdown 2</a></li>
-                                    <li><a href="#">Deep Dropdown 3</a></li>
-                                    <li><a href="#">Deep Dropdown 4</a></li>
-                                    <li><a href="#">Deep Dropdown 5</a></li>
+                                    <li><a href="about">About</a></li>
+                                    <li><a href="category">Category</a></li>
+                                    <li><a href="blog-details">Blog Details</a></li>
+                                    <li><a href="author-profile">Author Profile</a></li>
+                                    <li><a href="search-results">Search Results</a></li>
+                                    <li><a href="404">404 Not Found Page</a></li>
+        
+                                    <li className="dropdown"><a href="#"><span>Deep Dropdown</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
+                                        <ul>
+                                            <li><a href="#">Deep Dropdown 1</a></li>
+                                            <li><a href="#">Deep Dropdown 2</a></li>
+                                            <li><a href="#">Deep Dropdown 3</a></li>
+                                            <li><a href="#">Deep Dropdown 4</a></li>
+                                            <li><a href="#">Deep Dropdown 5</a></li>
+                                        </ul>
+                                    </li>
                                 </ul>
                             </li>
+                            <li><a href="contact">Contact</a></li>
                         </ul>
-                    </li>
-                    <li><a href="contact">Contact</a></li>
-                </ul>
-                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-            </nav>
+                        <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
+                    </nav>
+        
+                    <div className="header-social-links">
+                        <a href="#">Dashboard</a>
+                    </div>
+        
+                </div>
+            </header>
 
-            <div class="header-social-links">
-                <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
-                <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
-                <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
-                <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
-            </div>
-
-        </div>
-    </header>
-
-            <main class="main">
+            <main className="main">
         
                 {/* Blog Hero Section */}
-                <section id="blog-hero" class="blog-hero section">
+                <section id="blog-hero" className="blog-hero section">
         
-                    <div class="container-fluid p-0" data-aos="fade">
+                    <div className="container-fluid p-0" data-aos="fade">
         
-                        <div class="blog-hero-slider swiper init-swiper">
+                        <div className="blog-hero-slider swiper init-swiper">
                             {/*
-                            <script type="application/json" class="swiper-config">
+                            <script type="application/json" className="swiper-config">
                                 {
                                     "loop": true,
                                     "speed": 1000,
@@ -286,21 +283,21 @@ export default function PublicSite() {
                             </script>
                             */}
         
-                            <div class="swiper-wrapper">
+                            <div className="swiper-wrapper">
         
-                                <div class="swiper-slide">
-                                    <div class="blog-hero-item">
-                                        <img src="assets/img/blog/blog-hero-1.webp" alt="Blog Hero Image" class="img-fluid"/>
-                                        <div class="blog-hero-content">
-                                            <span class="category">Lifestyle</span>
+                                <div className="swiper-slide">
+                                    <div className="blog-hero-item">
+                                        <img src="assets/img/blog/blog-hero-1.webp" alt="Blog Hero Image" className="img-fluid"/>
+                                        <div className="blog-hero-content">
+                                            <span className="category">Lifestyle</span>
                                             <h1>5 Efficient Rules How to Organize Working Place Relationship</h1>
-                                            <div class="meta">
-                                                <span class="author">BY <a href="#">Dary Smith</a></span>
-                                                <span class="date">02 Jan, 2024</span>
-                                                <span class="read-time">3 Minute Read</span>
-                                                <span class="views">1.9k views</span>
+                                            <div className="meta">
+                                                <span className="author">BY <a href="#">Dary Smith</a></span>
+                                                <span className="date">02 Jan, 2024</span>
+                                                <span className="read-time">3 Minute Read</span>
+                                                <span className="views">1.9k views</span>
                                             </div>
-                                            <a href="blog-details" class="read-more">Continue Reading <i class="bi bi-arrow-right"></i></a>
+                                            <a href="blog-details" className="read-more">Continue Reading <i className="bi bi-arrow-right"></i></a>
                                         </div>
                                     </div>
                                 </div>
@@ -309,8 +306,8 @@ export default function PublicSite() {
         
                             </div>
         
-                            <div class="swiper-button-prev"></div>
-                            <div class="swiper-button-next"></div>
+                            <div className="swiper-button-prev"></div>
+                            <div className="swiper-button-next"></div>
         
                         </div>
         
@@ -320,11 +317,11 @@ export default function PublicSite() {
                 {/* /Blog Hero Section */}
         
                 {/* Featured Posts Section */}
-                <section id="featured-posts" class="featured-posts section">
+                <section id="featured-posts" className="featured-posts section">
         
                     {/* Section Title */}
-                    <div class="container section-title" data-aos="fade-up">
-                        <span class="description-title">Featured Posts</span>
+                    <div className="container section-title" data-aos="fade-up">
+                        <span className="description-title">Featured Posts</span>
                         <h2>Featured Posts</h2>
                         <p>
                             Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
@@ -332,11 +329,11 @@ export default function PublicSite() {
                     </div>
                     {/* End Section Title */}
         
-                    <div class="container" data-aos="fade-up" data-aos-delay="100">
+                    <div className="container" data-aos="fade-up" data-aos-delay="100">
         
-                        <div class="blog-posts-slider swiper init-swiper">
+                        <div className="blog-posts-slider swiper init-swiper">
                             {/*
-                            <script type="application/json" class="swiper-config">
+                            <script type="application/json" className="swiper-config">
                                 {
                                     "loop": true,
                                     "speed": 600,
@@ -364,35 +361,35 @@ export default function PublicSite() {
                             </script>
                             */}
         
-                            <div class="swiper-wrapper">
-                                <div class="swiper-slide">
-                                    <article class="blog-card">
-                                        <div class="blog-image">
+                            <div className="swiper-wrapper">
+                                <div className="swiper-slide">
+                                    <article className="blog-card">
+                                        <div className="blog-image">
                                             <img src="assets/img/blog/blog-post-square-3.webp" alt="Blog Image" loading="lazy"/>
-                                            <div class="category-badge">
+                                            <div className="category-badge">
                                                 Technology
                                             </div>
                                         </div>
-                                        <div class="blog-content">
-                                            <div class="author-info">
-                                                <img src="assets/img/person/person-f-8.webp" alt="Author" class="author-avatar"/>
-                                                <div class="author-details">
-                                                    <span class="author-name">Rebecca Martinez</span>
-                                                    <span class="publish-date">February 8, 2025</span>
+                                        <div className="blog-content">
+                                            <div className="author-info">
+                                                <img src="assets/img/person/person-f-8.webp" alt="Author" className="author-avatar"/>
+                                                <div className="author-details">
+                                                    <span className="author-name">Rebecca Martinez</span>
+                                                    <span className="publish-date">February 8, 2025</span>
                                                 </div>
                                             </div>
                                             <h3><a href="#">Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod</a></h3>
                                             <p>
                                                 Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae.
                                             </p>
-                                            <div class="blog-footer">
-                                                <div class="reading-time">
-                                                    <i class="bi bi-clock"></i>
+                                            <div className="blog-footer">
+                                                <div className="reading-time">
+                                                    <i className="bi bi-clock"></i>
                                                     <span>5 min read</span>
                                                 </div>
-                                                <a href="#" class="btn-read-more">
+                                                <a href="#" className="btn-read-more">
                                                     <span>Continue Reading</span>
-                                                    <i class="bi bi-arrow-right"></i>
+                                                    <i className="bi bi-arrow-right"></i>
                                                 </a>
                                             </div>
                                         </div>
@@ -403,7 +400,7 @@ export default function PublicSite() {
         
                             </div>
         
-                            <div class="swiper-pagination"></div>
+                            <div className="swiper-pagination"></div>
                         </div>
         
                     </div>
@@ -412,11 +409,11 @@ export default function PublicSite() {
                 {/* /Featured Posts Section */}
         
                 {/* Category Section Section */}
-                <section id="category-section" class="category-section section">
+                <section id="category-section" className="category-section section">
         
                     {/* Section Title */}
-                    <div class="container section-title" data-aos="fade-up">
-                        <span class="description-title">Category Section</span>
+                    <div className="container section-title" data-aos="fade-up">
+                        <span className="description-title">Category Section</span>
                         <h2>Category Section</h2>
                         <p>
                             Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
@@ -424,97 +421,116 @@ export default function PublicSite() {
                     </div>
                     {/* End Section Title */}
         
-                    <div class="container" data-aos="fade-up" data-aos-delay="100">
+                    <div className="container" data-aos="fade-up" data-aos-delay="100">
                         {/* Main Featured Post */}
-                        <div class="row gy-4 mb-5">
-                            <div class="col-lg-8">
-                                <article class="hero-post" data-aos="zoom-out" data-aos-delay="200">
-                                    <div class="post-img">
-                                        <img src="assets/img/blog/blog-post-5.webp" alt="" class="img-fluid" loading="lazy"/>
+                        <div className="row gy-4 mb-5">
+                            <div className="col-lg-8">
+                                <article className="hero-post" data-aos="zoom-out" data-aos-delay="200">
+                                    <div className="post-img">
+                                        <img src="assets/img/blog/blog-post-5.webp" alt="" className="img-fluid" loading="lazy"/>
                                     </div>
-                                    <div class="post-content">
-                                        <div class="author-info">
-                                            <img src="assets/img/person/person-m-8.webp" alt="" class="author-avatar"/>
-                                            <div class="author-details">
-                                                <span class="author-name">Michael R.</span>
-                                                <span class="post-date">15 March 2024</span>
+                                    <div className="post-content">
+                                        <div className="author-info">
+                                            <img src="assets/img/person/person-m-8.webp" alt="" className="author-avatar"/>
+                                            <div className="author-details">
+                                                <span className="author-name">Michael R.</span>
+                                                <span className="post-date">15 March 2024</span>
                                             </div>
                                         </div>
-                                        <h2 class="post-title">
+                                        <h2 className="post-title">
                                             <a href="blog-details">Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore</a>
                                         </h2>
-                                        <p class="post-excerpt">
+                                        <p className="post-excerpt">
                                             Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
                                         </p>
-                                        <div class="post-stats">
-                                            <span class="read-time"><i class="bi bi-clock"></i> 5 min read</span>
-                                            <span class="comments"><i class="bi bi-chat-dots"></i> 12 comments</span>
+                                        <div className="post-stats">
+                                            <span className="read-time"><i className="bi bi-clock"></i> 5 min read</span>
+                                            <span className="comments"><i className="bi bi-chat-dots"></i> 12 comments</span>
                                         </div>
                                     </div>
                                 </article>
                             </div>
         
-                            <div class="col-lg-4">
-                                <div class="sidebar-posts">
-                                    <article class="sidebar-post" data-aos="fade-left" data-aos-delay="300">
-                                        <div class="post-img">
-                                            <img src="assets/img/blog/blog-post-8.webp" alt="" class="img-fluid" loading="lazy"/>
+                            <div className="col-lg-4">
+                                <div className="sidebar-posts">
+                                    
+                                    <article className="sidebar-post" data-aos="fade-left" data-aos-delay="300">
+                                        <div className="post-img">
+                                            <img src="assets/img/blog/blog-post-8.webp" alt="" className="img-fluid" loading="lazy"/>
                                         </div>
-                                        <div class="post-content">
-                                            <span class="post-category">Design</span>
-                                            <h4 class="title">
+                                        <div className="post-content">
+                                            <span className="post-category">Design</span>
+                                            <h4 className="title">
                                                 <a href="blog-details">Neque porro quisquam est qui dolorem ipsum quia dolor sit amet</a>
                                             </h4>
-                                            <div class="post-meta">
-                                                <span class="post-date">22 February 2024</span>
+                                            <div className="post-meta">
+                                                <span className="post-date">22 February 2024</span>
                                             </div>
                                         </div>
                                     </article>
+                                    
                                 </div>
                             </div>
                         </div>
-        
-                        {/* Grid Posts */}
-                        <div class="posts-grid">
-                            <div class="row gy-4">
-                                <div class="col-md-6" data-aos="fade-up" data-aos-delay="200">
-                                    <article class="grid-post">
-                                        <div class="post-img">
-                                            <img src="assets/img/blog/blog-post-6.webp" alt="" class="img-fluid" loading="lazy"/>
-                                            <div class="post-overlay">
-                                                <span class="category-tag">Travel</span>
-                                            </div>
-                                        </div>
-                                        <div class="post-content">
-                                            <h3 class="title">
-                                                <a href="blog-details">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum</a>
-                                            </h3>
-                                            <p class="excerpt">
-                                                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.
-                                            </p>
-                                            <div class="post-footer">
-                                                <div class="author-info">
-                                                    <img src="assets/img/person/person-f-7.webp" alt="" class="author-img"/>
-                                                    <span class="author-name">Sarah K.</span>
+                        
+                        {loading ? (
+                            <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
+                        ) : posts?.data.length ? (
+                            <div className="posts-grid">
+                                <div className="row gy-4">
+                                {posts.data.map((item, index) => (
+                                    <div className="col-md-6" data-aos="fade-up" data-aos-delay="200">
+                                        <article className="grid-post">
+                                            <div className="post-img">
+                                                {item.featured_image && imageUrl(item.featured_image) ? (
+                                                    <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} className="img-fluid" loading="lazy" /> 
+                                                ) : (
+                                                    <span className={`post-image-placeholder placeholder-${index % 4}`}><span>JURNAL<br />IDE</span><b>✳</b></span>
+                                                )}
+                                                <div className="post-overlay">
+                                                    <span className="category-tag">{item.categories[0]?.name || 'Artikel'}</span>
                                                 </div>
-                                                <span class="read-time">3 min read</span>
                                             </div>
-                                        </div>
-                                    </article>
+                                            
+                                            <div className="post-content">
+                                                <h3 className="title">
+                                                    <button className="btn btn-outline-light" onClick={() => navigate(`/artikel/${encodeURIComponent(item.slug)}`)}>{item.title}</button>
+                                                </h3>
+                                                <p className="excerpt">{excerpt(item)}</p>
+                                                <div className="post-footer">
+                                                    <div className="author-info">
+                                                        <img src="assets/img/person/person-f-7.webp" alt="" className="author-img"/>
+                                                        <span className="author-name">Sarah K.</span>
+                                                    </div>
+                                                    {/* <span className="read-time">3 min read</span> */}
+                                                    <time>{dateLabel(item.published_at || item.created_at)}</time>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                ))}
                                 </div>
                             </div>
-                        </div>
+                        ) : !error ? (
+                            <div className="public-empty">
+                                <span>✳</span>
+                                <h3>Belum ada artikel untuk ditampilkan</h3>
+                                <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
+                            </div>
+                            ) : null
+                        }
+                        
                     </div>
         
                 </section>
                 {/* /Category Section Section */}
         
                 {/* Latest Posts Section */}
-                <section id="latest-posts" class="latest-posts section">
+                <section id="latest-posts" className="latest-posts section">
         
                     {/* Section Title */}
-                    <div class="container section-title" data-aos="fade-up">
-                        <span class="description-title">Latest Posts</span>
+                    <div className="container section-title" data-aos="fade-up">
+                        <span className="description-title">Latest Posts</span>
                         <h2>Latest Posts</h2>
                         <p>
                             Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
@@ -522,60 +538,60 @@ export default function PublicSite() {
                     </div>
                     {/* End Section Title */}
         
-                    <div class="container" data-aos="fade-up" data-aos-delay="100">
+                    <div className="container" data-aos="fade-up" data-aos-delay="100">
         
-                        <div class="row gy-4 align-items-stretch">
+                        <div className="row gy-4 align-items-stretch">
         
-                            <div class="col-lg-7" data-aos="zoom-in" data-aos-delay="150">
-                                <article class="featured-post position-relative h-100">
-                                    <figure class="featured-media m-0">
-                                        <img src="assets/img/blog/blog-hero-4.webp" alt="Featured post image" class="img-fluid w-100" loading="lazy"/>
+                            <div className="col-lg-7" data-aos="zoom-in" data-aos-delay="150">
+                                <article className="featured-post position-relative h-100">
+                                    <figure className="featured-media m-0">
+                                        <img src="assets/img/blog/blog-hero-4.webp" alt="Featured post image" className="img-fluid w-100" loading="lazy"/>
                                     </figure>
         
-                                    <div class="featured-content">
-                                        <div class="date-badge">
-                                            <span class="day">12</span>
-                                            <span class="mon">Dec</span>
+                                    <div className="featured-content">
+                                        <div className="date-badge">
+                                            <span className="day">12</span>
+                                            <span className="mon">Dec</span>
                                         </div>
         
-                                        <span class="cat-badge inverse">Politics</span>
+                                        <span className="cat-badge inverse">Politics</span>
         
-                                        <h3 class="title">Veritatis maiores natus officiis sit, temporibus alias dicta voluptatum</h3>
-                                        <p class="excerpt d-none d-md-block">
+                                        <h3 className="title">Veritatis maiores natus officiis sit, temporibus alias dicta voluptatum</h3>
+                                        <p className="excerpt d-none d-md-block">
                                             Quisquam perferendis officiis incidunt, facilisis aliquet consectetur lorem luctus. Ullamco laboris nisi ut aliquip ex ea commodo consequat.
                                         </p>
         
-                                        <div class="meta d-flex align-items-center gap-3">
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-person"></i><span class="ps-2">Jane Cooper</span>
+                                        <div className="meta d-flex align-items-center gap-3">
+                                            <div className="d-flex align-items-center">
+                                                <i className="bi bi-person"></i><span className="ps-2">Jane Cooper</span>
                                             </div>
-                                            <span class="sep">/</span>
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-folder2"></i><span class="ps-2">Editorial</span>
+                                            <span className="sep">/</span>
+                                            <div className="d-flex align-items-center">
+                                                <i className="bi bi-folder2"></i><span className="ps-2">Editorial</span>
                                             </div>
                                         </div>
         
-                                        <a href="blog-details" class="readmore stretched-link"><span>Continue</span><i class="bi bi-arrow-right"></i></a>
+                                        <a href="blog-details" className="readmore stretched-link"><span>Continue</span><i className="bi bi-arrow-right"></i></a>
                                     </div>
                                 </article>
                             </div>
                             {/* End Featured Post */}
         
-                            <div class="col-lg-5">
-                                <div class="row gy-4">
-                                    <div class="col-12" data-aos="fade-left" data-aos-delay="200">
-                                        <article class="compact-post h-100">
-                                            <div class="thumb">
-                                                <img src="assets/img/blog/blog-post-square-2.webp" class="img-fluid" alt="Post thumbnail" loading="lazy"/>
+                            <div className="col-lg-5">
+                                <div className="row gy-4">
+                                    <div className="col-12" data-aos="fade-left" data-aos-delay="200">
+                                        <article className="compact-post h-100">
+                                            <div className="thumb">
+                                                <img src="assets/img/blog/blog-post-square-2.webp" className="img-fluid" alt="Post thumbnail" loading="lazy"/>
                                             </div>
-                                            <div class="content">
-                                                <div class="meta">
-                                                    <span class="date">05 Aug</span>
-                                                    <span class="dot">•</span>
-                                                    <span class="category">Sports</span>
+                                            <div className="content">
+                                                <div className="meta">
+                                                    <span className="date">05 Aug</span>
+                                                    <span className="dot">•</span>
+                                                    <span className="category">Sports</span>
                                                 </div>
-                                                <h4 class="title">Officia recusandae cumque, dolore asperiores ducimus</h4>
-                                                <a href="blog-details" class="readmore"><span>Read Article</span><i class="bi bi-arrow-right"></i></a>
+                                                <h4 className="title">Officia recusandae cumque, dolore asperiores ducimus</h4>
+                                                <a href="blog-details" className="readmore"><span>Read Article</span><i className="bi bi-arrow-right"></i></a>
                                             </div>
                                         </article>
                                     </div>
@@ -586,20 +602,20 @@ export default function PublicSite() {
                             </div>
                             {/* End Right Column */}
         
-                            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-                                <article class="card-post h-100">
-                                    <div class="post-img position-relative overflow-hidden">
-                                        <img src="assets/img/blog/blog-post-2.webp" class="img-fluid w-100" alt="Post image" loading="lazy"/>
+                            <div className="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                                <article className="card-post h-100">
+                                    <div className="post-img position-relative overflow-hidden">
+                                        <img src="assets/img/blog/blog-post-2.webp" className="img-fluid w-100" alt="Post image" loading="lazy"/>
                                     </div>
-                                    <div class="content">
-                                        <div class="meta d-flex align-items-center flex-wrap gap-2">
-                                            <span class="cat-badge">Economics</span>
-                                            <div class="d-flex align-items-center ms-auto">
-                                                <i class="bi bi-person"></i><span class="ps-2">Robert Fox</span>
+                                    <div className="content">
+                                        <div className="meta d-flex align-items-center flex-wrap gap-2">
+                                            <span className="cat-badge">Economics</span>
+                                            <div className="d-flex align-items-center ms-auto">
+                                                <i className="bi bi-person"></i><span className="ps-2">Robert Fox</span>
                                             </div>
                                         </div>
-                                        <h3 class="title">Quam impedit minus, cumque aliquam deleniti inventore</h3>
-                                        <a href="blog-details" class="readmore"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+                                        <h3 className="title">Quam impedit minus, cumque aliquam deleniti inventore</h3>
+                                        <a href="blog-details" className="readmore"><span>Read More</span><i className="bi bi-arrow-right"></i></a>
                                     </div>
                                 </article>
                             </div>
@@ -615,54 +631,54 @@ export default function PublicSite() {
         
             </main>
         
-            <footer id="footer" class="footer position-relative light-background">
+            <footer id="footer" className="footer position-relative light-background">
         
-                <div class="container">
-                    <div class="row gy-5">
+                <div className="container">
+                    <div className="row gy-5">
         
-                        <div class="col-lg-4">
-                            <div class="footer-brand">
-                                <a href="index" class="logo d-flex align-items-center mb-3">
-                                    <span class="sitename">Story</span>
+                        <div className="col-lg-4">
+                            <div className="footer-brand">
+                                <a href="index" className="logo d-flex align-items-center mb-3">
+                                    <span className="sitename">Story</span>
                                 </a>
-                                <p class="tagline">
+                                <p className="tagline">
                                     Innovating the digital landscape with elegant solutions and timeless design.
                                 </p>
         
-                                <div class="social-links mt-4">
-                                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-                                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-                                    <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
-                                    <a href="#" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
-                                    <a href="#" aria-label="Dribbble"><i class="bi bi-dribbble"></i></a>
+                                <div className="social-links mt-4">
+                                    <a href="#" aria-label="Facebook"><i className="bi bi-facebook"></i></a>
+                                    <a href="#" aria-label="Instagram"><i className="bi bi-instagram"></i></a>
+                                    <a href="#" aria-label="LinkedIn"><i className="bi bi-linkedin"></i></a>
+                                    <a href="#" aria-label="Twitter"><i className="bi bi-twitter-x"></i></a>
+                                    <a href="#" aria-label="Dribbble"><i className="bi bi-dribbble"></i></a>
                                 </div>
                             </div>
                         </div>
         
-                        <div class="col-lg-6">
-                            <div class="footer-links-grid">
-                                <div class="row">
-                                    <div class="col-6 col-md-4">
+                        <div className="col-lg-6">
+                            <div className="footer-links-grid">
+                                <div className="row">
+                                    <div className="col-6 col-md-4">
                                         <h5>Company</h5>
-                                        <ul class="list-unstyled">
+                                        <ul className="list-unstyled">
                                             <li><a href="#">About Us</a></li>
                                             <li><a href="#">Our Team</a></li>
                                             <li><a href="#">Careers</a></li>
                                             <li><a href="#">Newsroom</a></li>
                                         </ul>
                                     </div>
-                                    <div class="col-6 col-md-4">
+                                    <div className="col-6 col-md-4">
                                         <h5>Services</h5>
-                                        <ul class="list-unstyled">
+                                        <ul className="list-unstyled">
                                             <li><a href="#">Web Development</a></li>
                                             <li><a href="#">UI/UX Design</a></li>
                                             <li><a href="#">Digital Strategy</a></li>
                                             <li><a href="#">Branding</a></li>
                                         </ul>
                                     </div>
-                                    <div class="col-6 col-md-4">
+                                    <div className="col-6 col-md-4">
                                         <h5>Support</h5>
-                                        <ul class="list-unstyled">
+                                        <ul className="list-unstyled">
                                             <li><a href="#">Help Center</a></li>
                                             <li><a href="#">Contact Us</a></li>
                                             <li><a href="#">Privacy Policy</a></li>
@@ -673,25 +689,25 @@ export default function PublicSite() {
                             </div>
                         </div>
         
-                        <div class="col-lg-2">
-                            <div class="footer-cta">
+                        <div className="col-lg-2">
+                            <div className="footer-cta">
                                 <h5>Let's Connect</h5>
-                                <a href="contact" class="btn btn-outline">Get in Touch</a>
+                                <a href="contact" className="btn btn-outline">Get in Touch</a>
                             </div>
                         </div>
         
                     </div>
                 </div>
         
-                <div class="footer-bottom">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="footer-bottom-content">
-                                    <p class="mb-0">
+                <div className="footer-bottom">
+                    <div className="container">
+                        <div className="row">
+                            <div className="col-12">
+                                <div className="footer-bottom-content">
+                                    <p className="mb-0">
                                         © <strong>Story</strong>. All rights reserved.
                                     </p>
-                                    <div class="credits">
+                                    <div className="credits">
                                         {/* All the links in the footer should remain intact. */}
                                         {/* You can delete the links only if you've purchased the pro version. */}
                                         {/* Licensing information: https://bootstrapmade.com/license/ */}
@@ -707,7 +723,7 @@ export default function PublicSite() {
             </footer>
         
             {/* Scroll Top */}
-            <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+            <a href="#" id="scroll-top" className="scroll-top d-flex align-items-center justify-content-center"><i className="bi bi-arrow-up-short"></i></a>
         
             {/* 
             Preloader

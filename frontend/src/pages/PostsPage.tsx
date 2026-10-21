@@ -569,261 +569,257 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                         </div>
     
                         <form onSubmit={savePost}>
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-title">Judul artikel *</label>
-                                <input
-                                    id="post-title"
-                                    className="form-control"
-                                    required
-                                    maxLength={255}
-                                    value={form.title}
-                                    onChange={(event) => setForm({
-                                        ...form, title: event.target.value,
-                                    })}
-                                />
-                            </div>
-    
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-slug">Slug (opsional)</label>
-                                <input
-                                    id="post-slug"
-                                    className="form-control"
-                                    maxLength={255}
-                                    placeholder="Dibuat otomatis jika kosong"
-                                    value={form.slug}
-                                    onChange={(event) => setForm({
-                                        ...form, slug: event.target.value,
-                                    })}
-                                />
-                            </div>
-                            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-excerpt">Ringkasan</label>
-                                <textarea
-                                    id="post-excerpt"
-                                    className="form-control"
-                                    rows={2}
-                                    value={form.excerpt}
-                                    onChange={(event) => setForm({
-                                        ...form, excerpt: event.target.value,
-                                    })}
-                                />
-                            </div>
-            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-body">Isi artikel *</label>
-                                <Suspense
-                                    fallback={
-                                        <div className="form-control py-3" role="status">
-                                            Memuat editor artikel...
-                                        </div>
-                                    }
-                                >
-                                    <RichTextEditor
-                                        value={form.body}
-                                        onChange={(html) => {
-                                            setForm((current) => ({
-                                                ...current,
-                                                body: html,
-                                            }));
-                                
-                                            setFieldErrors((current) => {
-                                                const remaining = { ...current };
-                                                delete remaining.body;
-                                                return remaining;
-                                            });
-                                        }}
-                                        mediaItems={mediaItems}
-                                        disabled={saving}
-                                    />
-                                </Suspense>
-
-                                <small className="text-muted d-block mt-2">
-                                    Gunakan toolbar untuk heading, format teks, tautan, daftar,
-                                    dan gambar. Unggah gambar terlebih dahulu melalui menu Media
-                                    agar dapat dipilih dari Media Library.
-                                </small>
-                            </div>
-                            
-                            <div className="mb-4">
-                                <label className="form-label" htmlFor="post-status">Status *</label>
-                                <select
-                                    id="post-status"
-                                    className="form-select"
-                                    value={form.status}
-                                    onChange={(event) => setForm({
-                                        ...form,
-                                        status: event.target.value as Status,
-                                    })}
-                                >
-                                    <option value="draft">Draf</option>
-                                    <option value="published">Dipublikasikan</option>
-                                    <option value="archived">Diarsipkan</option>
-                                </select>
-                            </div>
-                            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-categories">Kategori</label>
-                                <select
-                                    id="post-categories"
-                                    className="form-select"
-                                    multiple
-                                    size={Math.min(Math.max(categories.length, 2), 6)}
-                                    disabled={loadingOptions}
-                                    value={form.category_ids.map(String)}
-                                    onChange={(event) => {
-                                        setForm({
-                                            ...form,
-                                            category_ids: Array.from(event.currentTarget.selectedOptions, (option) => Number(option.value))
-                                        });
-                                    }}
-                                >
-                                    {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <small className="text-muted">
-                                    Pilih satu atau beberapa kategori. Gunakan Ctrl atau Cmd
-                                    untuk memilih beberapa opsi pada desktop.
-                                </small>
-                                {fieldErrors.category_ids && (
-                                    <div className="text-danger small">
-                                        {fieldErrors.category_ids}
+                            <div className="row">
+                                <div className="col-md-8">
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-title">Judul artikel *</label>
+                                        <input
+                                            id="post-title"
+                                            className="form-control"
+                                            required
+                                            maxLength={255}
+                                            value={form.title}
+                                            onChange={(event) => setForm({
+                                                ...form, title: event.target.value,
+                                            })}
+                                        />
                                     </div>
-                                )}
-                            </div>
-                            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-tags">Tag</label>
-                                <select
-                                    id="post-tags"
-                                    className="form-select"
-                                    multiple
-                                    size={Math.min(Math.max(tags.length, 2), 6)}
-                                    disabled={loadingOptions}
-                                    value={form.tag_ids.map(String)}
-                                    onChange={(event) => {
-                                        setForm({
-                                            ...form,
-                                            tag_ids: Array.from(
-                                                event.currentTarget.selectedOptions,
-                                                (option) => Number(option.value),
-                                            ),
-                                        });
-                                    }}
-                                >
-                                    {tags.map((tag) => (
-                                        <option key={tag.id} value={tag.id}>
-                                            {tag.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {fieldErrors.tag_ids && (
-                                    <div className="text-danger small">
-                                        {fieldErrors.tag_ids}
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-slug">Slug (opsional)</label>
+                                        <input
+                                            id="post-slug"
+                                            className="form-control"
+                                            maxLength={255}
+                                            placeholder="Dibuat otomatis jika kosong"
+                                            value={form.slug}
+                                            onChange={(event) => setForm({
+                                                ...form, slug: event.target.value,
+                                            })}
+                                        />
                                     </div>
-                                )}
-                            </div>
-                            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-featured-image">Gambar unggulan</label>
-                                <select
-                                    id="post-featured-image"
-                                    className="form-select"
-                                    value={form.featured_image_id}
-                                    disabled={loadingOptions}
-                                    onChange={(event) => setForm({
-                                        ...form,
-                                        featured_image_id: event.target.value,
-                                    })}
-                                >
-                                    <option value="">Tanpa gambar unggulan</option>
-                                    {mediaItems.map((media) => (
-                                        <option key={media.id} value={media.id}>
-                                            {media.original_name}
-                                            {media.alt_text ? ` — ${media.alt_text}` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            
-                                {form.featured_image_id && (
-                                    <div className="mt-3">
-                                        {(() => {
-                                            const selected = mediaItems.find((media) => String(media.id) === form.featured_image_id,);
-                            
-                                            return selected ? (
-                                                <img
-                                                    src={getMediaUrl(selected)}
-                                                    alt={selected.alt_text || selected.original_name}
-                                                    className="img-thumbnail"
-                                                    style={{
-                                                        maxWidth: '240px',
-                                                        maxHeight: '180px',
-                                                        objectFit: 'contain',
-                                                    }}
-                                                    onError={(event) => {
-                                                        event.currentTarget.style.display = 'none';
-                                                    }}
-                                                />
-                                            ) : null;
-                                        })()}
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-excerpt">Ringkasan</label>
+                                        <textarea
+                                            id="post-excerpt"
+                                            className="form-control"
+                                            rows={2}
+                                            value={form.excerpt}
+                                            onChange={(event) => setForm({
+                                                ...form, excerpt: event.target.value,
+                                            })}
+                                        />
                                     </div>
-                                )}
-                            
-                                {fieldErrors.featured_image_id && (
-                                    <div className="text-danger small">
-                                        {fieldErrors.featured_image_id}
-                                    </div>
-                                )}
-                            </div>
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-body">Isi artikel *</label>
+                                        <Suspense
+                                            fallback={
+                                                <div className="form-control py-3" role="status">
+                                                    Memuat editor artikel...
+                                                </div>
+                                            }
+                                        >
+                                            <RichTextEditor
+                                                value={form.body}
+                                                onChange={(html) => {
+                                                    setForm((current) => ({
+                                                        ...current,
+                                                        body: html,
+                                                    }));
+                                        
+                                                    setFieldErrors((current) => {
+                                                        const remaining = { ...current };
+                                                        delete remaining.body;
+                                                        return remaining;
+                                                    });
+                                                }}
+                                                mediaItems={mediaItems}
+                                                disabled={saving}
+                                            />
+                                        </Suspense>
         
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-meta-title">Meta title</label>
-                                <input
-                                    id="post-meta-title"
-                                    className="form-control"
-                                    maxLength={255}
-                                    value={form.meta_title}
-                                    onChange={(event) => setForm({
-                                        ...form,
-                                        meta_title: event.target.value,
-                                    })}
-                                />
-                                <small className="text-muted">
-                                    {form.meta_title.length}/255 karakter
-                                </small>
-                                {fieldErrors.meta_title && (
-                                    <div className="text-danger small">
-                                        {fieldErrors.meta_title}
+                                        <small className="text-muted d-block mt-2">
+                                            Gunakan toolbar untuk heading, format teks, tautan, daftar,
+                                            dan gambar. Unggah gambar terlebih dahulu melalui menu Media
+                                            agar dapat dipilih dari Media Library.
+                                        </small>
                                     </div>
-                                )}
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="post-meta-description">Meta description</label>
-                                <textarea
-                                    id="post-meta-description"
-                                    className="form-control"
-                                    rows={3}
-                                    maxLength={500}
-                                    value={form.meta_description}
-                                    onChange={(event) => setForm({
-                                        ...form,
-                                        meta_description: event.target.value,
-                                    })}
-                                />
-                                <small className="text-muted">
-                                    {form.meta_description.length}/500 karakter
-                                </small>
-                                {fieldErrors.meta_description && (
-                                    <div className="text-danger small">
-                                        {fieldErrors.meta_description}
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-featured-image">Gambar unggulan</label>
+                                        <select
+                                            id="post-featured-image"
+                                            className="form-select"
+                                            value={form.featured_image_id}
+                                            disabled={loadingOptions}
+                                            onChange={(event) => setForm({
+                                                ...form,
+                                                featured_image_id: event.target.value,
+                                            })}
+                                        >
+                                            <option value="">Tanpa gambar unggulan</option>
+                                            {mediaItems.map((media) => (
+                                                <option key={media.id} value={media.id}>
+                                                    {media.original_name}
+                                                    {media.alt_text ? ` — ${media.alt_text}` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    
+                                        {form.featured_image_id && (
+                                            <div className="mt-3">
+                                                {(() => {
+                                                    const selected = mediaItems.find((media) => String(media.id) === form.featured_image_id,);
+                                    
+                                                    return selected ? (
+                                                        <img
+                                                            src={getMediaUrl(selected)}
+                                                            alt={selected.alt_text || selected.original_name}
+                                                            className="img-thumbnail"
+                                                            style={{
+                                                                maxWidth: '240px',
+                                                                maxHeight: '180px',
+                                                                objectFit: 'contain',
+                                                            }}
+                                                            onError={(event) => {
+                                                                event.currentTarget.style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : null;
+                                                })()}
+                                            </div>
+                                        )}
+                                    
+                                        {fieldErrors.featured_image_id && (
+                                            <div className="text-danger small">
+                                                {fieldErrors.featured_image_id}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-meta-title">Meta title</label>
+                                        <input
+                                            id="post-meta-title"
+                                            className="form-control"
+                                            maxLength={255}
+                                            value={form.meta_title}
+                                            onChange={(event) => setForm({
+                                                ...form,
+                                                meta_title: event.target.value,
+                                            })}
+                                        />
+                                        <small className="text-muted">
+                                            {form.meta_title.length}/255 karakter
+                                        </small>
+                                        {fieldErrors.meta_title && (
+                                            <div className="text-danger small">
+                                                {fieldErrors.meta_title}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-meta-description">Meta description</label>
+                                        <textarea
+                                            id="post-meta-description"
+                                            className="form-control"
+                                            rows={3}
+                                            maxLength={500}
+                                            value={form.meta_description}
+                                            onChange={(event) => setForm({
+                                                ...form,
+                                                meta_description: event.target.value,
+                                            })}
+                                        />
+                                        <small className="text-muted">
+                                            {form.meta_description.length}/500 karakter
+                                        </small>
+                                        {fieldErrors.meta_description && (
+                                            <div className="text-danger small">
+                                                {fieldErrors.meta_description}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="col-md-4">
+                                    <div className="mb-4">
+                                        <label className="form-label" htmlFor="post-status">Status *</label>
+                                        <select
+                                            id="post-status"
+                                            className="form-select"
+                                            value={form.status}
+                                            onChange={(event) => setForm({
+                                                ...form,
+                                                status: event.target.value as Status,
+                                            })}
+                                        >
+                                            <option value="draft">Draf</option>
+                                            <option value="published">Dipublikasikan</option>
+                                            <option value="archived">Diarsipkan</option>
+                                        </select>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-categories">Kategori</label>
+                                        <select
+                                            id="post-categories"
+                                            className="form-select"
+                                            multiple
+                                            size={Math.min(Math.max(categories.length, 2), 6)}
+                                            disabled={loadingOptions}
+                                            value={form.category_ids.map(String)}
+                                            onChange={(event) => {
+                                                setForm({
+                                                    ...form,
+                                                    category_ids: Array.from(event.currentTarget.selectedOptions, (option) => Number(option.value))
+                                                });
+                                            }}
+                                        >
+                                            {categories.map((category) => (
+                                                <option key={category.id} value={category.id}>
+                                                    {category.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <small className="text-muted">
+                                            Pilih satu atau beberapa kategori. Gunakan Ctrl atau Cmd
+                                            untuk memilih beberapa opsi pada desktop.
+                                        </small>
+                                        {fieldErrors.category_ids && (
+                                            <div className="text-danger small">
+                                                {fieldErrors.category_ids}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="post-tags">Tag</label>
+                                        <select
+                                            id="post-tags"
+                                            className="form-select"
+                                            multiple
+                                            size={Math.min(Math.max(tags.length, 2), 6)}
+                                            disabled={loadingOptions}
+                                            value={form.tag_ids.map(String)}
+                                            onChange={(event) => {
+                                                setForm({
+                                                    ...form,
+                                                    tag_ids: Array.from(
+                                                        event.currentTarget.selectedOptions,
+                                                        (option) => Number(option.value),
+                                                    ),
+                                                });
+                                            }}
+                                        >
+                                            {tags.map((tag) => (
+                                                <option key={tag.id} value={tag.id}>
+                                                    {tag.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {fieldErrors.tag_ids && (
+                                            <div className="text-danger small">
+                                                {fieldErrors.tag_ids}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-
                             <div className="modal-actions">
                                 <button
                                     type="button"

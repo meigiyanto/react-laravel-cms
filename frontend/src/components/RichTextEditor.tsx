@@ -70,6 +70,10 @@ mediaItems = [], disabled = false }: Props) {
         content: value || '',
         editable: !disabled,
         onUpdate: ({ editor: currentEditor }) => {
+            if (currentEditor.isDestroyed || !currentEditor.schema) {
+                return;
+            }
+        
             onChange(currentEditor.getHTML());
         },
         editorProps: {
@@ -81,10 +85,14 @@ mediaItems = [], disabled = false }: Props) {
     });
 
     useEffect(() => {
-        if (!editor) return;
-
+        if (!editor || editor.isDestroyed || !editor.schema) {
+            return;
+        }
+    
         // Jangan memindahkan kursor jika konten sudah sama.
-        if (editor.getHTML() !== (value || '')) {
+        const currentHTML = editor.getHTML();
+    
+        if (currentHTML !== (value || '')) {
             editor.commands.setContent(value || '', {
                 emitUpdate: false,
             });

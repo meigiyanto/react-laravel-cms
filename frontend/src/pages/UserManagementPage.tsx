@@ -70,7 +70,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
         setLoading(true);
         setError('');
         try {
-            const response = await api.get<UserListResponse>('/users', {
+            const response = await api.get<UserListResponse>('/admin/users', {
                 params: { page, per_page: 100, search: search.trim() || undefined },
             });
             const result = response.data;
@@ -104,7 +104,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
     
         async function loadRoles() {
             try {
-                const response = await api.get<RolesResponse>('/roles');
+                const response = await api.get<RolesResponse>('/admin/roles');
     
                 if (!cancelled) {
                     setRoles(
@@ -155,12 +155,12 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
         setNotice('');
         try {
             if (editing) {
-                await api.put(`/users/${editing.id}`, {
+                await api.put(`/admin/users/${editing.id}`, {
                     name: form.name.trim(),
                     email: form.email.trim(),
                 });
                 if (form.role_id && Number(form.role_id) !== editing.role?.id) {
-                    await api.put(`/users/${editing.id}/role`, { role_id: Number(form.role_id) });
+                    await api.put(`/admin/users/${editing.id}/role`, { role_id: Number(form.role_id) });
                 }
                 setNotice('Data pengguna berhasil diperbarui.');
             } else {
