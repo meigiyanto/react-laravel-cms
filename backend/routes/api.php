@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PageController;
+use App\Http\Controllers\Api\PublicPostController;
 use App\Models\Tag;
 
 
@@ -20,21 +21,18 @@ Route::get('/health', function () {
     ]);
 });
 
-Route::post('/auth/login', [AuthController::class, 'login'])
-    ->middleware('throttle:10,1');
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+
+Route::prefix('public')->group(function () {
+    Route::get('/posts', [PublicPostController::class, 'index']);
+    Route::get('/posts/{slug}', [PublicPostController::class, 'show']);
+    Route::get('/posts/{slug}/comments', [PublicPostController::class, 'comments']);
+    Route::post('/posts/{slug}/comments', [PublicPostController::class, 'storeComment'])->middleware('throttle:5,1');
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
-
-    // USER && ROLE
-    Route::middleware('administrator')->group(function () {
-        Route::get('/roles', [RoleController::class, 'index']);
-        Route::get('/users', [UserController::class, 'index']);
-        Route::post('/users', [UserController::class, 'store']);
-        Route::put('/users/{id}', [UserController::class, 'update']);
-        Route::put('/users/{id}/role', [UserController::class, 'assignRole']);
-    });
 
     Route::get('/dashboard/stats', [PostController::class, 'stats'])->middleware('permission:posts.view');
 
@@ -76,15 +74,18 @@ Route::middleware('auth:sanctum')->group(function () {
             'data' => Tag::query()->orderBy('name')->get(['id', 'name', 'slug']),
         ]);
     })->middleware('permission:tags.view');
-
+    
+    // USER && ROLE
     // Manajemen pengguna: pertahankan grup administrator yang sudah ada.
-    Route::middleware('administrator')->group(function () {
+    Route::middleware('administrator')->prefix('admin')->group(function () {
+        Route::get('/roles', [RoleController::class, 'index']);
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{id}', [UserController::class, 'update']);
-        Route::put('/users/{id}/role', [
-            UserController::class, 'assignRole',
-        ]);
+        Route::put('/users/{id}/role', [UserController::class, 'assignRole']);
+
+        Route::get('/comments', [PublicPostController::class, 'moderateIndex']);
+        Route::patch('/comments/{comment}/status', [PublicPostController::class, 'moderateUpdate']);
     });
 });
 

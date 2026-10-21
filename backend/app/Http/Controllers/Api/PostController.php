@@ -47,7 +47,6 @@ class PostController extends Controller
         ]);
     }
 
-
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -299,5 +298,81 @@ class PostController extends Controller
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+    
+    public function comments(string $slug): JsonResponse
+    {
+        $post = Post::query()
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->firstOrFail();
+
+        $comments = $post->comments()
+            ->where('status', 'approved')
+            ->latest()
+            ->paginate(20, ['id', 'post_id', 'name', 'body', 'created_at'], 'page');
+
+        return response()->json(['success' => true, 'data' => $comments]);
+    }
+
+    public function storeComment(Request $request, string $slug): JsonResponse
+    {
+        $post = Post::query()
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:80'],
+            'email' => ['required', 'email:rfc', 'max:254'],
+            'body' => ['required', 'string', 'min:3', 'max:3000'],
+            // Honeypot field: real users leave it blank.
+            'website' => ['nullable', 'prohibited'],
+        ]);
+
+        $comment = $post->comments()->create([
+            'user_id' => $request->user()?->id,
+            'name' => trim($validated['name']),
+            'email' => Str::lower(trim($validated['email'])),
+            'body' => trim($validated['body']),
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Komentar diterima dan menunggu moderasi admin.',
+            'data' => ['id' => $comment->id, 'status' => $comment->status],
+        ], 201);
+    }
+
+    public function moderateIndex(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => ['sometimes', 'in:pending,approved,rejected'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+
+        $comments = Comment::query()
+            ->with(['post:id,title,slug', 'user:id,name'])
+            ->when(isset($validated['status']), fn ($query) => $query->where('status', $validated['status']))
+            ->latest()
+            ->paginate(20);
+
+        return response()->json(['success' => true, 'data' => $comments]);
+    }
+
+    public function moderateUpdate(Request $request, Comment $comment): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:approved,rejected,pending'],
+        ]);
+
+        $comment->update(['status' => $validated['status']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status komentar berhasil diperbarui.',
+            'data' => $comment->only(['id', 'post_id', 'status']),
+        ]);
     }
 }

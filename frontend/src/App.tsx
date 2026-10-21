@@ -8,11 +8,17 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const PostsPage = lazy(() => import('./pages/PostsPage'));
 const UserManagementPage = lazy(() => import('./pages/UserManagementPage'));
 import LoginPage from './pages/LoginPage';
+import PublicSite from './pages/PublicSite';
 import type { ActiveModule } from './components/Sidebar';
 
 import 'bootstrap-icons/font/bootstrap-icons.min.css';
 
 function App() {
+    const pathname = window.location.pathname;
+    if (!pathname.startsWith('/admin') && pathname !== '/login') {
+        return <PublicSite />;
+    }
+    
     const [authenticated, setAuthenticated] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
     const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
