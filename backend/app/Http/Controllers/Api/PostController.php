@@ -157,11 +157,11 @@ class PostController extends Controller
         ], 201);
     }
 
-    public function show(Request $request, Post $post): JsonResponse    {
+    public function show(Request $request, Post $post): JsonResponse    
+    {
         $permissions = $request->user()->role?->permissions ?? [];
 
-        if (
-            ! in_array('*', $permissions, true)
+        if (! in_array('*', $permissions, true)
             && ! in_array('posts.view', $permissions, true)
             && $post->user_id !== $request->user()->id
         ) {
@@ -178,21 +178,17 @@ class PostController extends Controller
     {
         if ($request->exists('slug') || $request->exists('title')) {
             $request->merge([
-                'slug' => trim((string) $request->input('slug'))
-                    ?: Str::slug(
-                        (string) $request->input('title')
-                    ),
+                'slug' => trim((string) $request->input('slug')) ?: Str::slug((string) $request->input('title'))
             ]);
         }
         
         $permissions = $request->user()->role?->permissions ?? [];
-
-        if (
-            ! in_array('*', $permissions, true)
+        
+        if (! in_array('*', $permissions, true)
             && ! in_array('posts.update', $permissions, true)
             && $post->user_id !== $request->user()->id
         ) {
-            abort(403, 'Anda tidak dapat mengubah artikel milik pengguna lain.');
+            abort(403, 'Anda tidak dapat melihat artikel milik pengguna lain.');
         }
         
         $validated = $request->validate([
@@ -213,8 +209,7 @@ class PostController extends Controller
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
-        if (
-            isset($validated['status'])
+        if (isset($validated['status'])
             && ! in_array('*', $permissions, true)
             && ! in_array('posts.publish', $permissions, true)
             && $validated['status'] !== 'draft'
@@ -277,11 +272,22 @@ class PostController extends Controller
             'data' => $post->fresh()->load(['user', 'categories', 'tags', 'featuredImage']),
         ]);
     }
-
-    public function destroy(Post $post): JsonResponse
+    
+    public function destroy(Request $request, Post $post): JsonResponse
     {
-        $post->delete();
+        $permissions = $request->user()->role?->permissions ?? [];
+    
+        $canDeleteAll = in_array('*', $permissions, true) || in_array('posts.delete', $permissions, true);
+    
+        $canDeleteOwn = in_array('posts.delete.own', $permissions, true);
 
+        if (! $canDeleteAll && (! $canDeleteOwn || $post->user_id !== $request->user()->id)
+        ) {
+            abort(403, 'Anda tidak memiliki izin untuk menghapus artikel ini.');
+        }
+    
+        $post->delete();
+    
         return response()->json([
             'success' => true,
             'message' => 'Artikel berhasil dihapus.',

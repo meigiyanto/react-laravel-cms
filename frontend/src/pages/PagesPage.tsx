@@ -4,8 +4,10 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
-import { faBookOpen } from '@fortawesome/free-solid-svg-icons';
+import { faBookOpen, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { canExact } from "../utils/permissions";
+import { useAuthProfile } from '../auth/AuthProfileContext';
 
 type Status = 'draft' | 'published' | 'archived';
 
@@ -90,6 +92,12 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
     const [editing, setEditing] = useState < CmsPage | null > (null);
     const [form, setForm] = useState < PageForm > (emptyForm);
     const [showForm, setShowForm] = useState(false);
+
+    const profile = useAuthProfile();
+    const canCreatePage = canExact(profile, "pages.create");
+    const canEditPage = canExact(profile, "pages.update");
+    const canDeletePage = canExact(profile, "pages.delete");
+    const canPublishPage = canExact(profile, "pages.publish");
 
     const loadPages = useCallback(async () => {
         setLoading(true);
@@ -263,8 +271,8 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                     className="btn btn-primary"
                     type="button"
                     onClick={openCreateForm}
-                    >
-                    + Halaman Baru
+                >
+                    <FontAwesomeIcon icon={faPlus} /> Halaman Baru
                 </button>
             }
         >
@@ -336,10 +344,12 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                             <p>
                                                 Buat halaman pertama atau ubah filter pencarian.
                                             </p>
+                                            {canCreatePage && (
                                             <button className="btn btn-outline-primary btn-sm"
                                                 type="button" onClick={openCreateForm}>
                                                 Buat halaman
                                             </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ): pages.map((item) => (
@@ -433,7 +443,9 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                 <label className="form-label" htmlFor="page-status">Status *</label>
                                 <select id="page-status" className="form-select" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Status }))}>
                                     <option value="draft">Draf</option>
-                                    <option value="published">Dipublikasikan</option>
+                                    {canPublishPage && (
+                                        <option value="published">Dipublikasikan</option>
+                                    )}
                                     <option value="archived">Diarsipkan</option>
                                 </select>
                             </div>
@@ -470,13 +482,17 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                             </div>
                 
                             <div className="modal-actions">
-                                <button type="button" className="btn btn-light" disabled={saving}
-                                    onClick={() => setShowForm(false)}>
-                                    Batal
-                                </button>
-                                <button type="submit" className="btn btn-primary" disabled={saving}>
-                                    {saving ? 'Menyimpan...': editing ? 'Simpan Perubahan': 'Buat Halaman'}
-                                </button>
+                                {canEditPage && (
+                                    <button type="button" className="btn btn-light" disabled={saving}
+                                        onClick={() => setShowForm(false)}>
+                                        Batal
+                                    </button>
+                                )}
+                                {canDeletePage && (
+                                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                                        {saving ? 'Menyimpan...': editing ? 'Simpan Perubahan': 'Buat Halaman'}
+                                    </button>
+                                )}
                             </div>
                         </form>
                     </section>

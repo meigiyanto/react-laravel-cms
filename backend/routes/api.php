@@ -27,9 +27,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 
+    // USER && ROLE
     Route::middleware('administrator')->group(function () {
         Route::get('/roles', [RoleController::class, 'index']);
-    
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{id}', [UserController::class, 'update']);
@@ -44,66 +44,36 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/posts/{post}', [PostController::class, 'show']);
     });
 
-    Route::post('/posts', [PostController::class, 'store'])
-        ->middleware('permission:posts.create');
-
-    Route::match(['put', 'patch'], '/posts/{post}', [
-        PostController::class, 'update',
-    ])->middleware('permission:posts.update');
-
-    Route::delete('/posts/{post}', [
-        PostController::class, 'destroy',
-    ])->middleware('permission:posts.delete');
+    Route::post('/posts', [PostController::class, 'store'])->middleware('permission:posts.create,exact');
+    Route::match(['put', 'patch'], '/posts/{post}', [PostController::class, 'update'])->middleware('permission:posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->middleware('permission:posts.delete');
 
     // KATEGORI: hanya role yang memiliki permission terkait
-    Route::get('/categories', [CategoryController::class, 'index'])
-        ->middleware('permission:categories.view');
-    Route::get('/categories/{category}', [CategoryController::class, 'show'])
-        ->middleware('permission:categories.view');
-    Route::post('/categories', [CategoryController::class, 'store'])
-        ->middleware('permission:categories.create');
-    Route::match(['put', 'patch'], '/categories/{category}', [
-        CategoryController::class, 'update',
-    ])->middleware('permission:categories.update');
-    Route::delete('/categories/{category}', [
-        CategoryController::class, 'destroy',
-    ])->middleware('permission:categories.delete');
+    Route::get('/categories', [CategoryController::class, 'index'])->middleware('permission:categories.view,exact');
+    Route::get('/categories/{category}', [CategoryController::class, 'show'])->middleware('permission:categories.view,exact');
+    Route::post('/categories', [CategoryController::class, 'store'])->middleware('permission:categories.create,exact');
+    Route::match(['put', 'patch'], '/categories/{category}', [CategoryController::class, 'update'])->middleware('permission:categories.update,exact');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:categories.delete,exact');
 
     // MEDIA
-    Route::get('/media', [MediaController::class, 'index'])
-        ->middleware('permission:media.view');
-    Route::get('/media/{media}', [MediaController::class, 'show'])
-        ->middleware('permission:media.view');
-    Route::post('/media', [MediaController::class, 'store'])
-        ->middleware('permission:media.create');
-    Route::match(['put', 'patch'], '/media/{media}', [
-        MediaController::class, 'update',
-    ])->middleware('permission:media.update');
-    Route::delete('/media/{media}', [
-        MediaController::class, 'destroy',
-    ])->middleware('permission:media.delete');
+    Route::get('/media', [MediaController::class, 'index'])->middleware('permission:media.view');
+    Route::get('/media/{media}', [MediaController::class, 'show'])->middleware('permission:media.view');
+    Route::post('/media', [MediaController::class, 'store'])->middleware('permission:media.create,exact');
+    Route::match(['put', 'patch'], '/media/{media}', [MediaController::class, 'update'])->middleware('permission:media.update');
+    Route::delete('/media/{media}', [MediaController::class, 'destroy'])->middleware('permission:media.delete');
 
     // HALAMAN
-    Route::get('/pages', [PageController::class, 'index'])
-        ->middleware('permission:pages.view');
-    Route::get('/pages/{page}', [PageController::class, 'show'])
-        ->middleware('permission:pages.view');
-    Route::post('/pages', [PageController::class, 'store'])
-        ->middleware('permission:pages.create');
-    Route::match(['put', 'patch'], '/pages/{page}', [
-        PageController::class, 'update',
-    ])->middleware('permission:pages.update');
-    Route::delete('/pages/{page}', [
-        PageController::class, 'destroy',
-    ])->middleware('permission:pages.delete');
+    Route::get('/pages', [PageController::class, 'index'])->middleware('permission:pages.view,exact');
+    Route::get('/pages/{page}', [PageController::class, 'show'])->middleware('permission:pages.view,exact');
+    Route::post('/pages', [PageController::class, 'store'])->middleware('permission:pages.create,exact');
+    Route::match(['put', 'patch'], '/pages/{page}', [PageController::class, 'update'])->middleware('permission:pages.update,exact');
+    Route::delete('/pages/{page}', [PageController::class, 'destroy'])->middleware('permission:pages.delete,exact');
 
     // TAG
     Route::get('/tags', function () {
         return response()->json([
             'success' => true,
-            'data' => Tag::query()
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug']),
+            'data' => Tag::query()->orderBy('name')->get(['id', 'name', 'slug']),
         ]);
     })->middleware('permission:tags.view');
 

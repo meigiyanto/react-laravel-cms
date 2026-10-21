@@ -103,11 +103,10 @@ class MediaController extends Controller
     public function show(Request $request, Media $media): JsonResponse
     {
         $permissions = $request->user()->role?->permissions ?? [];
-    
-        if (
-            ! in_array('*', $permissions, true)
+        
+        if (! in_array('*', $permissions, true)
             && ! in_array('media.view', $permissions, true)
-            && $media->user_id !== $request->user()->id
+            && (int) $media->user_id !== (int) $request->user()->id
         ) {
             abort(403, 'Anda tidak dapat melihat media milik pengguna lain.');
         }
@@ -118,46 +117,57 @@ class MediaController extends Controller
         ]);
     }
 
-    public function update(Request $request, Media $media): JsonResponse
+    public function update(Request $request, Media $media)
     {
+        if (! $this->canManageMedia(
+            $request,
+            $media,
+            'media.update',
+            'media.update.own'
+        )) {
+            return response()->json([
+                'message' => 'Anda tidak memiliki izin untuk mengubah media ini.',
+            ], 403);
+        }
+    
         $validated = $request->validate([
-            'alt_text' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'alt_text' => ['nullable', 'string', 'max:255'],
         ]);
-
+    
         $media->update($validated);
-
+    
         return response()->json([
-            'success' => true,
-            'message' => 'Metadata media berhasil diperbarui.',
             'data' => $this->formatMedia($media->fresh()),
         ]);
     }
-
-    public function destroy(Media $media): JsonResponse
+    
+    public function destroy(Request $request, Media $media)
     {
-        if (
-            $media->posts()->exists() ||
-            $media->pages()->exists()
-        ) {
+        if (! $this->canManageMedia(
+            $request,
+            $media,
+            'media.delete',
+            'media.delete.own'
+        )) {
             return response()->json([
-                'success' => false,
-                'message' => 'Media masih digunakan oleh artikel atau halaman.',
+                'message' => 'Anda tidak memiliki izin untuk menghapus media ini.',
+            ], 403);
+        }
+    
+        if ($media->posts()->exists() || $media->pages()->exists()) {
+            return response()->json([
+                'message' => 'Media sedang digunakan dan tidak dapat dihapus.',
             ], 422);
         }
-
-        $disk = Storage::disk($media->disk);
-
-        if ($disk->exists($media->path) && ! $disk->delete($media->path)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'File gagal dihapus. Data media tetap dipertahankan.',
-            ], 500);
+    
+        if ($media->disk && $media->path) {
+            \Illuminate\Support\Facades\Storage::disk($media->disk)
+                ->delete($media->path);
         }
-
+    
         $media->delete();
-
+    
         return response()->json([
-            'success' => true,
             'message' => 'Media berhasil dihapus.',
         ]);
     }
@@ -176,5 +186,24 @@ class MediaController extends Controller
             'alt_text' => $media->alt_text,
             'created_at' => $media->created_at,
         ];
+    }
+    
+    private function canManageMedia(
+        Request $request,
+        Media $media,
+        string $globalPermission,
+        string $ownPermission
+    ): bool {
+        $permissions = $request->user()?->role?->permissions ?? [];
+    
+        if (! is_array($permissions)) {
+            return false;
+        }
+    
+        if (in_array('*', $permissions, true) || in_array($globalPermission, $permissions, true)) {
+            return true;
+        }
+    
+        return in_array($ownPermission, $permissions, true) && (int) $media->user_id === (int) $request->user()->id;
     }
 }
