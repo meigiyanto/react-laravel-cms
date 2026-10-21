@@ -68,6 +68,15 @@ class PageController extends Controller
         $validated['published_at'] =
             $validated['status'] === 'published' ? now() : null;
 
+        $status = $validated['status'] ?? 'draft';
+
+        if ($status === 'published') {
+            $this->ensureCanPublish($request);
+        }
+        
+        $validated['status'] = $status;
+        $validated['published_at'] = $status === 'published' ? now() : null;
+        
         $page = Page::create($validated);
 
         return response()->json([
@@ -116,6 +125,12 @@ class PageController extends Controller
         }
 
         if (isset($validated['status'])) {
+            if ($validated['status'] === 'published'
+                && $page->status !== 'published'
+            ) {
+                $this->ensureCanPublish($request);
+            }
+        
             if ($validated['status'] === 'published') {
                 $validated['published_at'] =
                     $page->published_at ?? now();
@@ -162,5 +177,17 @@ class PageController extends Controller
         }
 
         return $slug;
+    }
+    
+    private function ensureCanPublish(Request $request): void
+    {
+        $permissions = $request->user()->role?->permissions ?? [];
+    
+        if (
+            ! in_array('*', $permissions, true)
+            && ! in_array('pages.publish', $permissions, true)
+        ) {
+            abort(403, 'Anda tidak memiliki izin untuk menerbitkan halaman.');
+        }
     }
 }

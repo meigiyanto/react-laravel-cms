@@ -202,4 +202,70 @@ class PostPermissionTest extends TestCase
     
         $this->getJson('/api/pages')->assertForbidden();
     }
+    
+    public function test_user_with_delete_own_permission_can_delete_own_post(): void
+    {
+        $role = Role::create([
+            'name' => 'Deleter Own',
+            'slug' => 'deleter-own',
+            'permissions' => [
+                'posts.view.own',
+                'posts.create',
+                'posts.delete.own',
+            ],
+        ]);
+    
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+        ]);
+    
+        $postId = $this->createPostAs(
+            $this->editor,
+            'Artikel untuk Uji Kepemilikan'
+        );
+    
+        // Buat artikel yang benar-benar dimiliki user penguji.
+        $ownPostId = $this->createPostAs(
+            $user,
+            'Artikel Milik Deleter Own'
+        );
+    
+        $this->actingAs($user, 'sanctum')
+            ->deleteJson("/api/posts/{$ownPostId}")
+            ->assertOk();
+    
+        $this->assertDatabaseMissing('posts', [
+            'id' => $ownPostId,
+        ]);
+    }
+    
+    public function test_user_with_delete_own_permission_cannot_delete_another_users_post(): void
+    {
+        $role = Role::create([
+            'name' => 'Deleter Own',
+            'slug' => 'deleter-own',
+            'permissions' => [
+                'posts.view.own',
+                'posts.create',
+                'posts.delete.own',
+            ],
+        ]);
+    
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+        ]);
+    
+        $postId = $this->createPostAs(
+            $this->editor,
+            'Artikel Milik Editor'
+        );
+    
+        $this->actingAs($user, 'sanctum')
+            ->deleteJson("/api/posts/{$postId}")
+            ->assertForbidden();
+    
+        $this->assertDatabaseHas('posts', [
+            'id' => $postId,
+        ]);
+    }
 }
