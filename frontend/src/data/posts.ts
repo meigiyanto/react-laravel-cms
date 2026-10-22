@@ -20,6 +20,8 @@ Mulailah dengan proyek sederhana, kemudian kembangkan fitur secara bertahap.`,
     category_ids: [1, 2],
     tag_ids: [1, 2],
     featured_image_id: '',
+    is_featured:  false,
+    allow_comments: true,
     meta_title: 'Panduan Laravel untuk Pemula',
     meta_description:
       'Pelajari Laravel dari routing, controller, model, migration, hingga pengujian aplikasi PHP.',
@@ -44,6 +46,8 @@ Lakukan pengujian secara berkala untuk mengetahui strategi yang paling efektif.`
     category_ids: [3],
     tag_ids: [3, 4],
     featured_image_id: '',
+    is_featured:  false,
+    allow_comments: true,
     meta_title: 'Strategi Penjualan Toko Online',
     meta_description:
       'Temukan strategi praktis untuk mengoptimalkan halaman produk, checkout, dan konversi e-commerce.',
@@ -68,6 +72,8 @@ Pisahkan tanggung jawab komponen agar kode lebih mudah diuji dan dirawat.`,
     category_ids: [1, 2],
     tag_ids: [5, 6],
     featured_image_id: '',
+    is_featured:  false,
+    allow_comments: true,
     meta_title: 'Dashboard CMS dengan React dan TypeScript',
     meta_description:
       'Panduan membangun dashboard CMS dengan React, TypeScript, komponen reusable, dan REST API.',
@@ -91,7 +97,9 @@ Evaluasi proses kerja secara berkala agar kebiasaan yang digunakan benar-benar m
     status: 'draft',
     category_ids: [4],
     tag_ids: [7, 8],
-    featured_image_id: '',
+    featured_image_id: '',     
+    is_featured:  false,
+    allow_comments: true,
     meta_title: 'Tips Produktivitas Developer',
     meta_description:
       'Tingkatkan produktivitas developer melalui manajemen tugas, pengujian, Git, dan dokumentasi.',
@@ -117,9 +125,10 @@ Dokumentasikan kontrak API agar frontend dan backend dapat dikembangkan secara t
     category_ids: [1],
     tag_ids: [1, 9],
     featured_image_id: '',
+    is_featured:  false,
+    allow_comments: true,
     meta_title: 'Praktik Terbaik REST API',
     meta_description:
       'Panduan desain REST API dengan validasi, autentikasi, pagination, status HTTP, dan pengujian.',
-     
-  },
+  }
 ];

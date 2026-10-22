@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers, faUserCircle, } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 
@@ -9,7 +9,8 @@ export type ActiveModule =
 | 'categories'
 | 'media'
 | 'pages'
-| 'users';
+| 'users'
+| 'profile';
 
 type SidebarProps = {
     active: ActiveModule;
@@ -67,6 +68,12 @@ const items: SidebarItem[] = [
         module: "users",
         icon: faUsers,
         adminOnly: true,
+    },
+    {
+        id: 'profile',
+        label: 'Profil Saya',
+        module: 'profile',
+        icon: faUserCircle,
     },
 ];
 

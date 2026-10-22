@@ -1,30 +1,36 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+// import type { FormEvent } from 'react';
 import '../public-site.css';
 import axios from 'axios';
-import DOMPurify from 'dompurify';
+// import DOMPurify from 'dompurify';
+
+/*
 import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+*/
 
 type Category = {
     id: number; 
     name: string; 
     slug: string
 };
+
 type Author = {
     id: number; 
     name: string
 } | null;
+
 type Media = {
     url?: string; 
     path?: string; 
     original_name?: string; 
     alt_text?: string | null
 } | null;
+
 type Post = {
     id: number; 
     title: string; 
@@ -40,12 +46,14 @@ type Post = {
     meta_title?: string | null; 
     meta_description?: string | null;
 };
+/*
 type CommentItem = {
     id: number; name: 
     string; 
     body: string; 
     created_at: string
 };
+*/
 type Page <T> = {
     data: T[]; 
     current_page: number; 
@@ -68,6 +76,7 @@ function imageUrl(media: Media): string {
     const apiOrigin = API_BASE.replace(/\/api\/?$/, '');
     return new URL(raw, `${apiOrigin || window.location.origin}/`).toString();
 }
+
 function dateLabel(value: string | null | undefined): string {
     if (!value) return 'Tanggal tidak tersedia';
     const date = new Date(value);
@@ -75,6 +84,7 @@ function dateLabel(value: string | null | undefined): string {
         day: 'numeric', month: 'long', year: 'numeric'
     });
 }
+
 function errorText(error: unknown): string {
     if (axios.isAxiosError(error)) {
         const errors = error.response?.data?.errors as Record < string,
@@ -84,6 +94,7 @@ function errorText(error: unknown): string {
     }
     return 'Terjadi kesalahan. Coba lagi.';
 }
+
 function excerpt(post: Post): string {
     if (post.excerpt?.trim()) return post.excerpt;
     const text = new DOMParser().parseFromString(post.body || '', 'text/html').body.textContent || '';
@@ -95,19 +106,20 @@ export default function PublicSite() {
     const [posts, setPosts] = useState <Page <Post> | null> (null);
     const [latestPosts, setLatestPosts] = useState<Post[]>([]);
     const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
-    const [post, setPost] = useState <Post | null> (null);
-    const [comments, setComments] = useState <Page <CommentItem> | null > (null);
-    const [searchInput, setSearchInput] = useState('');
-    const [search, setSearch] = useState('');
+    // const [post, setPost] = useState <Post | null> (null);
+    // const [comments, setComments] = useState <Page <CommentItem> | null > (null);
+    // const [searchInput, setSearchInput] = useState('');
+    // const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [commentForm, setCommentForm] = useState({ name: '', email: '', body: '', website: '' });
-    const [commentBusy, setCommentBusy] = useState(false);
-    const [commentMessage, setCommentMessage] = useState('');
-    const [commentError, setCommentError] = useState('');
+    // const [commentForm, setCommentForm] = useState({ name: '', email: '', body: '', website: '' });
+    // const [commentBusy, setCommentBusy] = useState(false);
+    // const [commentMessage, setCommentMessage] = useState('');
+    // const [commentError, setCommentError] = useState('');
     
+    /*
     function initSwiper() {
         document.querySelectorAll(".init-swiper").forEach(function(swiperElement) {
             let config = JSON.parse(
@@ -121,14 +133,15 @@ export default function PublicSite() {
             }
         });
     }
+    */
 
     useEffect(() => {
         const onPop = () => setPathname(window.location.pathname);
         window.addEventListener('popstate', onPop);
-        window.addEventListener('load', initSwiper);
+        // window.addEventListener('load', initSwiper);
         return () => {
             window.removeEventListener('popstate', onPop);
-            window.removeEventListener('load', initSwiper);
+            // window.removeEventListener('load', initSwiper);
         }
     }, []);
 
@@ -144,11 +157,13 @@ export default function PublicSite() {
             top: 0, behavior: 'smooth'
         });
     }
-
+    
+    /*
     useEffect(() => {
         const timer = window.setTimeout(() => setSearch(searchInput.trim()), 250);
         return () => window.clearTimeout(timer);
     }, [searchInput]);
+    */
     
     useEffect(() => {
         let active = true;
@@ -159,20 +174,20 @@ export default function PublicSite() {
     
             if (slug) {
                 setPost(null);
-                setComments(null);
-                setCommentMessage('');
-                setCommentError('');
+                // setComments(null);
+                // setCommentMessage('');
+                // setCommentError('');
     
                 try {
-                    const [postResponse, commentsResponse] = await Promise.all([
+                    const [postResponse, /* commentsResponse */] = await Promise.all([
                         publicApi.get(`/public/posts/${encodeURIComponent(slug)}`),
-                        publicApi.get(`/public/posts/${encodeURIComponent(slug)}/comments`),
+                        // publicApi.get(`/public/posts/${encodeURIComponent(slug)}/comments`),
                     ]);
     
                     if (!active) return;
     
                     setPost(postResponse.data.data);
-                    setComments(commentsResponse.data.data);
+                    // setComments(commentsResponse.data.data);
                 } catch (err: unknown) {
                     if (active) setError(errorText(err));
                 } finally {
@@ -185,7 +200,7 @@ export default function PublicSite() {
                         publicApi.get('/public/posts', {
                             params: {
                                 page,
-                                search: search || undefined,
+                                /* search: search || undefined, */
                                 category: category || undefined,
                             },
                         }),
@@ -215,9 +230,9 @@ export default function PublicSite() {
         return () => {
             active = false;
         };
-    }, [slug, page, search, category]);
+    }, [slug, page, /* search,*/ category]);
 
-
+    /*
     async function submitComment(event: FormEvent < HTMLFormElement >) {
         event.preventDefault();
         if (!slug) return;
@@ -241,7 +256,8 @@ export default function PublicSite() {
         (posts?.data || []).forEach((item) => item.categories.forEach((cat) => unique.set(cat.slug, cat)));
         return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
     }, [posts]);
-
+    */
+    
     return (
         <>
             <header id="header" className="header d-flex align-items-center position-relative">
@@ -471,9 +487,7 @@ export default function PublicSite() {
                     <div className="container section-title" data-aos="fade-up">
                         <span className="description-title">Category Section</span>
                         <h2>Category Section</h2>
-                        <p>
-                            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit
-                        </p>
+                        <p> Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
                     </div>
                     {/* End Section Title */}
         
@@ -532,11 +546,13 @@ export default function PublicSite() {
                         
                         {loading ? (
                             <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
-                        ) : posts?.length ? (
+                        ) : posts.length ? (
                             <div className="posts-grid">
                                 <div className="row gy-4">
-                                {posts.map((item, index) => (
-                                    <div className="col-md-6" data-aos="fade-up" data-aos-delay="200">
+                                {posts.map((item) => (
+                                    <div key={item.id} className="col-md-6" data-aos="fade-up" data-aos-delay="200">
+                                <code>{JSON.stringify(item)}</code>
+                                
                                         <article className="grid-post">
                                             <div className="post-img">
                                                 {item.featured_image && imageUrl(item.featured_image) ? (
@@ -556,7 +572,7 @@ export default function PublicSite() {
                                                 <p className="excerpt">{excerpt(item)}</p>
                                                 <div className="post-footer">
                                                     <div className="author-info">
-                                                        <img src="assets/img/person/person-f-7.webp" alt="" className="author-img"/>
+                                                        <img src="storage/profiles/IvZLMqgoY7JO5lZkww7LR1O1hWlHfHogW84nOUmg.webp" alt="" className="author-img"/>
                                                         <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
                                                     </div>
                                                     {/* <span className="read-time">3 min read</span> */}

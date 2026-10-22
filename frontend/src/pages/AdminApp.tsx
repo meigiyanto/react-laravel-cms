@@ -7,6 +7,7 @@ const PagesPage = lazy(() => import('../pages/PagesPage'));
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 const PostsPage = lazy(() => import('../pages/PostsPage'));
 const UserManagementPage = lazy(() => import('../pages/UserManagementPage'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 import LoginPage from '../pages/LoginPage';
 import type { ActiveModule } from '../components/Sidebar';
 
@@ -20,8 +21,7 @@ function AdminApp() {
         const response = await api.get('/auth/me');
         const data = response.data?.data;
     
-        if (
-            !data ||
+        if (!data ||
             !Array.isArray(data.permissions) ||
             !data.role?.slug
         ) {
@@ -32,6 +32,7 @@ function AdminApp() {
             id: data.id,
             name: data.name,
             email: data.email,
+            profile_photo_url: data.profile_photo_url ?? null,
             role: data.role,
             permissions: data.permissions,
         };
@@ -151,9 +152,10 @@ function AdminApp() {
         media: 'media.view',
         pages: 'pages.view',
         users: null,
+        profile: null,
     };
     
-    const hasPageAccess = activeModule === 'users' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!);
+    const hasPageAccess = activeModule === 'profile' || (activeModule === 'users' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!));
     
     let page: React.ReactNode;
     
@@ -208,6 +210,22 @@ function AdminApp() {
                     <UserManagementPage
                         onNavigate={navigation.onNavigate}
                         onLogout={navigation.onLogout}
+                    />
+                </Suspense>
+            );
+            break;
+            
+        case 'profile':
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <ProfilePage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                        onProfileUpdated={(updated) => {
+                            setProfile((current) =>
+                                current ? { ...current, ...updated } : current
+                            );
+                        }}
                     />
                 </Suspense>
             );

@@ -4,6 +4,7 @@ export type AuthProfile = {
     id: number;
     name: string;
     email: string;
+    profile_photo_url?: string | null;
     role: {
         id: number;
         name: string;

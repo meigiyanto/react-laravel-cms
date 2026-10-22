@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PublicPostController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Models\Tag;
 
 
@@ -33,6 +34,7 @@ Route::prefix('public')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::post('/profile', [ProfileController::class, 'update']);
 
     Route::get('/dashboard/stats', [PostController::class, 'stats'])->middleware('permission:posts.view');
 

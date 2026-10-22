@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -63,6 +64,8 @@ class AuthController extends Controller
                     'id' => $role->id,
                     'name' => $role->name,
                     'slug' => $role->slug,
+                    'profile_photo_url' => $user->profile_photo_path
+    ? Storage::disk('public')->url($user->profile_photo_path) : null,
                 ] : null,
                 'permissions' => $role?->permissions ?? [],
             ],
