@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 // import type { FormEvent } from 'react';
 import '../public-site.css';
 import axios from 'axios';
-// import DOMPurify from 'dompurify';
+import DOMPurify from 'dompurify';
 
 /*
 import Swiper from 'swiper';
@@ -20,8 +20,9 @@ type Category = {
 };
 
 type Author = {
-    id: number; 
-    name: string
+    id: number;
+    name: string;
+    profile_photo_path?: string | null;
 } | null;
 
 type Media = {
@@ -32,28 +33,36 @@ type Media = {
 } | null;
 
 type Post = {
-    id: number; 
-    title: string; 
-    slug: string; 
-    excerpt: string | null; 
+    id: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
     body: string;
-    published_at: string | null; 
-    created_at: string; 
-    user: Author; 
+    published_at: string | null;
+    created_at: string;
+    user: Author;
     categories: Category[];
-    featured_image: Media; 
+    featured_image: Media;
     approved_comments_count?: number;
-    meta_title?: string | null; 
+    allow_comments?: boolean;
+    meta_title?: string | null;
     meta_description?: string | null;
 };
-/*
+
 type CommentItem = {
-    id: number; name: 
-    string; 
-    body: string; 
-    created_at: string
+    id: number;
+    name: string;
+    body: string;
+    created_at: string;
 };
-*/
+
+type CommentForm = {
+    name: string;
+    email: string;
+    body: string;
+    website: string;
+};
+
 type Page <T> = {
     data: T[]; 
     current_page: number; 
@@ -75,6 +84,13 @@ function imageUrl(media: Media): string {
     if (/^https?:\/\//i.test(raw)) return raw;
     const apiOrigin = API_BASE.replace(/\/api\/?$/, '');
     return new URL(raw, `${apiOrigin || window.location.origin}/`).toString();
+}
+
+function authorImageUrl(author: Author): string {
+    if (!author?.profile_photo_path) return '';
+    return imageUrl({
+        path: author.profile_photo_path,
+    });
 }
 
 function dateLabel(value: string | null | undefined): string {
@@ -106,18 +122,18 @@ export default function PublicSite() {
     const [posts, setPosts] = useState <Page <Post> | null> (null);
     const [latestPosts, setLatestPosts] = useState<Post[]>([]);
     const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
-    // const [post, setPost] = useState <Post | null> (null);
-    // const [comments, setComments] = useState <Page <CommentItem> | null > (null);
-    // const [searchInput, setSearchInput] = useState('');
-    // const [search, setSearch] = useState('');
+    const [post, setPost] = useState <Post | null> (null);
+    const [comments, setComments] = useState <Page <CommentItem> | null > (null);
+    const [searchInput, setSearchInput] = useState('');
+    const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    // const [commentForm, setCommentForm] = useState({ name: '', email: '', body: '', website: '' });
-    // const [commentBusy, setCommentBusy] = useState(false);
-    // const [commentMessage, setCommentMessage] = useState('');
-    // const [commentError, setCommentError] = useState('');
+    const [commentForm, setCommentForm] = useState({ name: '', email: '', body: '', website: '' });
+    const [commentBusy, setCommentBusy] = useState(false);
+    const [commentMessage, setCommentMessage] = useState('');
+    const [commentError, setCommentError] = useState('');
     
     /*
     function initSwiper() {
@@ -174,20 +190,20 @@ export default function PublicSite() {
     
             if (slug) {
                 setPost(null);
-                // setComments(null);
-                // setCommentMessage('');
-                // setCommentError('');
+                setComments(null);
+                setCommentMessage('');
+                setCommentError('');
     
                 try {
-                    const [postResponse, /* commentsResponse */] = await Promise.all([
+                    const [postResponse,  commentsResponse] = await Promise.all([
                         publicApi.get(`/public/posts/${encodeURIComponent(slug)}`),
-                        // publicApi.get(`/public/posts/${encodeURIComponent(slug)}/comments`),
+                        publicApi.get(`/public/posts/${encodeURIComponent(slug)}/comments`),
                     ]);
     
                     if (!active) return;
     
                     setPost(postResponse.data.data);
-                    // setComments(commentsResponse.data.data);
+                    setComments(commentsResponse.data.data);
                 } catch (err: unknown) {
                     if (active) setError(errorText(err));
                 } finally {
@@ -232,25 +248,34 @@ export default function PublicSite() {
         };
     }, [slug, page, /* search,*/ category]);
 
-    /*
-    async function submitComment(event: FormEvent < HTMLFormElement >) {
+    async function submitComment(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        if (!slug) return;
-        setCommentBusy(true); setCommentError(''); setCommentMessage('');
+    
+        if (!slug || !post) return;
+    
+        setCommentBusy(true);
+        setCommentError('');
+        setCommentMessage('');
+    
         try {
             const response = await publicApi.post(`/public/posts/${encodeURIComponent(slug)}/comments`, commentForm);
-            setCommentMessage(response.data.message || 'Komentar dikirim untuk moderasi.');
+    
+            setCommentMessage(response.data.message || 'Komentar berhasil dikirim dan menunggu moderasi.');
+    
             setCommentForm({
-                name: '', email: '', body: '', website: ''
+                name: '',
+                email: '',
+                body: '',
+                website: '',
             });
-        } catch (err) {
+        } catch (err: unknown) {
             setCommentError(errorText(err));
-        }
-        finally {
+        } finally {
             setCommentBusy(false);
         }
     }
 
+    /*
     const allCategories = useMemo(() => {
         const unique = new Map <string, Category> ();
         (posts?.data || []).forEach((item) => item.categories.forEach((cat) => unique.set(cat.slug, cat)));
@@ -309,417 +334,704 @@ export default function PublicSite() {
             </header>
 
             <main className="main">
-        
-                {/* Blog Hero Section */}
-                <section id="blog-hero" className="blog-hero section">
-        
-                    <div className="container-fluid p-0" data-aos="fade">
-        
-                        <div className="blog-hero-slider swiper init-swiper">
-                            {/*
-                            <script type="application/json" className="swiper-config">
-                                {
-                                    "loop": true,
-                                    "speed": 1000,
-                                    "effect": "fade",
-                                    "autoplay": {
-                                        "delay": 5000
-                                    },
-                                    "slidesPerView": 1,
-                                    "navigation": {
-                                        "nextEl": ".swiper-button-next",
-                                        "prevEl": ".swiper-button-prev"
-                                    }
-                                }
-                            </script>
-                            */}
-        
-                            <div className="swiper-wrapper">
-        
-                                <div className="swiper-slide">
-                                    <div className="blog-hero-item">
-                                        <img src="assets/img/blog/blog-hero-1.webp" alt="Blog Hero Image" className="img-fluid"/>
-                                        <div className="blog-hero-content">
-                                            <span className="category">Lifestyle</span>
-                                            <h1>5 Efficient Rules How to Organize Working Place Relationship</h1>
-                                            <div className="meta">
-                                                <span className="author">BY <a href="#">Dary Smith</a></span>
-                                                <span className="date">02 Jan, 2024</span>
-                                                <span className="read-time">3 Minute Read</span>
-                                                <span className="views">1.9k views</span>
-                                            </div>
-                                            <a href="blog-details" className="read-more">Continue Reading <i className="bi bi-arrow-right"></i></a>
+                {slug ? (
+                    <>
+                        <div className="page-title">
+                            <div className="heading">
+                                <div className="container">
+                                    <div className="row d-flex justify-content-center text-center">
+                                        <div className="col-lg-8">
+                                            <h1 className="heading-title">Blog Details</h1>
+                                            <p className="mb-0">
+                                                Odio et unde deleniti. Deserunt numquam exercitationem. Officiis quo
+                                                odio sint voluptas consequatur ut a odio voluptatem. Sit dolorum
+                                                debitis veritatis natus dolores. Quasi ratione sint. Sit quaerat
+                                                ipsum dolorem.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
-                                {/* End slide item */}
-        
-        
                             </div>
-        
-                            <div className="swiper-button-prev"></div>
-                            <div className="swiper-button-next"></div>
-        
+                            <nav className="breadcrumbs">
+                                <div className="container">
+                                    <ol>
+                                        <li><a href="#">Home</a></li>
+                                        <li className="current">Blog Details</li>
+                                    </ol>
+                                </div>
+                            </nav>
                         </div>
-        
-                    </div>
-        
-                </section>
-                {/* /Blog Hero Section */}
-        
-                {/* Featured Posts Section */}
-                <section id="featured-posts" className="featured-posts section">
-        
-                    {/* Section Title */}
-                    <div className="container section-title" data-aos="fade-up">
-                        <span className="description-title">Featured Posts</span>
-                        <h2>Featured Posts</h2>
-                        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-                    </div>
-                    {/* End Section Title */}
-        
-                    <div className="container" data-aos="fade-up" data-aos-delay="100">
-        
-                        <div className="blog-posts-slider swiper init-swiper">
-                            {/*
-                            <script type="application/json" className="swiper-config">
-                                {
-                                    "loop": true,
-                                    "speed": 600,
-                                    "autoplay": {
-                                        "delay": 4500
-                                    },
-                                    "slidesPerView": 1,
-                                    "spaceBetween": 40,
-                                    "centeredSlides": true,
-                                    "breakpoints": {
-                                        "768": {
-                                            "slidesPerView": 1.5,
-                                            "spaceBetween": 30
-                                        },
-                                        "1200": {
-                                            "slidesPerView": 2.2,
-                                            "spaceBetween": 40
+                        
+                        <section className="section article-detail-section">
+                            <div className="container">
+                                <div className="row justify-content-center">
+                                    <div className="col-lg-9">
+                        
+                                        {loading ? (
+                                            <div className="public-loading" role="status">
+                                                Memuat artikel...
+                                            </div>
+                                        ) : error ? (
+                                            <div className="alert alert-danger" role="alert">
+                                                {error}
+                                            </div>
+                                        ) : post ? (
+                                            <>
+                                                <article className="article-detail">
+                                                    <div className="article-detail-meta mb-3">
+                                                        <span>
+                                                            {post.categories?.[0]?.name || 'Artikel'}
+                                                        </span>
+                                                        <span className="mx-2">·</span>
+                                                        <time>
+                                                            {dateLabel(post.published_at || post.created_at)}
+                                                        </time>
+                                                    </div>
+                        
+                                                    <h1 className="article-detail-title mb-4">
+                                                        {post.title}
+                                                    </h1>
+                        
+                                                    <div className="article-detail-author mb-4">
+                                                        <strong>
+                                                            {post.user?.name || 'Tim Redaksi'}
+                                                        </strong>
+                                                        <span className="text-muted ms-2">
+                                                            · {post.approved_comments_count ?? comments?.total ?? 0} komentar
+                                                        </span>
+                                                    </div>
+                        
+                                                    {post.featured_image && imageUrl(post.featured_image) && (
+                                                        <img
+                                                            src={imageUrl(post.featured_image)}
+                                                            alt={
+                                                                post.featured_image.alt_text ||
+                                                                post.title
+                                                            }
+                                                            className="img-fluid rounded mb-4 w-100"
+                                                        />
+                                                    )}
+                        
+                                                    {post.excerpt && (
+                                                        <p className="lead mb-4">{post.excerpt}</p>
+                                                    )}
+                        
+                                                    <div
+                                                        className="article-detail-body"
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: DOMPurify.sanitize(post.body || ''),
+                                                        }}
+                                                    />
+                                                </article>
+                        
+                                                <section className="article-comments mt-5" id="komentar">
+                                                    <h2 className="h3 mb-4">
+                                                        Komentar ({comments?.total ?? 0})
+                                                    </h2>
+                        
+                                                    {comments?.data?.length ? (
+                                                        <div className="comment-list">
+                                                            {comments.data.map((comment) => (
+                                                                <article
+                                                                    key={comment.id}
+                                                                    className="comment-item border-bottom py-3"
+                                                                >
+                                                                    <div className="d-flex align-items-start gap-3">
+                                                                        <div
+                                                                            className="comment-avatar"
+                                                                            aria-hidden="true"
+                                                                        >
+                                                                            {comment.name
+                                                                                .charAt(0)
+                                                                                .toUpperCase()}
+                                                                        </div>
+                        
+                                                                        <div className="flex-grow-1">
+                                                                            <div className="d-flex flex-wrap justify-content-between gap-2">
+                                                                                <strong>{comment.name}</strong>
+                                                                                <time className="text-muted small">
+                                                                                    {dateLabel(comment.created_at)}
+                                                                                </time>
+                                                                            </div>
+                        
+                                                                            <p className="mt-2 mb-0 comment-body">
+                                                                                {comment.body}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                </article>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-muted">
+                                                            Belum ada komentar. Jadilah yang pertama berkomentar!
+                                                        </p>
+                                                    )}
+                        
+                                                    {post.allow_comments === false ? (
+                                                        <div className="alert alert-secondary mt-4">
+                                                            Komentar untuk artikel ini telah dinonaktifkan.
+                                                        </div>
+                                                    ) : (
+                                                        <div className="blog-comment-form mt-5">
+                                                            <div className="section-header mb-4">
+                                                                <h3>Tinggalkan Komentar</h3>
+                                                                <p>
+                                                                    Sampaikan pendapatmu dengan sopan.
+                                                                    Komentar akan ditinjau sebelum ditampilkan.
+                                                                </p>
+                                                            </div>
+                        
+                                                            {commentMessage && (
+                                                                <div className="alert alert-success" role="status">
+                                                                    {commentMessage}
+                                                                </div>
+                                                            )}
+                        
+                                                            {commentError && (
+                                                                <div className="alert alert-danger" role="alert">
+                                                                    {commentError}
+                                                                </div>
+                                                            )}
+                        
+                                                            <form onSubmit={submitComment}>
+                                                                <div className="row g-3">
+                                                                    <div className="col-md-6">
+                                                                        <label htmlFor="comment-name">
+                                                                            Nama
+                                                                        </label>
+                                                                        <input
+                                                                            id="comment-name"
+                                                                            className="form-control"
+                                                                            type="text"
+                                                                            autoComplete="name"
+                                                                            minLength={2}
+                                                                            maxLength={80}
+                                                                            required
+                                                                            value={commentForm.name}
+                                                                            onChange={(event) =>
+                                                                                setCommentForm({
+                                                                                    ...commentForm,
+                                                                                    name: event.target.value,
+                                                                                })
+                                                                            }
+                                                                        />
+                                                                    </div>
+                        
+                                                                    <div className="col-md-6">
+                                                                        <label htmlFor="comment-email">
+                                                                            Email
+                                                                        </label>
+                                                                        <input
+                                                                            id="comment-email"
+                                                                            className="form-control"
+                                                                            type="email"
+                                                                            autoComplete="email"
+                                                                            maxLength={254}
+                                                                            required
+                                                                            value={commentForm.email}
+                                                                            onChange={(event) =>
+                                                                                setCommentForm({
+                                                                                    ...commentForm,
+                                                                                    email: event.target.value,
+                                                                                })
+                                                                            }
+                                                                        />
+                                                                    </div>
+                        
+                                                                    <div
+                                                                        className="col-12"
+                                                                        aria-hidden="true"
+                                                                        style={{
+                                                                            position: 'absolute',
+                                                                            left: '-9999px',
+                                                                        }}
+                                                                    >
+                                                                        <label htmlFor="comment-website">
+                                                                            Website
+                                                                        </label>
+                                                                        <input
+                                                                            id="comment-website"
+                                                                            type="text"
+                                                                            tabIndex={-1}
+                                                                            autoComplete="off"
+                                                                            value={commentForm.website}
+                                                                            onChange={(event) =>
+                                                                                setCommentForm({
+                                                                                    ...commentForm,
+                                                                                    website: event.target.value,
+                                                                                })
+                                                                            }
+                                                                        />
+                                                                    </div>
+                        
+                                                                    <div className="col-12">
+                                                                        <label htmlFor="comment-body">
+                                                                            Komentar
+                                                                        </label>
+                                                                        <textarea
+                                                                            id="comment-body"
+                                                                            className="form-control"
+                                                                            rows={5}
+                                                                            minLength={3}
+                                                                            maxLength={3000}
+                                                                            required
+                                                                            value={commentForm.body}
+                                                                            onChange={(event) =>
+                                                                                setCommentForm({
+                                                                                    ...commentForm,
+                                                                                    body: event.target.value,
+                                                                                })
+                                                                            }
+                                                                        />
+                                                                    </div>
+                        
+                                                                    <div className="col-12">
+                                                                        <button
+                                                                            className="btn btn-primary"
+                                                                            type="submit"
+                                                                            disabled={commentBusy}
+                                                                        >
+                                                                            {commentBusy
+                                                                                ? 'Mengirim...'
+                                                                                : 'Kirim Komentar'}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    )}
+                                                </section>
+                                            </>
+                                        ) : (
+                                            <div className="alert alert-warning">
+                                                Artikel tidak ditemukan atau tidak tersedia untuk publik.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </>
+                ) : (
+                    <>
+                        {/* Blog Hero Section */}
+                        <section id="blog-hero" className="blog-hero section">
+                
+                            <div className="container-fluid p-0" data-aos="fade">
+                
+                                <div className="blog-hero-slider swiper init-swiper">
+                                    {/*
+                                    <script type="application/json" className="swiper-config">
+                                        {
+                                            "loop": true,
+                                            "speed": 1000,
+                                            "effect": "fade",
+                                            "autoplay": {
+                                                "delay": 5000
+                                            },
+                                            "slidesPerView": 1,
+                                            "navigation": {
+                                                "nextEl": ".swiper-button-next",
+                                                "prevEl": ".swiper-button-prev"
+                                            }
                                         }
-                                    },
-                                    "pagination": {
-                                        "el": ".swiper-pagination",
-                                        "clickable": true
-                                    }
-                                }
-                            </script>
-                            */}
-        
-                            <div className="swiper-wrapper">
-                                {featuredPosts.map((item) => (
-                                    <div className="mb-3 swiper-slide" key={item.id}>
-                                        <article className="blog-card">
-                                            <div className="blog-image">
-                                                {item.featured_image && imageUrl(item.featured_image) ? (
-                                                    <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} loading="lazy" />
-                                                ) : (
-                                                    <div className="post-image-placeholder">
-                                                        <span>JURNAL<br />IDE</span>
+                                    </script>
+                                    */}
+                
+                                    <div className="swiper-wrapper">
+                
+                                        <div className="swiper-slide">
+                                            <div className="blog-hero-item">
+                                                <img src="assets/img/blog/blog-hero-1.webp" alt="Blog Hero Image" className="img-fluid"/>
+                                                <div className="blog-hero-content">
+                                                    <span className="category">Lifestyle</span>
+                                                    <h1>5 Efficient Rules How to Organize Working Place Relationship</h1>
+                                                    <div className="meta">
+                                                        <span className="author">BY <a href="#">Dary Smith</a></span>
+                                                        <span className="date">02 Jan, 2024</span>
+                                                        <span className="read-time">3 Minute Read</span>
+                                                        <span className="views">1.9k views</span>
                                                     </div>
-                                                )}
-                                                <div className="category-badge">
-                                                    {item.categories[0]?.name || 'Artikel'}
+                                                    <a href="blog-details" className="read-more">Continue Reading <i className="bi bi-arrow-right"></i></a>
                                                 </div>
                                             </div>
-                            
-                                            <div className="blog-content">
-                                                <div className="author-info">
-                                                    <div className="author-details">
-                                                        <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
-                                                        <span className="publish-date">{dateLabel(item.published_at || item.created_at)}</span>
-                                                    </div>
-                                                </div>
-                            
-                                                <h3>
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-link p-0 text-start"
-                                                        onClick={() =>
-                                                            navigate(`/artikel/${encodeURIComponent(item.slug)}`)
-                                                        }
-                                                    >
-                                                        {item.title}
-                                                    </button>
-                                                </h3>
-                            
-                                                <p>{excerpt(item)}</p>
-                            
-                                                <div className="blog-footer">
-                                                    <span>{item.approved_comments_count ?? 0} komentar</span>
-                                                    <button
-                                                        type="button"
-                                                        className="btn-read-more"
-                                                        onClick={() =>
-                                                            navigate(`/artikel/${encodeURIComponent(item.slug)}`)
-                                                        }
-                                                    >
-                                                        <span>Baca artikel</span>
-                                                        <i className="bi bi-arrow-right" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </article>
+                                        </div>
+                                        {/* End slide item */}
+                
+                
                                     </div>
-                                ))}
-                            
-                                {featuredPosts.length === 0 && (
-                                    <p className="text-muted">Belum ada artikel unggulan.</p>
-                                )}
-                            </div>
-        
-                            <div className="swiper-pagination"></div>
-                        </div>
-        
-                    </div>
-        
-                </section>
-                {/* /Featured Posts Section */}
-        
-                {/* Category Section Section */}
-                <section id="category-section" className="category-section section">
-        
-                    {/* Section Title */}
-                    <div className="container section-title" data-aos="fade-up">
-                        <span className="description-title">Category Section</span>
-                        <h2>Category Section</h2>
-                        <p> Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-                    </div>
-                    {/* End Section Title */}
-        
-                    <div className="container" data-aos="fade-up" data-aos-delay="100">
-                        {/* Main Featured Post
-                        <div className="row gy-4 mb-5">
-                            <div className="col-lg-8">
-                                <article className="hero-post" data-aos="zoom-out" data-aos-delay="200">
-                                    <div className="post-img">
-                                        <img src="assets/img/blog/blog-post-5.webp" alt="" className="img-fluid" loading="lazy"/>
-                                    </div>
-                                    <div className="post-content">
-                                        <div className="author-info">
-                                            <img src="assets/img/person/person-m-8.webp" alt="" className="author-avatar"/>
-                                            <div className="author-details">
-                                                <span className="author-name">Michael R.</span>
-                                                <span className="post-date">15 March 2024</span>
-                                            </div>
-                                        </div>
-                                        <h2 className="post-title">
-                                            <a href="blog-details">Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore</a>
-                                        </h2>
-                                        <p className="post-excerpt">
-                                            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-                                        </p>
-                                        <div className="post-stats">
-                                            <span className="read-time"><i className="bi bi-clock"></i> 5 min read</span>
-                                            <span className="comments"><i className="bi bi-chat-dots"></i> 12 comments</span>
-                                        </div>
-                                    </div>
-                                </article>
-                            </div>
-        
-                            <div className="col-lg-4">
-                                <div className="sidebar-posts">
-                                    
-                                    <article className="sidebar-post" data-aos="fade-left" data-aos-delay="300">
-                                        <div className="post-img">
-                                            <img src="assets/img/blog/blog-post-8.webp" alt="" className="img-fluid" loading="lazy"/>
-                                        </div>
-                                        <div className="post-content">
-                                            <span className="post-category">Design</span>
-                                            <h4 className="title">
-                                                <a href="blog-details">Neque porro quisquam est qui dolorem ipsum quia dolor sit amet</a>
-                                            </h4>
-                                            <div className="post-meta">
-                                                <span className="post-date">22 February 2024</span>
-                                            </div>
-                                        </div>
-                                    </article>
-                                    
+                
+                                    <div className="swiper-button-prev"></div>
+                                    <div className="swiper-button-next"></div>
+                
                                 </div>
+                
                             </div>
-                        </div>
-                        */}
-                        
-                        {loading ? (
-                            <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
-                        ) : posts.length ? (
-                            <div className="posts-grid">
-                                <div className="row gy-4">
-                                {posts.map((item) => (
-                                    <div key={item.id} className="col-md-6" data-aos="fade-up" data-aos-delay="200">
-                                <code>{JSON.stringify(item)}</code>
-                                
-                                        <article className="grid-post">
+                
+                        </section>
+                        {/* /Blog Hero Section */}
+                
+                        {/* Featured Posts Section */}
+                        <section id="featured-posts" className="featured-posts section">
+                
+                            {/* Section Title */}
+                            <div className="container section-title" data-aos="fade-up">
+                                <span className="description-title">Featured Posts</span>
+                                <h2>Featured Posts</h2>
+                                <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+                            </div>
+                            {/* End Section Title */}
+                
+                            <div className="container" data-aos="fade-up" data-aos-delay="100">
+                
+                                <div className="blog-posts-slider swiper init-swiper">
+                                    {/*
+                                    <script type="application/json" className="swiper-config">
+                                        {
+                                            "loop": true,
+                                            "speed": 600,
+                                            "autoplay": {
+                                                "delay": 4500
+                                            },
+                                            "slidesPerView": 1,
+                                            "spaceBetween": 40,
+                                            "centeredSlides": true,
+                                            "breakpoints": {
+                                                "768": {
+                                                    "slidesPerView": 1.5,
+                                                    "spaceBetween": 30
+                                                },
+                                                "1200": {
+                                                    "slidesPerView": 2.2,
+                                                    "spaceBetween": 40
+                                                }
+                                            },
+                                            "pagination": {
+                                                "el": ".swiper-pagination",
+                                                "clickable": true
+                                            }
+                                        }
+                                    </script>
+                                    */}
+                
+                                    <div className="swiper-wrapper">
+                                        {featuredPosts.map((item) => (
+                                            <div className="mb-3 swiper-slide" key={item.id}>
+                                                <article className="blog-card">
+                                                    <div className="blog-image">
+                                                        {item.featured_image && imageUrl(item.featured_image) ? (
+                                                            <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} loading="lazy" />
+                                                        ) : (
+                                                            <div className="post-image-placeholder">
+                                                                <span>JURNAL<br />IDE</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="category-badge">
+                                                            {item.categories[0]?.name || 'Artikel'}
+                                                        </div>
+                                                    </div>
+                                    
+                                                    <div className="blog-content">
+                                                        <div className="author-info">
+                                                            <div className="author-details">
+                                                                <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
+                                                                <span className="publish-date">{dateLabel(item.published_at || item.created_at)}</span>
+                                                            </div>
+                                                        </div>
+                                    
+                                                        <h3>
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-link p-0 text-start"
+                                                                onClick={() =>
+                                                                    navigate(`/artikel/${encodeURIComponent(item.slug)}`)
+                                                                }
+                                                            >
+                                                                {item.title}
+                                                            </button>
+                                                        </h3>
+                                    
+                                                        <p>{excerpt(item)}</p>
+                                    
+                                                        <div className="blog-footer">
+                                                            <span>{item.approved_comments_count ?? 0} komentar</span>
+                                                            <button
+                                                                type="button"
+                                                                className="btn-read-more"
+                                                                onClick={() =>
+                                                                    navigate(`/artikel/${encodeURIComponent(item.slug)}`)
+                                                                }
+                                                            >
+                                                                <span>Baca artikel</span>
+                                                                <i className="bi bi-arrow-right" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </article>
+                                            </div>
+                                        ))}
+                                    
+                                        {featuredPosts.length === 0 && (
+                                            <p className="text-muted">Belum ada artikel unggulan.</p>
+                                        )}
+                                    </div>
+                
+                                    <div className="swiper-pagination"></div>
+                                </div>
+                
+                            </div>
+                
+                        </section>
+                        {/* /Featured Posts Section */}
+                
+                        {/* Category Section Section */}
+                        <section id="category-section" className="category-section section">
+                
+                            {/* Section Title */}
+                            <div className="container section-title" data-aos="fade-up">
+                                <span className="description-title">Category Section</span>
+                                <h2>Category Section</h2>
+                                <p> Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+                            </div>
+                            {/* End Section Title */}
+                
+                            <div className="container" data-aos="fade-up" data-aos-delay="100">
+                                {/* Main Featured Post
+                                <div className="row gy-4 mb-5">
+                                    <div className="col-lg-8">
+                                        <article className="hero-post" data-aos="zoom-out" data-aos-delay="200">
                                             <div className="post-img">
-                                                {item.featured_image && imageUrl(item.featured_image) ? (
-                                                    <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} className="img-fluid" loading="lazy" /> 
-                                                ) : (
-                                                    <span className={`post-image-placeholder placeholder-${index % 4}`}><span>JURNAL<br />IDE</span><b>✳</b></span>
-                                                )}
-                                                <div className="post-overlay">
-                                                    <span className="category-tag">{item.categories[0]?.name || 'Artikel'}</span>
-                                                </div>
+                                                <img src="assets/img/blog/blog-post-5.webp" alt="" className="img-fluid" loading="lazy"/>
                                             </div>
-                                            
                                             <div className="post-content">
-                                                <h3 className="title">
-                                                    <button className="btn btn-outline-light" onClick={() => navigate(`/artikel/${encodeURIComponent(item.slug)}`)}>{item.title}</button>
-                                                </h3>
-                                                <p className="excerpt">{excerpt(item)}</p>
-                                                <div className="post-footer">
-                                                    <div className="author-info">
-                                                        <img src="storage/profiles/IvZLMqgoY7JO5lZkww7LR1O1hWlHfHogW84nOUmg.webp" alt="" className="author-img"/>
-                                                        <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
+                                                <div className="author-info">
+                                                    <img src="assets/img/person/person-m-8.webp" alt="" className="author-avatar"/>
+                                                    <div className="author-details">
+                                                        <span className="author-name">Michael R.</span>
+                                                        <span className="post-date">15 March 2024</span>
                                                     </div>
-                                                    {/* <span className="read-time">3 min read</span> */}
-                                                    <time>{dateLabel(item.published_at || item.created_at)}</time>
+                                                </div>
+                                                <h2 className="post-title">
+                                                    <a href="blog-details">Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore</a>
+                                                </h2>
+                                                <p className="post-excerpt">
+                                                    Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+                                                </p>
+                                                <div className="post-stats">
+                                                    <span className="read-time"><i className="bi bi-clock"></i> 5 min read</span>
+                                                    <span className="comments"><i className="bi bi-chat-dots"></i> 12 comments</span>
                                                 </div>
                                             </div>
                                         </article>
                                     </div>
-                                ))}
-                                </div>
-                            </div>
-                        ) : !error ? (
-                            <div className="public-empty">
-                                <span>✳</span>
-                                <h3>Belum ada artikel untuk ditampilkan</h3>
-                                <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
-                            </div>
-                            ) : null
-                        }
-                        
-                    </div>
-        
-                </section>
-                {/* /Category Section Section */}
-        
-                {/* Latest Posts Section */}
-                <section id="latest-posts" className="latest-posts section">
-        
-                    {/* Section Title */}
-                    <div className="container section-title" data-aos="fade-up">
-                        <span className="description-title">Latest Posts</span>
-                        <h2>Latest Posts</h2>
-                        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-                    </div>
-                    {/* End Section Title */}
-        
-                    <div className="container" data-aos="fade-up" data-aos-delay="100">
-        
-                        <div className="row gy-4 align-items-stretch">
-        
-                            <div className="col-lg-7" data-aos="zoom-in" data-aos-delay="150">
-                                <article className="featured-post position-relative h-100">
-                                    <figure className="featured-media m-0">
-                                        <img src="assets/img/blog/blog-hero-4.webp" alt="Featured post image" className="img-fluid w-100" loading="lazy"/>
-                                    </figure>
-        
-                                    <div className="featured-content">
-                                        <div className="date-badge">
-                                            <span className="day">12</span>
-                                            <span className="mon">Dec</span>
+                
+                                    <div className="col-lg-4">
+                                        <div className="sidebar-posts">
+                                            
+                                            <article className="sidebar-post" data-aos="fade-left" data-aos-delay="300">
+                                                <div className="post-img">
+                                                    <img src="assets/img/blog/blog-post-8.webp" alt="" className="img-fluid" loading="lazy"/>
+                                                </div>
+                                                <div className="post-content">
+                                                    <span className="post-category">Design</span>
+                                                    <h4 className="title">
+                                                        <a href="blog-details">Neque porro quisquam est qui dolorem ipsum quia dolor sit amet</a>
+                                                    </h4>
+                                                    <div className="post-meta">
+                                                        <span className="post-date">22 February 2024</span>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                            
                                         </div>
-        
-                                        <span className="cat-badge inverse">Politics</span>
-        
-                                        <h3 className="title">Veritatis maiores natus officiis sit, temporibus alias dicta voluptatum</h3>
-                                        <p className="excerpt d-none d-md-block">
-                                            Quisquam perferendis officiis incidunt, facilisis aliquet consectetur lorem luctus. Ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                                        </p>
-        
-                                        <div className="meta d-flex align-items-center gap-3">
-                                            <div className="d-flex align-items-center">
-                                                <i className="bi bi-person"></i><span className="ps-2">Jane Cooper</span>
-                                            </div>
-                                            <span className="sep">/</span>
-                                            <div className="d-flex align-items-center">
-                                                <i className="bi bi-folder2"></i><span className="ps-2">Editorial</span>
-                                            </div>
-                                        </div>
-        
-                                        <a href="blog-details" className="readmore stretched-link"><span>Continue</span><i className="bi bi-arrow-right"></i></a>
                                     </div>
-                                </article>
-                            </div>
-                            {/* End Featured Post */}
+                                </div>
+                                */}
+                                
+                                {loading ? (
+                                    <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
+                                ) : posts.length ? (
+                                    <div className="posts-grid">
+                                        <div className="row gy-4">
+                                        {posts.map((item) => (
+                                            <div key={item.id} className="col-md-6" data-aos="fade-up" data-aos-delay="200">
+                                        
+                                                <article className="grid-post">
+                                                    <div className="post-img">
+                                                        {item.featured_image && imageUrl(item.featured_image) ? (
+                                                            <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} className="img-fluid" loading="lazy" /> 
+                                                        ) : (
+                                                            <span className={`post-image-placeholder placeholder-${index % 4}`}><span>JURNAL<br />IDE</span><b>✳</b></span>
+                                                        )}
+                                                        <div className="post-overlay">
+                                                            <span className="category-tag">{item.categories[0]?.name || 'Artikel'}</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="post-content">
+                                                        <h3 className="title">
+                                                            <button className="btn btn-outline-primary" onClick={() => navigate(`/artikel/${encodeURIComponent(item.slug)}`)}>{item.title}</button>
+                                                        </h3>
+                                                        <p className="excerpt">{excerpt(item)}</p>
+                                                        <div className="post-footer">
+                                                            
+                                                            <div className="author-info">
+                                                                {authorImageUrl(item.user) ? (
+                                                                    <img src={authorImageUrl(item.user)} alt={`Foto ${item.user?.name || 'penulis'}`} className="author-img" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                                                                ) : (
+                                                                    <span className="author-avatar-fallback" aria-hidden="true"> {(item.user?.name || 'T').charAt(0).toUpperCase()}</span>
+                                                                )}
+                                                                <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
+                                                            </div>
         
-                            <div className="col-lg-5">
-                                <div className="row gy-4">
+                                                            {/* <span className="read-time">3 min read</span> */}
+                                                            <time>{dateLabel(item.published_at || item.created_at)}</time>
+                                                        </div>
+                                                    </div>
+                                                </article>
+                                            </div>
+                                        ))}
+                                        </div>
+                                    </div>
+                                ) : !error ? (
+                                    <div className="public-empty">
+                                        <span>✳</span>
+                                        <h3>Belum ada artikel untuk ditampilkan</h3>
+                                        <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
+                                    </div>
+                                    ) : null
+                                }
+                                
+                            </div>
+                
+                        </section>
+                        {/* /Category Section Section */}
+                
+                        {/* Latest Posts Section */}
+                        <section id="latest-posts" className="latest-posts section">
+                
+                            {/* Section Title */}
+                            <div className="container section-title" data-aos="fade-up">
+                                <span className="description-title">Latest Posts</span>
+                                <h2>Latest Posts</h2>
+                                <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+                            </div>
+                            {/* End Section Title */}
+                
+                            <div className="container" data-aos="fade-up" data-aos-delay="100">
+                
+                                <div className="row gy-4 align-items-stretch">
+                
+                                    <div className="col-lg-7" data-aos="zoom-in" data-aos-delay="150">
+                                        <article className="featured-post position-relative h-100">
+                                            <figure className="featured-media m-0">
+                                                <img src="assets/img/blog/blog-hero-4.webp" alt="Featured post image" className="img-fluid w-100" loading="lazy"/>
+                                            </figure>
+                
+                                            <div className="featured-content">
+                                                <div className="date-badge">
+                                                    <span className="day">12</span>
+                                                    <span className="mon">Dec</span>
+                                                </div>
+                
+                                                <span className="cat-badge inverse">Politics</span>
+                
+                                                <h3 className="title">Veritatis maiores natus officiis sit, temporibus alias dicta voluptatum</h3>
+                                                <p className="excerpt d-none d-md-block">
+                                                    Quisquam perferendis officiis incidunt, facilisis aliquet consectetur lorem luctus. Ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                                                </p>
+                
+                                                <div className="meta d-flex align-items-center gap-3">
+                                                    <div className="d-flex align-items-center">
+                                                        <i className="bi bi-person"></i><span className="ps-2">Jane Cooper</span>
+                                                    </div>
+                                                    <span className="sep">/</span>
+                                                    <div className="d-flex align-items-center">
+                                                        <i className="bi bi-folder2"></i><span className="ps-2">Editorial</span>
+                                                    </div>
+                                                </div>
+                
+                                                <a href="blog-details" className="readmore stretched-link"><span>Continue</span><i className="bi bi-arrow-right"></i></a>
+                                            </div>
+                                        </article>
+                                    </div>
+                                    {/* End Featured Post */}
+                
+                                    <div className="col-lg-5">
+                                        <div className="row gy-4">
+                                            
+                                            <div className="col-12" data-aos="fade-left" data-aos-delay="200">
+                                                <article className="compact-post h-100">
+                                                    <div className="thumb">
+                                                        <img src="assets/img/blog/blog-post-square-2.webp" className="img-fluid" alt="Post thumbnail" loading="lazy"/>
+                                                    </div>
+                                                    <div className="content">
+                                                        <div className="meta">
+                                                            <span className="date">05 Aug</span>
+                                                            <span className="dot">•</span>
+                                                            <span className="category">Sports</span>
+                                                        </div>
+                                                        <h4 className="title">Officia recusandae cumque, dolore asperiores ducimus</h4>
+                                                        <a href="blog-details" className="readmore"><span>Read Article</span><i className="bi bi-arrow-right"></i></a>
+                                                    </div>
+                                                </article>
+                                            </div>
+                                            {/* End Compact Post */}
+                
+                
+                                        </div>
+                                    </div>
+                                    {/* End Right Column */}
                                     
-                                    <div className="col-12" data-aos="fade-left" data-aos-delay="200">
-                                        <article className="compact-post h-100">
-                                            <div className="thumb">
-                                                <img src="assets/img/blog/blog-post-square-2.webp" className="img-fluid" alt="Post thumbnail" loading="lazy"/>
-                                            </div>
-                                            <div className="content">
-                                                <div className="meta">
-                                                    <span className="date">05 Aug</span>
-                                                    <span className="dot">•</span>
-                                                    <span className="category">Sports</span>
+                                    {/* loading ? (
+                                        <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
+                                    ) : latestposts?.data.length ? (
+                                    ) : !error ? (
+                                        <div className="public-empty">
+                                            <span>✳</span>
+                                            <h3>Belum ada artikel untuk ditampilkan</h3>
+                                            <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
+                                        </div> ) : null
+                                    */}
+                                    
+                                    {latestPosts?.map((post) => (
+                                        <div key={post.id} className="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                                            <article className="card-post h-100">
+                                                <div className="post-img position-relative overflow-hidden">
+                                                    {post.featured_image && imageUrl(post.featured_image) ? (
+                                                        <img className="img-fluid w-100" src={imageUrl(post.featured_image)} alt={post.featured_image.alt_text || post.title} loading="lazy"
+                                                        />
+                                                    ) : (
+                                                        <div className="post-image-placeholder">
+                                                            <span>JURNAL<br />IDE</span>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <h4 className="title">Officia recusandae cumque, dolore asperiores ducimus</h4>
-                                                <a href="blog-details" className="readmore"><span>Read Article</span><i className="bi bi-arrow-right"></i></a>
-                                            </div>
-                                        </article>
-                                    </div>
-                                    {/* End Compact Post */}
-        
-        
+                                                <div className="content">
+                                                    <div className="meta d-flex align-items-center flex-wrap gap-2">
+                                                        <span className="cat-badge">{post?.categories[0]?.name}</span>
+                                                        <div className="d-flex align-items-center ms-auto">
+                                                            <i className="bi bi-person"></i> <span className="ps-2">{post.user?.name || 'Tim Redaksi'}</span>
+                                                        </div>
+                                                    </div>
+                                                    <h3 className="title">{post.title}</h3>
+                                                    <a href={`${post.slug}`} className="readmore">
+                                                        <span>Read More</span>
+                                                        <i className="bi bi-arrow-right"></i>
+                                                    </a>
+                                                </div>
+                                            </article>
+                                        </div>
+                                    ))}
+                
                                 </div>
                             </div>
-                            {/* End Right Column */}
-                            
-                            {/* loading ? (
-                                <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
-                            ) : latestposts?.data.length ? (
-                            ) : !error ? (
-                                <div className="public-empty">
-                                    <span>✳</span>
-                                    <h3>Belum ada artikel untuk ditampilkan</h3>
-                                    <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
-                                </div> ) : null
-                            */}
-                            
-                            {latestPosts?.map((post) => (
-                                <div key={post.id} className="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-                                    <article className="card-post h-100">
-                                        <div className="post-img position-relative overflow-hidden">
-                                            {post.featured_image && imageUrl(post.featured_image) ? (
-                                                <img className="img-fluid w-100" src={imageUrl(post.featured_image)} alt={post.featured_image.alt_text || post.title} loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="post-image-placeholder">
-                                                    <span>JURNAL<br />IDE</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="content">
-                                            <div className="meta d-flex align-items-center flex-wrap gap-2">
-                                                <span className="cat-badge">{post?.categories[0]?.name}</span>
-                                                <div className="d-flex align-items-center ms-auto">
-                                                    <i className="bi bi-person"></i> <span className="ps-2">{post.user?.name || 'Tim Redaksi'}</span>
-                                                </div>
-                                            </div>
-                                            <h3 className="title">{post.title}</h3>
-                                            <a href={`${post.slug}`} className="readmore">
-                                                <span>Read More</span>
-                                                <i className="bi bi-arrow-right"></i>
-                                            </a>
-                                        </div>
-                                    </article>
-                                </div>
-                            ))}
-        
-                        </div>
-                    </div>
-        
-                </section>
-                {/* /Latest Posts Section */}
+                
+                        </section>
+                        {/* /Latest Posts Section */}
+                    </>
+                )}
         
             </main>
         

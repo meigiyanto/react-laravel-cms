@@ -25,35 +25,26 @@ class PublicPostController extends Controller
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
             ->when(
-                filter_var(
-                    $validated['featured'] ?? false,
-                    FILTER_VALIDATE_BOOLEAN
-                ),
+                filter_var($validated['featured'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 fn ($query) => $query->where('is_featured', true)
             )
             ->with([
-                'user:id,name',
+                'user:id,name,profile_photo_path',
                 'categories:id,name,slug',
                 'featuredImage',
             ])
             ->withCount([
-                'comments as approved_comments_count' =>
-                    fn ($query) => $query->where('status', 'approved'),
+                'comments as approved_comments_count' => fn ($query) => $query->where('status', 'approved'),
             ])
             ->when(filled($validated['search'] ?? null), function ($query) use ($validated) {
                 $term = trim($validated['search']);
     
                 $query->where(function ($builder) use ($term) {
-                    $builder->where('title', 'like', "%{$term}%")
-                        ->orWhere('excerpt', 'like', "%{$term}%");
+                    $builder->where('title', 'like', "%{$term}%")->orWhere('excerpt', 'like', "%{$term}%");
                 });
             })
             ->when(filled($validated['category'] ?? null), function ($query) use ($validated) {
-                $query->whereHas(
-                    'categories',
-                    fn ($categoryQuery) =>
-                        $categoryQuery->where('slug', $validated['category'])
-                );
+                $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->where('slug', $validated['category']));
             })
             ->orderByDesc('published_at')
             ->orderByDesc('id')
@@ -65,20 +56,15 @@ class PublicPostController extends Controller
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
             ->with([
-                'user:id,name',
+                'user:id,name,profile_photo_path',
                 'categories:id,name,slug',
                 'featuredImage',
             ])
             ->withCount([
-                'comments as approved_comments_count' =>
-                    fn ($query) => $query->where('status', 'approved'),
+                'comments as approved_comments_count' => fn ($query) => $query->where('status', 'approved'),
             ])
             ->when(filled($validated['category'] ?? null), function ($query) use ($validated) {
-                $query->whereHas(
-                    'categories',
-                    fn ($categoryQuery) =>
-                        $categoryQuery->where('slug', $validated['category'])
-                );
+                $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->where('slug', $validated['category']));
             })
             ->latest('published_at')
             ->latest('id')
