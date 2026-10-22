@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-// import type { FormEvent } from 'react';
 import '../public-site.css';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
-
-/*
-import Swiper from 'swiper';
-import { Navigation, Pagination } from 'swiper/modules';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-*/
+
+type CategoryWithPosts = Category & {
+    description?: string | null;
+    posts: Post[];
+};
 
 type Category = {
     id: number; 
@@ -103,8 +104,7 @@ function dateLabel(value: string | null | undefined): string {
 
 function errorText(error: unknown): string {
     if (axios.isAxiosError(error)) {
-        const errors = error.response?.data?.errors as Record < string,
-        string[] > | undefined;
+        const errors = error.response?.data?.errors as Record <string, string[] > | undefined;
         if (errors) return Object.values(errors).flat().join(' ');
         return error.response?.data?.message || 'Tidak dapat menghubungi server. Coba lagi.';
     }
@@ -134,31 +134,12 @@ export default function PublicSite() {
     const [commentBusy, setCommentBusy] = useState(false);
     const [commentMessage, setCommentMessage] = useState('');
     const [commentError, setCommentError] = useState('');
+    const [categoryArticles, setCategoryArticles] = useState<CategoryWithPosts[]>([]);
     
-    /*
-    function initSwiper() {
-        document.querySelectorAll(".init-swiper").forEach(function(swiperElement) {
-            let config = JSON.parse(
-                swiperElement.querySelector(".swiper-config").innerHTML.trim()
-            );
-
-            if (swiperElement.classList.contains("swiper-tab")) {
-                initSwiperWithCustomPagination(swiperElement, config);
-            } else {
-                new Swiper(swiperElement, config);
-            }
-        });
-    }
-    */
-
     useEffect(() => {
         const onPop = () => setPathname(window.location.pathname);
         window.addEventListener('popstate', onPop);
-        // window.addEventListener('load', initSwiper);
-        return () => {
-            window.removeEventListener('popstate', onPop);
-            // window.removeEventListener('load', initSwiper);
-        }
+        return () => window.removeEventListener('popstate', onPop);
     }, []);
 
     const slug = useMemo(() => {
@@ -212,23 +193,25 @@ export default function PublicSite() {
             } else {
                 setPosts(null);
                 try {
-                    const [response, featuredResponse] = await Promise.all([
-                        publicApi.get('/public/posts', {
-                            params: {
-                                page,
-                                /* search: search || undefined, */
-                                category: category || undefined,
-                            },
-                        }),
-                        publicApi.get('/public/posts', {
-                            params: { featured: 1, page: 1 },
-                        }),
-                    ]);
+                    const [response, featuredResponse, categoryResponse] =
+                        await Promise.all([
+                            publicApi.get('/public/posts', {
+                                params: {
+                                    page,
+                                    category: category || undefined,
+                                },
+                            }),
+                            publicApi.get('/public/posts', {
+                                params: { featured: 1, page: 1 },
+                            }),
+                            publicApi.get('/public/categories/posts'),
+                        ]);
                     
                     if (active) {
                         setPosts(response.data.data.posts.data);
                         setFeaturedPosts(featuredResponse.data.data.posts.data);
                         setLatestPosts(response.data.data.latestposts);
+                        setCategoryArticles(categoryResponse.data.data);
                     }
                     
                 } catch (err: unknown) {
@@ -247,7 +230,7 @@ export default function PublicSite() {
             active = false;
         };
     }, [slug, page, /* search,*/ category]);
-
+    
     async function submitComment(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
     
@@ -258,9 +241,15 @@ export default function PublicSite() {
         setCommentMessage('');
     
         try {
-            const response = await publicApi.post(`/public/posts/${encodeURIComponent(slug)}/comments`, commentForm);
+            const response = await publicApi.post(
+                `/public/posts/${encodeURIComponent(slug)}/comments`,
+                commentForm,
+            );
     
-            setCommentMessage(response.data.message || 'Komentar berhasil dikirim dan menunggu moderasi.');
+            setCommentMessage(
+                response.data.message ||
+                'Komentar berhasil dikirim dan menunggu moderasi.',
+            );
     
             setCommentForm({
                 name: '',
@@ -275,864 +264,970 @@ export default function PublicSite() {
         }
     }
 
-    /*
     const allCategories = useMemo(() => {
         const unique = new Map <string, Category> ();
         (posts?.data || []).forEach((item) => item.categories.forEach((cat) => unique.set(cat.slug, cat)));
         return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
     }, [posts]);
-    */
-    
+
     return (
         <>
-            <header id="header" className="header d-flex align-items-center position-relative">
-                <div className="container position-relative d-flex align-items-center justify-content-between">
+            <header id="header" className="header position-relative">
+                <div className="container-fluid container-xl position-relative">
         
-                    <a href="index" className="logo d-flex align-items-center me-auto me-xl-0">
-                        {/* Uncomment the line below if you also wish to use an image logo */}
-                        {/* <img src="assets/img/logo.webp" alt="" /> */}
-                        <h1 className="sitename">Story</h1>
-                    </a>
+                    <div className="top-row d-flex align-items-center justify-content-between">
+                        <a href="index" className="logo d-flex align-items-end">
+                            {/* Uncomment the line below if you also wish to use an image logo */}
+                            {/* <img src="assets/img/logo.webp" alt=""> */}
+                            <h1 className="sitename">Blogy</h1><span>.</span>
+                        </a>
         
-                    <nav id="navmenu" className="navmenu">
-                        <ul>
-                            <li><a href="index" className="active">Home</a></li>
-                            <li><a href="about">About</a></li>
-                            <li><a href="category">Category</a></li>
-                            <li><a href="blog-details">Blog Details</a></li>
-                            <li><a href="author-profile">Author Profile</a></li>
-                            <li className="dropdown"><a href="#"><span>Pages</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
-                                <ul>
-                                    <li><a href="about">About</a></li>
-                                    <li><a href="category">Category</a></li>
-                                    <li><a href="blog-details">Blog Details</a></li>
-                                    <li><a href="author-profile">Author Profile</a></li>
-                                    <li><a href="search-results">Search Results</a></li>
-                                    <li><a href="404">404 Not Found Page</a></li>
+                        <div className="d-flex align-items-center">
+                            <div className="social-links">
+                                <a href="#" className="facebook"><i className="bi bi-facebook"></i></a>
+                                <a href="#" className="twitter"><i className="bi bi-twitter"></i></a>
+                                <a href="#" className="instagram"><i className="bi bi-instagram"></i></a>
+                            </div>
         
-                                    <li className="dropdown"><a href="#"><span>Deep Dropdown</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
-                                        <ul>
-                                            <li><a href="#">Deep Dropdown 1</a></li>
-                                            <li><a href="#">Deep Dropdown 2</a></li>
-                                            <li><a href="#">Deep Dropdown 3</a></li>
-                                            <li><a href="#">Deep Dropdown 4</a></li>
-                                            <li><a href="#">Deep Dropdown 5</a></li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li><a href="contact">Contact</a></li>
-                        </ul>
-                        <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
-                    </nav>
-        
-                    <div className="header-social-links">
-                        <a href="#">Dashboard</a>
+                            <form className="search-form ms-4">
+                                <input type="text" placeholder="Search..." className="form-control" />
+                                <button type="submit" className="btn"><i className="bi bi-search"></i></button>
+                            </form>
+                        </div>
                     </div>
         
+                </div>
+                <div className="nav-wrap">
+                    <div className="container d-flex justify-content-center position-relative">
+                        <nav id="navmenu" className="navmenu">
+                            <ul>
+                                <li><a href="index" className="active">Home</a></li>
+                                <li><a href="about">About</a></li>
+                                <li><a href="category">Category</a></li>
+                                <li><a href="blog-details">Blog Details</a></li>
+                                <li><a href="author-profile">Author Profile</a></li>
+                                <li className="dropdown"><a href="#"><span>Pages</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
+                                    <ul>
+                                        <li><a href="about">About</a></li>
+                                        <li><a href="category">Category</a></li>
+                                        <li><a href="blog-details">Blog Details</a></li>
+                                        <li><a href="author-profile">Author Profile</a></li>
+                                        <li><a href="search-results">Search Results</a></li>
+                                        <li><a href="404">404 Not Found Page</a></li>
+        
+                                        <li className="dropdown"><a href="#"><span>Deep Dropdown</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
+                                            <ul>
+                                                <li><a href="#">Deep Dropdown 1</a></li>
+                                                <li><a href="#">Deep Dropdown 2</a></li>
+                                                <li><a href="#">Deep Dropdown 3</a></li>
+                                                <li><a href="#">Deep Dropdown 4</a></li>
+                                                <li><a href="#">Deep Dropdown 5</a></li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><a href="contact">Contact</a></li>
+                            </ul>
+                            <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
+                        </nav>
+                    </div>
                 </div>
             </header>
 
             <main className="main">
-                {slug ? (
+                {!slug ? (
                     <>
-                        <div className="page-title">
-                            <div className="heading">
-                                <div className="container">
-                                    <div className="row d-flex justify-content-center text-center">
-                                        <div className="col-lg-8">
-                                            <h1 className="heading-title">Blog Details</h1>
-                                            <p className="mb-0">
-                                                Odio et unde deleniti. Deserunt numquam exercitationem. Officiis quo
-                                                odio sint voluptas consequatur ut a odio voluptatem. Sit dolorum
-                                                debitis veritatis natus dolores. Quasi ratione sint. Sit quaerat
-                                                ipsum dolorem.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <nav className="breadcrumbs">
-                                <div className="container">
-                                    <ol>
-                                        <li><a href="#">Home</a></li>
-                                        <li className="current">Blog Details</li>
-                                    </ol>
-                                </div>
-                            </nav>
-                        </div>
+                        {loading ? (
+                            <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
+                        ) : posts.length ? (
+                            <>
+                                {/* Blog Hero Section */}
+                                <section id="blog-hero" className="blog-hero section">
                         
-                        <section className="section article-detail-section">
-                            <div className="container">
-                                <div className="row justify-content-center">
-                                    <div className="col-lg-9">
+                                    <div className="container" data-aos="fade-up" data-aos-delay="100">
                         
-                                        {loading ? (
-                                            <div className="public-loading" role="status">
-                                                Memuat artikel...
-                                            </div>
-                                        ) : error ? (
-                                            <div className="alert alert-danger" role="alert">
-                                                {error}
-                                            </div>
-                                        ) : post ? (
-                                            <>
-                                                <article className="article-detail">
-                                                    <div className="article-detail-meta mb-3">
-                                                        <span>
-                                                            {post.categories?.[0]?.name || 'Artikel'}
-                                                        </span>
-                                                        <span className="mx-2">·</span>
-                                                        <time>
-                                                            {dateLabel(post.published_at || post.created_at)}
-                                                        </time>
-                                                    </div>
+                                        <div className="blog-grid">
                         
-                                                    <h1 className="article-detail-title mb-4">
-                                                        {post.title}
-                                                    </h1>
-                        
-                                                    <div className="article-detail-author mb-4">
-                                                        <strong>
-                                                            {post.user?.name || 'Tim Redaksi'}
-                                                        </strong>
-                                                        <span className="text-muted ms-2">
-                                                            · {post.approved_comments_count ?? comments?.total ?? 0} komentar
-                                                        </span>
-                                                    </div>
-                        
-                                                    {post.featured_image && imageUrl(post.featured_image) && (
-                                                        <img
-                                                            src={imageUrl(post.featured_image)}
-                                                            alt={
-                                                                post.featured_image.alt_text ||
-                                                                post.title
-                                                            }
-                                                            className="img-fluid rounded mb-4 w-100"
-                                                        />
-                                                    )}
-                        
-                                                    {post.excerpt && (
-                                                        <p className="lead mb-4">{post.excerpt}</p>
-                                                    )}
-                        
-                                                    <div
-                                                        className="article-detail-body"
-                                                        dangerouslySetInnerHTML={{
-                                                            __html: DOMPurify.sanitize(post.body || ''),
-                                                        }}
-                                                    />
-                                                </article>
-                        
-                                                <section className="article-comments mt-5" id="komentar">
-                                                    <h2 className="h3 mb-4">
-                                                        Komentar ({comments?.total ?? 0})
-                                                    </h2>
-                        
-                                                    {comments?.data?.length ? (
-                                                        <div className="comment-list">
-                                                            {comments.data.map((comment) => (
-                                                                <article
-                                                                    key={comment.id}
-                                                                    className="comment-item border-bottom py-3"
-                                                                >
-                                                                    <div className="d-flex align-items-start gap-3">
-                                                                        <div
-                                                                            className="comment-avatar"
-                                                                            aria-hidden="true"
-                                                                        >
-                                                                            {comment.name
-                                                                                .charAt(0)
-                                                                                .toUpperCase()}
-                                                                        </div>
-                        
-                                                                        <div className="flex-grow-1">
-                                                                            <div className="d-flex flex-wrap justify-content-between gap-2">
-                                                                                <strong>{comment.name}</strong>
-                                                                                <time className="text-muted small">
-                                                                                    {dateLabel(comment.created_at)}
-                                                                                </time>
-                                                                            </div>
-                        
-                                                                            <p className="mt-2 mb-0 comment-body">
-                                                                                {comment.body}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                </article>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <p className="text-muted">
-                                                            Belum ada komentar. Jadilah yang pertama berkomentar!
-                                                        </p>
-                                                    )}
-                        
-                                                    {post.allow_comments === false ? (
-                                                        <div className="alert alert-secondary mt-4">
-                                                            Komentar untuk artikel ini telah dinonaktifkan.
-                                                        </div>
-                                                    ) : (
-                                                        <div className="blog-comment-form mt-5">
-                                                            <div className="section-header mb-4">
-                                                                <h3>Tinggalkan Komentar</h3>
-                                                                <p>
-                                                                    Sampaikan pendapatmu dengan sopan.
-                                                                    Komentar akan ditinjau sebelum ditampilkan.
-                                                                </p>
-                                                            </div>
-                        
-                                                            {commentMessage && (
-                                                                <div className="alert alert-success" role="status">
-                                                                    {commentMessage}
-                                                                </div>
-                                                            )}
-                        
-                                                            {commentError && (
-                                                                <div className="alert alert-danger" role="alert">
-                                                                    {commentError}
-                                                                </div>
-                                                            )}
-                        
-                                                            <form onSubmit={submitComment}>
-                                                                <div className="row g-3">
-                                                                    <div className="col-md-6">
-                                                                        <label htmlFor="comment-name">
-                                                                            Nama
-                                                                        </label>
-                                                                        <input
-                                                                            id="comment-name"
-                                                                            className="form-control"
-                                                                            type="text"
-                                                                            autoComplete="name"
-                                                                            minLength={2}
-                                                                            maxLength={80}
-                                                                            required
-                                                                            value={commentForm.name}
-                                                                            onChange={(event) =>
-                                                                                setCommentForm({
-                                                                                    ...commentForm,
-                                                                                    name: event.target.value,
-                                                                                })
-                                                                            }
-                                                                        />
-                                                                    </div>
-                        
-                                                                    <div className="col-md-6">
-                                                                        <label htmlFor="comment-email">
-                                                                            Email
-                                                                        </label>
-                                                                        <input
-                                                                            id="comment-email"
-                                                                            className="form-control"
-                                                                            type="email"
-                                                                            autoComplete="email"
-                                                                            maxLength={254}
-                                                                            required
-                                                                            value={commentForm.email}
-                                                                            onChange={(event) =>
-                                                                                setCommentForm({
-                                                                                    ...commentForm,
-                                                                                    email: event.target.value,
-                                                                                })
-                                                                            }
-                                                                        />
-                                                                    </div>
-                        
-                                                                    <div
-                                                                        className="col-12"
-                                                                        aria-hidden="true"
-                                                                        style={{
-                                                                            position: 'absolute',
-                                                                            left: '-9999px',
-                                                                        }}
-                                                                    >
-                                                                        <label htmlFor="comment-website">
-                                                                            Website
-                                                                        </label>
-                                                                        <input
-                                                                            id="comment-website"
-                                                                            type="text"
-                                                                            tabIndex={-1}
-                                                                            autoComplete="off"
-                                                                            value={commentForm.website}
-                                                                            onChange={(event) =>
-                                                                                setCommentForm({
-                                                                                    ...commentForm,
-                                                                                    website: event.target.value,
-                                                                                })
-                                                                            }
-                                                                        />
-                                                                    </div>
-                        
-                                                                    <div className="col-12">
-                                                                        <label htmlFor="comment-body">
-                                                                            Komentar
-                                                                        </label>
-                                                                        <textarea
-                                                                            id="comment-body"
-                                                                            className="form-control"
-                                                                            rows={5}
-                                                                            minLength={3}
-                                                                            maxLength={3000}
-                                                                            required
-                                                                            value={commentForm.body}
-                                                                            onChange={(event) =>
-                                                                                setCommentForm({
-                                                                                    ...commentForm,
-                                                                                    body: event.target.value,
-                                                                                })
-                                                                            }
-                                                                        />
-                                                                    </div>
-                        
-                                                                    <div className="col-12">
-                                                                        <button
-                                                                            className="btn btn-primary"
-                                                                            type="submit"
-                                                                            disabled={commentBusy}
-                                                                        >
-                                                                            {commentBusy
-                                                                                ? 'Mengirim...'
-                                                                                : 'Kirim Komentar'}
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    )}
-                                                </section>
-                                            </>
-                                        ) : (
-                                            <div className="alert alert-warning">
-                                                Artikel tidak ditemukan atau tidak tersedia untuk publik.
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    </>
-                ) : (
-                    <>
-                        {/* Blog Hero Section */}
-                        <section id="blog-hero" className="blog-hero section">
-                
-                            <div className="container-fluid p-0" data-aos="fade">
-                
-                                <div className="blog-hero-slider swiper init-swiper">
-                                    {/*
-                                    <script type="application/json" className="swiper-config">
-                                        {
-                                            "loop": true,
-                                            "speed": 1000,
-                                            "effect": "fade",
-                                            "autoplay": {
-                                                "delay": 5000
-                                            },
-                                            "slidesPerView": 1,
-                                            "navigation": {
-                                                "nextEl": ".swiper-button-next",
-                                                "prevEl": ".swiper-button-prev"
-                                            }
-                                        }
-                                    </script>
-                                    */}
-                
-                                    <div className="swiper-wrapper">
-                
-                                        <div className="swiper-slide">
-                                            <div className="blog-hero-item">
-                                                <img src="assets/img/blog/blog-hero-1.webp" alt="Blog Hero Image" className="img-fluid"/>
-                                                <div className="blog-hero-content">
-                                                    <span className="category">Lifestyle</span>
-                                                    <h1>5 Efficient Rules How to Organize Working Place Relationship</h1>
-                                                    <div className="meta">
-                                                        <span className="author">BY <a href="#">Dary Smith</a></span>
-                                                        <span className="date">02 Jan, 2024</span>
-                                                        <span className="read-time">3 Minute Read</span>
-                                                        <span className="views">1.9k views</span>
-                                                    </div>
-                                                    <a href="blog-details" className="read-more">Continue Reading <i className="bi bi-arrow-right"></i></a>
+                                            {/* Featured Post (Large) */}
+                                            <article className="blog-item featured" data-aos="fade-up">
+                                                <div className="post-image-placeholder">
+                                                    <span>JURNAL<br />IDE</span>
                                                 </div>
+                                                <div className="blog-content">
+                                                    <div className="post-meta">
+                                                        <span className="date">Apr. 14th, 2025</span>
+                                                        <span className="category">Technology</span>
+                                                    </div>
+                                                    <h2 className="post-title">
+                                                        <a href="blog-details" title="Lorem ipsum dolor sit amet, consectetur adipiscing elit">Lorem ipsum dolor sit amet, consectetur adipiscing elit</a>
+                                                    </h2>
+                                                </div>
+                                            </article>
+                        
+                                            {/* 4 Regular Posts */}
+                                            <article className="blog-item" data-aos="fade-up" data-aos-delay="100">
+                                                <div className="post-image-placeholder">
+                                                    <span>JURNAL<br />IDE</span>
+                                                </div>
+                                                <div className="blog-content">
+                                                    <div className="post-meta">
+                                                        <span className="date">Apr. 14th, 2025</span>
+                                                        <span className="category">Security</span>
+                                                    </div>
+                                                    <h3 className="post-title">
+                                                        <a href="blog-details" title="Sed do eiusmod tempor incididunt ut labore">Sed do eiusmod tempor incididunt ut labore</a>
+                                                    </h3>
+                                                </div>
+                                            </article>
+
+                                        </div>
+                        
+                                    </div>
+                        
+                                </section>
+                                
+                                {/* Featured Posts Section */}
+                                <section id="featured-posts" className="featured-posts section">
+                        
+                                    {/* Section Title */}
+                                    <div className="container section-title" data-aos="fade-up">
+                                        <h2>Featured Posts</h2>
+                                        <div>
+                                            <span>Check Our</span> <span className="description-title">Featured Posts</span>
+                                        </div>
+                                    </div>
+                        
+                                    <div className="container" data-aos="fade-up" data-aos-delay="100">
+                                        <div className="blog-posts-slider">
+                                            <div className="swiper-wrapper">
+                                            
+                                                <Swiper
+                                                    modules={[Navigation, Pagination, Autoplay]}
+                                                    spaceBetween={20}
+                                                    slidesPerView={1}
+                                                    navigation
+                                                    pagination={ { clickable: true }}
+                                                    autoplay={ {
+                                                        delay: 4000,
+                                                        disableOnInteraction: false,
+                                                    }}
+                                                    loop={featuredPosts.length > 1}
+                                                    breakpoints={ {
+                                                        640: {
+                                                            slidesPerView: 2,
+                                                        },
+                                                        1024: {
+                                                            slidesPerView: 3,
+                                                        }
+                                                    }}
+                                                >
+                                                
+                                                {featuredPosts.slice(0, 6).map((item, index) => (
+                                                    <div key={index} className="swiper-slide">
+                                                        <SwiperSlide key={item.id}>
+                                                            <div className="blog-post-item">
+                                                                {item.featured_image && imageUrl(item.featured_image) ? (
+                                                                    <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} loading="lazy" />
+                                                                ) : (
+                                                                    <div className="post-image-placeholder">
+                                                                        <span>JURNAL<br />IDE</span>
+                                                                    </div>
+                                                                )}
+                                                                <div className="blog-post-content">
+                                                                    <div className="post-meta">
+                                                                        <span><i className="bi bi-person"></i> {item.user?.name || 'Redaksi'}</span>
+                                                                        <span><i className="bi bi-clock"></i> {dateLabel(item.created_at || item.published_at)}</span>
+                                                                        <span><i className="bi bi-labels"></i> {item.categories[0].name}</span>
+                                                                    </div>
+                                                                    <h2><a href="#">{item.title}</a></h2>
+                                                                    <p>{excerpt(item)}</p>
+                                                                    <a href="#" className="read-more">Read More <i className="bi bi-arrow-right"></i></a>
+                                                                </div>
+
+                                                            </div>
+                                                        </SwiperSlide>
+                                                    </div> 
+                                                ))}
+                                                
+                                                </Swiper>
                                             </div>
                                         </div>
-                                        {/* End slide item */}
-                
-                
                                     </div>
-                
-                                    <div className="swiper-button-prev"></div>
-                                    <div className="swiper-button-next"></div>
-                
-                                </div>
-                
-                            </div>
-                
-                        </section>
-                        {/* /Blog Hero Section */}
-                
-                        {/* Featured Posts Section */}
-                        <section id="featured-posts" className="featured-posts section">
-                
-                            {/* Section Title */}
-                            <div className="container section-title" data-aos="fade-up">
-                                <span className="description-title">Featured Posts</span>
-                                <h2>Featured Posts</h2>
-                                <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-                            </div>
-                            {/* End Section Title */}
-                
-                            <div className="container" data-aos="fade-up" data-aos-delay="100">
-                
-                                <div className="blog-posts-slider swiper init-swiper">
-                                    {/*
-                                    <script type="application/json" className="swiper-config">
-                                        {
-                                            "loop": true,
-                                            "speed": 600,
-                                            "autoplay": {
-                                                "delay": 4500
-                                            },
-                                            "slidesPerView": 1,
-                                            "spaceBetween": 40,
-                                            "centeredSlides": true,
-                                            "breakpoints": {
-                                                "768": {
-                                                    "slidesPerView": 1.5,
-                                                    "spaceBetween": 30
-                                                },
-                                                "1200": {
-                                                    "slidesPerView": 2.2,
-                                                    "spaceBetween": 40
-                                                }
-                                            },
-                                            "pagination": {
-                                                "el": ".swiper-pagination",
-                                                "clickable": true
-                                            }
-                                        }
-                                    </script>
-                                    */}
-                
-                                    <div className="swiper-wrapper">
-                                        {featuredPosts.map((item) => (
-                                            <div className="mb-3 swiper-slide" key={item.id}>
-                                                <article className="blog-card">
-                                                    <div className="blog-image">
-                                                        {item.featured_image && imageUrl(item.featured_image) ? (
-                                                            <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} loading="lazy" />
+                        
+                                </section>
+                                
+                                
+                                <section id="category-section" className="category-section section">
+                                    <div className="container section-title" data-aos="fade-up">
+                                        <h2>Category Section</h2>
+                                        <div>
+                                            <span className="description-title">Category Section</span>
+                                        </div>
+                                    </div>
+                                    {categoryArticles.map((item, index) => (
+                                        <div key={index}>
+                                        {item.posts.length > 0 ? (
+                                            <div className="container" data-aos="fade-up" data-aos-delay="100">
+                                                <div className="row">
+                                                    {item.posts.slice(0, 3).map((article) => (
+                                                        <div key={article.id} className="col-md-6 col-lg-4">
+                                                            <article className="featured-post">
+                                                                <div className="post-img">
+                                                                    {article.featured_image && imageUrl(article.featured_image) && (
+                                                                        <img src={imageUrl(article.featured_image)} alt={ article.featured_image.alt_text || article.title } className="img-fluid" loading="lazy" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="post-content">
+                                                                    <div className="category-meta">
+                                                                        <span className="post-category">{article.categories[0].name}</span>
+                                                                        <div className="author-meta">
+                                                                            <span className="author-name"></span>
+                                                                            <span className="author-date">{dateLabel(article.created_at || article.published_at)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <h2 className="title">
+                                                                        <button className="btn btn-link" onClick={() => navigate(`/artikel/${encodeURIComponent(article.slug)}`)}>
+                                                                            {article.title}
+                                                                        </button>
+                                                                    </h2>
+                                                                </div>
+                                                            </article>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                
+                                                <div className="row">
+                                                {item.posts.slice(0, 6).map((article, index) => (
+                                                    <div key={index} className="col-xl-4 col-lg-6">
+                                                        <article className="list-post">
+                                                            <div className="post-img">
+                                                                {article.featured_image && imageUrl(article.featured_image) && (
+                                                                    <img src={imageUrl(article.featured_image)} alt={ article.featured_image.alt_text || article.title } className="img-fluid" loading="lazy" />
+                                                                )}
+                                                            </div>
+                                                            <div className="post-content">
+                                                                <div className="category-meta">
+                                                                    <span className="post-category">{article.categories[0].name}</span>
+                                                                </div>
+                                                                <h3 className="title">
+                                                                    <a href="#">{article.title}</a>
+                                                                </h3>
+                                                                <div className="post-meta">
+                                                                    <span className="post-date">{dateLabel(article.created_at || article.published_at)}</span>
+                                                                </div>
+                                                            </div>
+                                                        </article>
+                                                    </div>
+                                                ))}
+                                                </div>
+                                                
+                                            </div>
+                                        ) : (
+                                            <p>Belum ada artikel dalam kategori ini.</p>
+                                        )}
+                                        </div>
+                                    ))}
+                                </section>
+                                
+                                
+                                {/* Latest Posts */}
+                                <section id="latest-posts" className="latest-posts section">
+                        
+                                    {/* Section Title */}
+                                    <div className="container section-title" data-aos="fade-up">
+                                        <h2>Latest Posts</h2>
+                                        <div>
+                                            <span>Check Our</span> <span className="description-title">Latest Posts</span>
+                                        </div>
+                                    </div>
+                        
+                                    <div className="container" data-aos="fade-up" data-aos-delay="100">
+                                        <div className="row gy-4">
+                                        {latestPosts.map((post, index) => (
+                                            <div key={index} className="col-lg-4">
+                                                <article>
+                                                    <div className="post-img">
+                                                        {post.featured_image && imageUrl(post.featured_image) ? (
+                                                            <img src={imageUrl(post.featured_image)} alt={post.featured_image.alt_text || post.title} loading="lazy" className="img-fluid"/>
                                                         ) : (
                                                             <div className="post-image-placeholder">
                                                                 <span>JURNAL<br />IDE</span>
                                                             </div>
                                                         )}
-                                                        <div className="category-badge">
-                                                            {item.categories[0]?.name || 'Artikel'}
+                                                    </div>
+                        
+                                                    <p className="post-category">{post.categories[0]?.name}</p>
+                                                    <h2 className="title">
+                                                        <a href="blog-details">{post.title}</a>
+                                                    </h2>
+                        
+                                                    <div className="d-flex align-items-center">
+                                                        {authorImageUrl(post.user) ? (
+                                                            <img src={authorImageUrl(post.user)} alt={`Foto ${post.user?.name || 'penulis'}`} className="img-fluid post-author-img flex-shrink-0" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                                                        ) : (
+                                                            <span className="author-avatar-fallback" aria-hidden="true"> {(post.user?.name || 'T').charAt(0).toUpperCase()}</span>
+                                                        )}
+                                                        <div className="post-meta">
+                                                            <p className="post-author">{post.user?.name}</p>
+                                                            <p className="post-date">
+                                                                <time dateTime="2022-01-01">{dateLabel(post.created_at || post.published_at)}</time>
+                                                            </p>
                                                         </div>
                                                     </div>
-                                    
-                                                    <div className="blog-content">
+                                                </article>
+                                            </div>
+                                        ))}
+                                        </div>
+                                    </div>
+                        
+                                </section>
+                        
+                                {/* Call To Action Section */}
+                                <section id="call-to-action" className="call-to-action section">
+                                    <div className="container" data-aos="fade-up" data-aos-delay="100">
+                                        <div className="row gy-4 justify-content-between align-items-center">
+                                            <div className="col-lg-6">
+                                                <div className="cta-content" data-aos="fade-up" data-aos-delay="200">
+                                                    <h2>Subscribe to our newsletter</h2>
+                                                    <p>
+                                                        Proin eget tortor risus. Mauris blandit aliquet elit, eget tincidunt nibh pulvinar a. Curabitur aliquet quam id dui posuere blandit.
+                                                    </p>
+                                                    <form action="forms/newsletter.php" method="post" className="php-email-form cta-form" data-aos="fade-up" data-aos-delay="300">
+                                                        <div className="input-group mb-3">
+                                                            <input type="email" className="form-control" placeholder="Email address..." aria-label="Email address" aria-describedby="button-subscribe" />
+                                                            <button className="btn btn-primary" type="submit" id="button-subscribe">Subscribe</button>
+                                                        </div>
+                                                        <div className="loading">
+                                                            Loading
+                                                        </div>
+                                                        <div className="error-message"></div>
+                                                        <div className="sent-message">
+                                                            Your subscription request has been sent. Thank you!
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            <div className="col-lg-4">
+                                                <div className="cta-image" data-aos="zoom-out" data-aos-delay="200">
+                                                    <img src="assets/img/cta/cta-1.webp" alt="" className="img-fluid"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                            </>
+                        ) : !error ? (
+                            <div className="public-empty">
+                                <span>✳</span>
+                                <h3>Belum ada artikel untuk ditampilkan</h3>
+                                <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
+                            </div>
+                            ) : null
+                        }
+                        
+                        {posts && posts.last_page > 1 && (
+                            <div className="public-pagination">
+                                <button disabled={page <= 1} onClick={() => { setPage((p) => p - 1); window.scrollTo({ top: 500, behavior: 'smooth' }); }}>← Sebelumnya</button>
+                                <span>Halaman {posts.current_page} dari {posts.last_page}</span>
+                                <button disabled={page >= posts.last_page} onClick={() => { setPage((p) => p + 1); window.scrollTo({ top: 500, behavior: 'smooth' }); }}>Berikutnya →</button>
+                            </div>
+                        )}
+
+                    </>
+                ) : (
+                    <>
+                        <div className="page-title">
+                            <div className="breadcrumbs">
+                                <nav aria-label="breadcrumb">
+                                    <ol className="breadcrumb">
+                                        <li className="breadcrumb-item"><a href="#"><i className="bi bi-house"></i> Home</a></li>
+                                        <li className="breadcrumb-item"><a href="#">Category</a></li>
+                                        <li className="breadcrumb-item active current">Blog Details</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                
+                            <div className="title-wrapper">
+                                <h1>Blog Details</h1>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.</p>
+                            </div>
+                        </div>
+                        <div className="container">
+                            <div className="row">
+                                <div className="col-lg-8">
+                
+                                    {/* Blog Details Section */}
+                                    <section id="blog-details" className="blog-details section">
+                                        <div className="container" data-aos="fade-up">
+                
+                                            <article className="article">
+                
+                                                <div className="hero-img" data-aos="zoom-in">
+                                                    <img src="assets/img/blog/blog-post-3.webp" alt="Featured blog image" className="img-fluid" loading="lazy"/>
+                                                    <div className="meta-overlay">
+                                                        <div className="meta-categories">
+                                                            <a href="#" className="category">Web Development</a>
+                                                            <span className="divider">•</span>
+                                                            <span className="reading-time"><i className="bi bi-clock"></i> 6 min read</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                
+                                                <div className="article-content" data-aos="fade-up" data-aos-delay="100">
+                                                    <div className="content-header">
+                                                        <h1 className="title">Modern Web Development: Best Practices and Future Trends for 2025</h1>
+                
                                                         <div className="author-info">
                                                             <div className="author-details">
-                                                                <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
-                                                                <span className="publish-date">{dateLabel(item.published_at || item.created_at)}</span>
+                                                                <img src="assets/img/person/person-f-8.webp" alt="Author" className="author-img" />
+                                                                <div className="info">
+                                                                    <h4>Michael Chen</h4>
+                                                                    <span className="role">Senior Web Developer</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="post-meta">
+                                                                <span className="date"><i className="bi bi-calendar3"></i> Mar 15, 2025</span>
+                                                                <span className="divider">•</span>
+                                                                <span className="comments"><i className="bi bi-chat-text"></i> 18 Comments</span>
                                                             </div>
                                                         </div>
-                                    
-                                                        <h3>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-link p-0 text-start"
-                                                                onClick={() =>
-                                                                    navigate(`/artikel/${encodeURIComponent(item.slug)}`)
-                                                                }
-                                                            >
-                                                                {item.title}
-                                                            </button>
-                                                        </h3>
-                                    
-                                                        <p>{excerpt(item)}</p>
-                                    
-                                                        <div className="blog-footer">
-                                                            <span>{item.approved_comments_count ?? 0} komentar</span>
-                                                            <button
-                                                                type="button"
-                                                                className="btn-read-more"
-                                                                onClick={() =>
-                                                                    navigate(`/artikel/${encodeURIComponent(item.slug)}`)
-                                                                }
-                                                            >
-                                                                <span>Baca artikel</span>
-                                                                <i className="bi bi-arrow-right" />
-                                                            </button>
-                                                        </div>
                                                     </div>
-                                                </article>
-                                            </div>
-                                        ))}
-                                    
-                                        {featuredPosts.length === 0 && (
-                                            <p className="text-muted">Belum ada artikel unggulan.</p>
-                                        )}
-                                    </div>
                 
-                                    <div className="swiper-pagination"></div>
-                                </div>
-                
-                            </div>
-                
-                        </section>
-                        {/* /Featured Posts Section */}
-                
-                        {/* Category Section Section */}
-                        <section id="category-section" className="category-section section">
-                
-                            {/* Section Title */}
-                            <div className="container section-title" data-aos="fade-up">
-                                <span className="description-title">Category Section</span>
-                                <h2>Category Section</h2>
-                                <p> Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-                            </div>
-                            {/* End Section Title */}
-                
-                            <div className="container" data-aos="fade-up" data-aos-delay="100">
-                                {/* Main Featured Post
-                                <div className="row gy-4 mb-5">
-                                    <div className="col-lg-8">
-                                        <article className="hero-post" data-aos="zoom-out" data-aos-delay="200">
-                                            <div className="post-img">
-                                                <img src="assets/img/blog/blog-post-5.webp" alt="" className="img-fluid" loading="lazy"/>
-                                            </div>
-                                            <div className="post-content">
-                                                <div className="author-info">
-                                                    <img src="assets/img/person/person-m-8.webp" alt="" className="author-avatar"/>
-                                                    <div className="author-details">
-                                                        <span className="author-name">Michael R.</span>
-                                                        <span className="post-date">15 March 2024</span>
-                                                    </div>
-                                                </div>
-                                                <h2 className="post-title">
-                                                    <a href="blog-details">Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore</a>
-                                                </h2>
-                                                <p className="post-excerpt">
-                                                    Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
-                                                </p>
-                                                <div className="post-stats">
-                                                    <span className="read-time"><i className="bi bi-clock"></i> 5 min read</span>
-                                                    <span className="comments"><i className="bi bi-chat-dots"></i> 12 comments</span>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    </div>
-                
-                                    <div className="col-lg-4">
-                                        <div className="sidebar-posts">
-                                            
-                                            <article className="sidebar-post" data-aos="fade-left" data-aos-delay="300">
-                                                <div className="post-img">
-                                                    <img src="assets/img/blog/blog-post-8.webp" alt="" className="img-fluid" loading="lazy"/>
-                                                </div>
-                                                <div className="post-content">
-                                                    <span className="post-category">Design</span>
-                                                    <h4 className="title">
-                                                        <a href="blog-details">Neque porro quisquam est qui dolorem ipsum quia dolor sit amet</a>
-                                                    </h4>
-                                                    <div className="post-meta">
-                                                        <span className="post-date">22 February 2024</span>
-                                                    </div>
-                                                </div>
-                                            </article>
-                                            
-                                        </div>
-                                    </div>
-                                </div>
-                                */}
-                                
-                                {loading ? (
-                                    <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
-                                ) : posts.length ? (
-                                    <div className="posts-grid">
-                                        <div className="row gy-4">
-                                        {posts.map((item) => (
-                                            <div key={item.id} className="col-md-6" data-aos="fade-up" data-aos-delay="200">
-                                        
-                                                <article className="grid-post">
-                                                    <div className="post-img">
-                                                        {item.featured_image && imageUrl(item.featured_image) ? (
-                                                            <img src={imageUrl(item.featured_image)} alt={item.featured_image.alt_text || item.title} className="img-fluid" loading="lazy" /> 
-                                                        ) : (
-                                                            <span className={`post-image-placeholder placeholder-${index % 4}`}><span>JURNAL<br />IDE</span><b>✳</b></span>
-                                                        )}
-                                                        <div className="post-overlay">
-                                                            <span className="category-tag">{item.categories[0]?.name || 'Artikel'}</span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="post-content">
-                                                        <h3 className="title">
-                                                            <button className="btn btn-outline-primary" onClick={() => navigate(`/artikel/${encodeURIComponent(item.slug)}`)}>{item.title}</button>
-                                                        </h3>
-                                                        <p className="excerpt">{excerpt(item)}</p>
-                                                        <div className="post-footer">
-                                                            
-                                                            <div className="author-info">
-                                                                {authorImageUrl(item.user) ? (
-                                                                    <img src={authorImageUrl(item.user)} alt={`Foto ${item.user?.name || 'penulis'}`} className="author-img" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
-                                                                ) : (
-                                                                    <span className="author-avatar-fallback" aria-hidden="true"> {(item.user?.name || 'T').charAt(0).toUpperCase()}</span>
-                                                                )}
-                                                                <span className="author-name">{item.user?.name || 'Tim Redaksi'}</span>
-                                                            </div>
-        
-                                                            {/* <span className="read-time">3 min read</span> */}
-                                                            <time>{dateLabel(item.published_at || item.created_at)}</time>
-                                                        </div>
-                                                    </div>
-                                                </article>
-                                            </div>
-                                        ))}
-                                        </div>
-                                    </div>
-                                ) : !error ? (
-                                    <div className="public-empty">
-                                        <span>✳</span>
-                                        <h3>Belum ada artikel untuk ditampilkan</h3>
-                                        <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
-                                    </div>
-                                    ) : null
-                                }
-                                
-                            </div>
-                
-                        </section>
-                        {/* /Category Section Section */}
-                
-                        {/* Latest Posts Section */}
-                        <section id="latest-posts" className="latest-posts section">
-                
-                            {/* Section Title */}
-                            <div className="container section-title" data-aos="fade-up">
-                                <span className="description-title">Latest Posts</span>
-                                <h2>Latest Posts</h2>
-                                <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-                            </div>
-                            {/* End Section Title */}
-                
-                            <div className="container" data-aos="fade-up" data-aos-delay="100">
-                
-                                <div className="row gy-4 align-items-stretch">
-                
-                                    <div className="col-lg-7" data-aos="zoom-in" data-aos-delay="150">
-                                        <article className="featured-post position-relative h-100">
-                                            <figure className="featured-media m-0">
-                                                <img src="assets/img/blog/blog-hero-4.webp" alt="Featured post image" className="img-fluid w-100" loading="lazy"/>
-                                            </figure>
-                
-                                            <div className="featured-content">
-                                                <div className="date-badge">
-                                                    <span className="day">12</span>
-                                                    <span className="mon">Dec</span>
-                                                </div>
-                
-                                                <span className="cat-badge inverse">Politics</span>
-                
-                                                <h3 className="title">Veritatis maiores natus officiis sit, temporibus alias dicta voluptatum</h3>
-                                                <p className="excerpt d-none d-md-block">
-                                                    Quisquam perferendis officiis incidunt, facilisis aliquet consectetur lorem luctus. Ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                                                </p>
-                
-                                                <div className="meta d-flex align-items-center gap-3">
-                                                    <div className="d-flex align-items-center">
-                                                        <i className="bi bi-person"></i><span className="ps-2">Jane Cooper</span>
-                                                    </div>
-                                                    <span className="sep">/</span>
-                                                    <div className="d-flex align-items-center">
-                                                        <i className="bi bi-folder2"></i><span className="ps-2">Editorial</span>
-                                                    </div>
-                                                </div>
-                
-                                                <a href="blog-details" className="readmore stretched-link"><span>Continue</span><i className="bi bi-arrow-right"></i></a>
-                                            </div>
-                                        </article>
-                                    </div>
-                                    {/* End Featured Post */}
-                
-                                    <div className="col-lg-5">
-                                        <div className="row gy-4">
-                                            
-                                            <div className="col-12" data-aos="fade-left" data-aos-delay="200">
-                                                <article className="compact-post h-100">
-                                                    <div className="thumb">
-                                                        <img src="assets/img/blog/blog-post-square-2.webp" className="img-fluid" alt="Post thumbnail" loading="lazy"/>
-                                                    </div>
                                                     <div className="content">
-                                                        <div className="meta">
-                                                            <span className="date">05 Aug</span>
-                                                            <span className="dot">•</span>
-                                                            <span className="category">Sports</span>
-                                                        </div>
-                                                        <h4 className="title">Officia recusandae cumque, dolore asperiores ducimus</h4>
-                                                        <a href="blog-details" className="readmore"><span>Read Article</span><i className="bi bi-arrow-right"></i></a>
-                                                    </div>
-                                                </article>
-                                            </div>
-                                            {/* End Compact Post */}
+                                                        <p className="lead">
+                                                            The landscape of web development continues to evolve at an unprecedented pace, bringing new technologies, frameworks, and methodologies that reshape how we build modern web applications.
+                                                        </p>
                 
+                                                        <p>
+                                                            As we delve into 2025, the web development ecosystem has transformed dramatically, introducing innovative approaches to building faster, more secure, and highly engaging web experiences. This comprehensive guide explores the latest trends and best practices that are defining the future of web development.
+                                                        </p>
                 
-                                        </div>
-                                    </div>
-                                    {/* End Right Column */}
-                                    
-                                    {/* loading ? (
-                                        <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
-                                    ) : latestposts?.data.length ? (
-                                    ) : !error ? (
-                                        <div className="public-empty">
-                                            <span>✳</span>
-                                            <h3>Belum ada artikel untuk ditampilkan</h3>
-                                            <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
-                                        </div> ) : null
-                                    */}
-                                    
-                                    {latestPosts?.map((post) => (
-                                        <div key={post.id} className="col-lg-4" data-aos="fade-up" data-aos-delay="200">
-                                            <article className="card-post h-100">
-                                                <div className="post-img position-relative overflow-hidden">
-                                                    {post.featured_image && imageUrl(post.featured_image) ? (
-                                                        <img className="img-fluid w-100" src={imageUrl(post.featured_image)} alt={post.featured_image.alt_text || post.title} loading="lazy"
-                                                        />
-                                                    ) : (
-                                                        <div className="post-image-placeholder">
-                                                            <span>JURNAL<br />IDE</span>
+                                                        <div className="content-image right-aligned">
+                                                            <img src="assets/img/blog/blog-hero-2.webp" className="img-fluid" alt="Modern web development tools" loading="lazy"/>
+                                                            <figcaption>Modern development environments emphasize collaboration and efficiency</figcaption>
                                                         </div>
-                                                    )}
-                                                </div>
-                                                <div className="content">
-                                                    <div className="meta d-flex align-items-center flex-wrap gap-2">
-                                                        <span className="cat-badge">{post?.categories[0]?.name}</span>
-                                                        <div className="d-flex align-items-center ms-auto">
-                                                            <i className="bi bi-person"></i> <span className="ps-2">{post.user?.name || 'Tim Redaksi'}</span>
+                
+                                                        <h2>The Rise of Web Components</h2>
+                                                        <p>
+                                                            Web Components have become increasingly crucial in modern web development, offering a standardized way to create reusable custom elements. Key advantages include:
+                                                        </p>
+                                                        <ul>
+                                                            <li>Enhanced code reusability across different frameworks</li>
+                                                            <li>Better encapsulation of functionality</li>
+                                                            <li>Improved maintenance and scalability</li>
+                                                            <li>Framework-agnostic component development</li>
+                                                        </ul>
+                
+                                                        <div className="highlight-box">
+                                                            <h3>Key Trends in 2025</h3>
+                                                            <ul className="trend-list">
+                                                                <li>
+                                                                    <i className="bi bi-lightning-charge"></i>
+                                                                    <span>Edge Computing and Serverless Architecture</span>
+                                                                </li>
+                                                                <li>
+                                                                    <i className="bi bi-shield-check"></i>
+                                                                    <span>Enhanced Security Measures</span>
+                                                                </li>
+                                                                <li>
+                                                                    <i className="bi bi-phone"></i>
+                                                                    <span>Progressive Web Apps (PWAs)</span>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                
+                                                        <h2>Performance Optimization</h2>
+                                                        <p>
+                                                            Performance remains a critical factor in web development, with an increasing focus on Core Web Vitals and user experience metrics. Modern applications must be optimized for both speed and efficiency.
+                                                        </p>
+                
+                                                        <blockquote>
+                                                            <p>
+                                                                "The future of web development lies not just in writing code, but in creating seamless, accessible, and performant experiences that work for everyone, everywhere."
+                                                            </p>
+                                                            <cite>Emily Thompson, Web Performance Architect</cite>
+                                                        </blockquote>
+                
+                                                        <div className="content-grid">
+                                                            <div className="row g-4">
+                                                                <div className="col-md-6">
+                                                                    <div className="info-card">
+                                                                        <i className="bi bi-speedometer2"></i>
+                                                                        <h4>Performance Metrics</h4>
+                                                                        <p>
+                                                                            Focus on Core Web Vitals and user-centric performance metrics for better search rankings and user experience.
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="col-md-6">
+                                                                    <div className="info-card">
+                                                                        <i className="bi bi-universal-access"></i>
+                                                                        <h4>Accessibility</h4>
+                                                                        <p>
+                                                                            Implementing WCAG guidelines and ensuring web applications are accessible to all users across different devices.
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                
+                                                        <h2>Looking Forward</h2>
+                                                        <p>
+                                                            As we continue through 2025, web development practices will further evolve, embracing new technologies while maintaining a strong foundation in performance, accessibility, and user experience. Staying updated with these trends and best practices is crucial for developers looking to build modern, scalable web applications.
+                                                        </p>
+                                                    </div>
+                
+                                                    <div className="meta-bottom">
+                                                        <div className="tags-section">
+                                                            <h4>Related Topics</h4>
+                                                            <div className="tags">
+                                                                <a href="#" className="tag">Web Development</a>
+                                                                <a href="#" className="tag">Performance</a>
+                                                                <a href="#" className="tag">Best Practices</a>
+                                                                <a href="#" className="tag">Trends</a>
+                                                                <a href="#" className="tag">2025</a>
+                                                            </div>
+                                                        </div>
+                
+                                                        <div className="share-section">
+                                                            <h4>Share Article</h4>
+                                                            <div className="social-links">
+                                                                <a href="#" className="twitter"><i className="bi bi-twitter-x"></i></a>
+                                                                <a href="#" className="facebook"><i className="bi bi-facebook"></i></a>
+                                                                <a href="#" className="linkedin"><i className="bi bi-linkedin"></i></a>
+                                                                <a href="#" className="copy-link" title="Copy Link"><i className="bi bi-link-45deg"></i></a>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <h3 className="title">{post.title}</h3>
-                                                    <a href={`${post.slug}`} className="readmore">
-                                                        <span>Read More</span>
-                                                        <i className="bi bi-arrow-right"></i>
-                                                    </a>
                                                 </div>
+                
                                             </article>
+                
                                         </div>
-                                    ))}
+                                    </section>
+                
+                                    {/* Blog Author Section */}
+                                    <section id="blog-author" className="blog-author section">
+                
+                                        <div className="container" data-aos="fade-up">
+                                            <div className="author-box">
+                                                <div className="row align-items-center">
+                                                    <div className="col-lg-3 col-md-4 text-center">
+                                                        <img src="assets/img/person/person-f-12.webp" className="author-img rounded-circle" alt="" loading="lazy"/>
+                
+                                                        <div className="author-social-links mt-3">
+                                                            <a href="https://twitter.com/#" className="twitter"><i className="bi bi-twitter-x"></i></a>
+                                                            <a href="https://linkedin.com/#" className="linkedin"><i className="bi bi-linkedin"></i></a>
+                                                            <a href="https://github.com/#" className="github"><i className="bi bi-github"></i></a>
+                                                            <a href="https://facebook.com/#" className="facebook"><i className="bi bi-facebook"></i></a>
+                                                            <a href="https://instagram.com/#" className="instagram"><i className="bi bi-instagram"></i></a>
+                                                        </div>
+                                                    </div>
+                
+                                                    <div className="col-lg-9 col-md-8">
+                                                        <div className="author-content">
+                                                            <h3 className="author-name">Sarah Anderson</h3>
+                                                            <span className="author-title">Senior Tech Writer &amp; Developer Advocate</span>
+                
+                                                            <div className="author-bio mt-3">
+                                                                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium. Passionate about creating content that bridges the gap between developers and end-users.
+                                                            </div>
+                
+                                                            <div className="author-website mt-3">
+                                                                <a href="#" className="website-link">
+                                                                    <i className="bi bi-globe"></i>
+                                                                    <span>sarahanderson.dev</span>
+                                                                </a>
+                                                                <a href="#" className="more-posts">
+                                                                    Read More from Sarah <i className="bi bi-arrow-right"></i>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                
+                                    </section>
+                                    
+                                    {/* Blog Comments Section */}
+                                    <section id="blog-comments" className="blog-comments section">
+                
+                                        <div className="container" data-aos="fade-up" data-aos-delay="100">
+                
+                                            <div className="blog-comments-3">
+                                                <div className="section-header">
+                                                    <h3>Discussion <span className="comment-count">(8)</span></h3>
+                                                </div>
+                
+                                                <div className="comments-wrapper">
+                                                    {/* Comment 1 */}
+                                                    <article className="comment-card">
+                                                        <div className="comment-header">
+                                                            <div className="user-info">
+                                                                <img src="assets/img/person/person-f-9.webp" alt="User avatar" loading="lazy"/>
+                                                                <div className="meta">
+                                                                    <h4 className="name">Sarah Williams</h4>
+                                                                    <span className="date"><i className="bi bi-calendar3"></i> February 13, 2025</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="comment-content">
+                                                            <p>
+                                                                Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper.
+                                                            </p>
+                                                        </div>
+                                                        <div className="comment-actions">
+                                                            <button className="action-btn like-btn">
+                                                                <i className="bi bi-hand-thumbs-up"></i>
+                                                                <span>12</span>
+                                                            </button>
+                                                            <button className="action-btn reply-btn">
+                                                                <i className="bi bi-reply"></i>
+                                                                <span>Reply</span>
+                                                            </button>
+                                                        </div>
+                                                    </article>
+                
+                                                    {/* Comment 2 with replies */}
+                                                    <article className="comment-card">
+                                                        <div className="comment-header">
+                                                            <div className="user-info">
+                                                                <img src="assets/img/person/person-m-9.webp" alt="User avatar" loading="lazy"/>
+                                                                <div className="meta">
+                                                                    <h4 className="name">James Cooper</h4>
+                                                                    <span className="date"><i className="bi bi-calendar3"></i> February 13, 2025</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="comment-content">
+                                                            <p>
+                                                                Quisque ut nisi. Donec mi odio, faucibus at, scelerisque quis, convallis in, nisi. Suspendisse non nisl sit amet velit hendrerit rutrum. Ut leo. Ut a nisl id ante tempus hendrerit.
+                                                            </p>
+                                                        </div>
+                                                        <div className="comment-actions">
+                                                            <button className="action-btn like-btn">
+                                                                <i className="bi bi-hand-thumbs-up"></i>
+                                                                <span>8</span>
+                                                            </button>
+                                                            <button className="action-btn reply-btn">
+                                                                <i className="bi bi-reply"></i>
+                                                                <span>Reply</span>
+                                                            </button>
+                                                        </div>
+                
+                                                        {/* Reply Thread */}
+                                                        <div className="reply-thread">
+                                                            {/* Reply 1 */}
+                                                            <article className="comment-card reply">
+                                                                <div className="comment-header">
+                                                                    <div className="user-info">
+                                                                        <img src="assets/img/person/person-f-9.webp" alt="User avatar" loading="lazy"/>
+                                                                        <div className="meta">
+                                                                            <h4 className="name">Emily Parker</h4>
+                                                                            <span className="date"><i className="bi bi-calendar3"></i> February 13, 2025</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="comment-content">
+                                                                    <p>
+                                                                        Cras ultricies mi eu turpis hendrerit fringilla. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae.
+                                                                    </p>
+                                                                </div>
+                                                                <div className="comment-actions">
+                                                                    <button className="action-btn like-btn">
+                                                                        <i className="bi bi-hand-thumbs-up"></i>
+                                                                        <span>5</span>
+                                                                    </button>
+                                                                    <button className="action-btn reply-btn">
+                                                                        <i className="bi bi-reply"></i>
+                                                                        <span>Reply</span>
+                                                                    </button>
+                                                                </div>
+                                                            </article>
+                
+                                                            {/* Reply 2 */}
+                                                            <article className="comment-card reply">
+                                                                <div className="comment-header">
+                                                                    <div className="user-info">
+                                                                        <img src="assets/img/person/person-f-7.webp" alt="User avatar" loading="lazy"/>
+                                                                        <div className="meta">
+                                                                            <h4 className="name">Daniel Brown</h4>
+                                                                            <span className="date"><i className="bi bi-calendar3"></i> February 13, 2025</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="comment-content">
+                                                                    <p>
+                                                                        Nam commodo suscipit quam. Vestibulum ullamcorper mauris at ligula. Fusce fermentum odio nec arcu.
+                                                                    </p>
+                                                                </div>
+                                                                <div className="comment-actions">
+                                                                    <button className="action-btn like-btn">
+                                                                        <i className="bi bi-hand-thumbs-up"></i>
+                                                                        <span>3</span>
+                                                                    </button>
+                                                                    <button className="action-btn reply-btn">
+                                                                        <i className="bi bi-reply"></i>
+                                                                        <span>Reply</span>
+                                                                    </button>
+                                                                </div>
+                                                            </article>
+                                                        </div>
+                                                    </article>
+                
+                                                    {/* Comment 3 */}
+                                                    <article className="comment-card">
+                                                        <div className="comment-header">
+                                                            <div className="user-info">
+                                                                <img src="assets/img/person/person-m-6.webp" alt="User avatar" loading="lazy"/>
+                                                                <div className="meta">
+                                                                    <h4 className="name">Rachel Adams</h4>
+                                                                    <span className="date"><i className="bi bi-calendar3"></i> February 13, 2025</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="comment-content">
+                                                            <p>
+                                                                Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim.
+                                                            </p>
+                                                        </div>
+                                                        <div className="comment-actions">
+                                                            <button className="action-btn like-btn">
+                                                                <i className="bi bi-hand-thumbs-up"></i>
+                                                                <span>6</span>
+                                                            </button>
+                                                            <button className="action-btn reply-btn">
+                                                                <i className="bi bi-reply"></i>
+                                                                <span>Reply</span>
+                                                            </button>
+                                                        </div>
+                                                    </article>
+                                                </div>
+                                            </div>
+                
+                                        </div>
+                
+                                    </section>
+                                    
+                                    {/* Blog Comment Form Section */}
+                                    <section id="blog-comment-form" className="blog-comment-form section">
+                
+                                        <div className="container" data-aos="fade-up" data-aos-delay="100">
+                
+                                            <form method="post" role="form">
+                
+                                                <div className="section-header">
+                                                    <h3>Share Your Thoughts</h3>
+                                                    <p>
+                                                        Your email address will not be published. Required fields are marked *
+                                                    </p>
+                                                </div>
+                
+                                                <div className="row gy-3">
+                                                    <div className="col-md-6 form-group">
+                                                        <label for="name">Full Name *</label>
+                                                        <input type="text" name="name" className="form-control" id="name" placeholder="Enter your full name" required />
+                                                    </div>
+                
+                                                    <div className="col-md-6 form-group">
+                                                        <label for="email">Email Address *</label>
+                                                        <input type="email" name="email" className="form-control" id="email" placeholder="Enter your email address" required />
+                                                    </div>
+                
+                                                    <div className="col-12 form-group">
+                                                        <label for="website">Website</label>
+                                                        <input type="url" name="website" className="form-control" id="website" placeholder="Your website (optional)" />
+                                                    </div>
+                
+                                                    <div className="col-12 form-group">
+                                                        <label for="comment">Your Comment *</label>
+                                                        <textarea className="form-control" name="comment" id="comment" rows="5" placeholder="Write your thoughts here..." required=""></textarea>
+                                                    </div>
+                
+                                                    <div className="col-12 text-center">
+                                                        <button type="submit" className="btn-submit">Post Comment</button>
+                                                    </div>
+                                                </div>
+                
+                                            </form>
+                
+                                        </div>
+                
+                                    </section>
                 
                                 </div>
-                            </div>
+                                <div className="col-lg-4 sidebar">
+                                    <div className="widgets-container" data-aos="fade-up" data-aos-delay="200">
                 
-                        </section>
-                        {/* /Latest Posts Section */}
+                                        {/* Search Widget */}
+                                        <div className="search-widget widget-item">
+                
+                                            <h3 className="widget-title">Search</h3>
+                                            <form action="">
+                                                <input type="text"/>
+                                                <button type="submit" title="Search"><i className="bi bi-search"></i></button>
+                                            </form>
+                
+                                        </div>
+                                        {/*/Search Widget */}
+                
+                                        {/* Categories Widget */}
+                                        <div className="categories-widget widget-item">
+                
+                                            <h3 className="widget-title">Categories</h3>
+                                            <ul className="mt-3">
+                                                <li><a href="#">General <span>(25)</span></a></li>
+                                                <li><a href="#">Lifestyle <span>(12)</span></a></li>
+                                                <li><a href="#">Travel <span>(5)</span></a></li>
+                                                <li><a href="#">Design <span>(22)</span></a></li>
+                                                <li><a href="#">Creative <span>(8)</span></a></li>
+                                                <li><a href="#">Educaion <span>(14)</span></a></li>
+                                            </ul>
+                
+                                        </div>
+                
+                                        {/* Categories Widget */}
+                                        <div className="categories-widget widget-item">
+                
+                                            <h3 className="widget-title">Categories</h3>
+                                            <ul className="mt-3">
+                                                <li><a href="#">General <span>(25)</span></a></li>
+                                                <li><a href="#">Lifestyle <span>(12)</span></a></li>
+                                                <li><a href="#">Travel <span>(5)</span></a></li>
+                                                <li><a href="#">Design <span>(22)</span></a></li>
+                                                <li><a href="#">Creative <span>(8)</span></a></li>
+                                                <li><a href="#">Educaion <span>(14)</span></a></li>
+                                            </ul>
+                
+                                        </div>
+                                        
+                                        {/* 5 Recent Posts Widget */}
+                                        <div className="recent-posts-widget widget-item">
+                
+                                            <h3 className="widget-title">Recent Posts</h3>
+                
+                                            <div className="post-item">
+                                                <img src="assets/img/blog/blog-post-square-1.webp" alt="" className="flex-shrink-0"/>
+                                                <div>
+                                                    <h4><a href="blog-details">Nihil blanditiis at in nihil autem</a></h4>
+                                                    <time datetime="2020-01-01">Jan 1, 2020</time>
+                                                </div>
+                                            </div>
+                
+                                        </div>
+                
+                                        {/* Tags Widget */}
+                                        <div className="tags-widget widget-item">
+                
+                                            <h3 className="widget-title">Tags</h3>
+                                            <ul>
+                                                <li><a href="#">App</a></li>
+                                                <li><a href="#">IT</a></li>
+                                                <li><a href="#">Business</a></li>
+                                                <li><a href="#">Mac</a></li>
+                                                <li><a href="#">Design</a></li>
+                                                <li><a href="#">Office</a></li>
+                                                <li><a href="#">Creative</a></li>
+                                                <li><a href="#">Studio</a></li>
+                                                <li><a href="#">Smart</a></li>
+                                                <li><a href="#">Tips</a></li>
+                                                <li><a href="#">Marketing</a></li>
+                                            </ul>
+                
+                                        </div>
+                
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </>
                 )}
         
             </main>
         
-            <footer id="footer" className="footer position-relative light-background">
-        
-                <div className="container">
-                    <div className="row gy-5">
-        
-                        <div className="col-lg-4">
-                            <div className="footer-brand">
-                                <a href="index" className="logo d-flex align-items-center mb-3">
-                                    <span className="sitename">Story</span>
-                                </a>
-                                <p className="tagline">
-                                    Innovating the digital landscape with elegant solutions and timeless design.
+            <footer id="footer" className="footer">
+                <div className="container footer-top">
+                    <div className="row gy-4">
+                        <div className="col-lg-4 col-md-6 footer-about">
+                            <a href="index" className="logo d-flex align-items-center">
+                                <span className="sitename">Blogy</span>
+                            </a>
+                            <div className="footer-contact pt-3">
+                                <p>
+                                    A108 Adam Street
                                 </p>
-        
-                                <div className="social-links mt-4">
-                                    <a href="#" aria-label="Facebook"><i className="bi bi-facebook"></i></a>
-                                    <a href="#" aria-label="Instagram"><i className="bi bi-instagram"></i></a>
-                                    <a href="#" aria-label="LinkedIn"><i className="bi bi-linkedin"></i></a>
-                                    <a href="#" aria-label="Twitter"><i className="bi bi-twitter-x"></i></a>
-                                    <a href="#" aria-label="Dribbble"><i className="bi bi-dribbble"></i></a>
-                                </div>
+                                <p>
+                                    New York, NY 535022
+                                </p>
+                                <p className="mt-3">
+                                    <strong>Phone:</strong> <span>+1 5589 55488 55</span>
+                                </p>
+                                <p>
+                                    <strong>Email:</strong> <span>info@example.com</span>
+                                </p>
+                            </div>
+                            <div className="social-links d-flex mt-4">
+                                <a href=""><i className="bi bi-twitter-x"></i></a>
+                                <a href=""><i className="bi bi-facebook"></i></a>
+                                <a href=""><i className="bi bi-instagram"></i></a>
+                                <a href=""><i className="bi bi-linkedin"></i></a>
                             </div>
                         </div>
         
-                        <div className="col-lg-6">
-                            <div className="footer-links-grid">
-                                <div className="row">
-                                    <div className="col-6 col-md-4">
-                                        <h5>Company</h5>
-                                        <ul className="list-unstyled">
-                                            <li><a href="#">About Us</a></li>
-                                            <li><a href="#">Our Team</a></li>
-                                            <li><a href="#">Careers</a></li>
-                                            <li><a href="#">Newsroom</a></li>
-                                        </ul>
-                                    </div>
-                                    <div className="col-6 col-md-4">
-                                        <h5>Services</h5>
-                                        <ul className="list-unstyled">
-                                            <li><a href="#">Web Development</a></li>
-                                            <li><a href="#">UI/UX Design</a></li>
-                                            <li><a href="#">Digital Strategy</a></li>
-                                            <li><a href="#">Branding</a></li>
-                                        </ul>
-                                    </div>
-                                    <div className="col-6 col-md-4">
-                                        <h5>Support</h5>
-                                        <ul className="list-unstyled">
-                                            <li><a href="#">Help Center</a></li>
-                                            <li><a href="#">Contact Us</a></li>
-                                            <li><a href="#">Privacy Policy</a></li>
-                                            <li><a href="#">Terms of Service</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="col-lg-2 col-md-3 footer-links">
+                            <h4>Useful Links</h4>
+                            <ul>
+                                <li><a href="#">Home</a></li>
+                                <li><a href="#">About us</a></li>
+                                <li><a href="#">Services</a></li>
+                                <li><a href="#">Terms of service</a></li>
+                                <li><a href="#">Privacy policy</a></li>
+                            </ul>
                         </div>
         
-                        <div className="col-lg-2">
-                            <div className="footer-cta">
-                                <h5>Let's Connect</h5>
-                                <a href="contact" className="btn btn-outline">Get in Touch</a>
-                            </div>
+                        <div className="col-lg-2 col-md-3 footer-links">
+                            <h4>Our Services</h4>
+                            <ul>
+                                <li><a href="#">Web Design</a></li>
+                                <li><a href="#">Web Development</a></li>
+                                <li><a href="#">Product Management</a></li>
+                                <li><a href="#">Marketing</a></li>
+                                <li><a href="#">Graphic Design</a></li>
+                            </ul>
+                        </div>
+        
+                        <div className="col-lg-2 col-md-3 footer-links">
+                            <h4>Hic solutasetp</h4>
+                            <ul>
+                                <li><a href="#">Molestiae accusamus iure</a></li>
+                                <li><a href="#">Excepturi dignissimos</a></li>
+                                <li><a href="#">Suscipit distinctio</a></li>
+                                <li><a href="#">Dilecta</a></li>
+                                <li><a href="#">Sit quas consectetur</a></li>
+                            </ul>
+                        </div>
+        
+                        <div className="col-lg-2 col-md-3 footer-links">
+                            <h4>Nobis illum</h4>
+                            <ul>
+                                <li><a href="#">Ipsam</a></li>
+                                <li><a href="#">Laudantium dolorum</a></li>
+                                <li><a href="#">Dinera</a></li>
+                                <li><a href="#">Trodelas</a></li>
+                                <li><a href="#">Flexo</a></li>
+                            </ul>
                         </div>
         
                     </div>
                 </div>
-        
-                <div className="footer-bottom">
-                    <div className="container">
-                        <div className="row">
-                            <div className="col-12">
-                                <div className="footer-bottom-content">
-                                    <p className="mb-0">
-                                        © <strong>Story</strong>. All rights reserved.
-                                    </p>
-                                    <div className="credits">
-                                        {/* All the links in the footer should remain intact. */}
-                                        {/* You can delete the links only if you've purchased the pro version. */}
-                                        {/* Licensing information: https://bootstrapmade.com/license/ */}
-                                        {/* Purchase the pro version with working PHP/AJAX contact form: [buy-url] */}
-                                        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a> | <a href="https://bootstrapmade.com/tools/">DevTools</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div className="container copyright text-center mt-4">
                 </div>
-        
             </footer>
         
             {/* Scroll Top */}
             <a href="#" id="scroll-top" className="scroll-top d-flex align-items-center justify-content-center"><i className="bi bi-arrow-up-short"></i></a>
-        
-            {/* 
-            Preloader
-                <div id="preloader"></div>
-            */}
         </>
     );
 }

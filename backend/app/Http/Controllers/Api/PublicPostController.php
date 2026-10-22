@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Comment;
 use App\Models\Post;
 use Illuminate\Http\JsonResponse;
@@ -178,6 +179,39 @@ class PublicPostController extends Controller
             'success' => true,
             'message' => 'Status komentar berhasil diperbarui.',
             'data' => $comment->only(['id', 'post_id', 'status']),
+        ]);
+    }
+    
+    public function postsByCategory(): JsonResponse
+    {
+        $categories = Category::query()
+            ->whereHas('posts', function ($query) {
+                $query->where('status', 'published')
+                    ->whereNotNull('published_at')
+                    ->where('published_at', '<=', now());
+            })
+            ->with(['posts' => function ($query) {
+                $query->where('status', 'published')
+                    ->whereNotNull('published_at')
+                    ->where('published_at', '<=', now())
+                    ->with([
+                        'user:id,name,profile_photo_path',
+                        'categories:id,name,slug',
+                        'featuredImage',
+                    ])
+                    ->withCount([
+                        'comments as approved_comments_count' => fn ($comments) => $comments->where('status', 'approved'),
+                    ])
+                    ->orderByDesc('published_at')
+                    ->orderByDesc('id')
+                    ->limit(4);
+            }])
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'description']);
+    
+        return response()->json([
+            'success' => true,
+            'data' => $categories,
         ]);
     }
 }

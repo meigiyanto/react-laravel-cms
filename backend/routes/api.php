@@ -29,6 +29,8 @@ Route::prefix('public')->group(function () {
     Route::get('/posts/{slug}', [PublicPostController::class, 'show']);
     Route::get('/posts/{slug}/comments', [PublicPostController::class, 'comments']);
     Route::post('/posts/{slug}/comments', [PublicPostController::class, 'storeComment'])->middleware('throttle:5,1');
+
+    Route::get('/categories/posts', [PublicPostController::class, 'postsByCategory']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
