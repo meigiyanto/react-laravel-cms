@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import '../public-site.css';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
@@ -120,12 +120,11 @@ function excerpt(post: Post): string {
 
 export default function PublicSite() {
     const [pathname, setPathname] = useState(window.location.pathname);
-    const [posts, setPosts] = useState <Page <Post> | null> (null);
+    const [posts, setPosts] = useState<Post[]>([]);
     const [latestPosts, setLatestPosts] = useState<Post[]>([]);
-    const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
+    const [featuredPosts, setfeaturedPosts] = useState<Post[]>([]);
     const [post, setPost] = useState <Post | null> (null);
     const [comments, setComments] = useState <Page <CommentItem> | null > (null);
-    const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
     const [page, setPage] = useState(1);
@@ -156,13 +155,6 @@ export default function PublicSite() {
         });
     }
     
-    /*
-    useEffect(() => {
-        const timer = window.setTimeout(() => setSearch(searchInput.trim()), 250);
-        return () => window.clearTimeout(timer);
-    }, [searchInput]);
-    */
-    
     useEffect(() => {
         let active = true;
     
@@ -192,7 +184,7 @@ export default function PublicSite() {
                     if (active) setLoading(false);
                 }
             } else {
-                setPosts(null);
+                setPosts([]);
                 try {
                     const [response, featuredResponse, categoryResponse] =
                         await Promise.all([
@@ -211,7 +203,7 @@ export default function PublicSite() {
                     
                     if (active) {
                         setPosts(response.data.data.posts.data);
-                        setFeaturedPosts(featuredResponse.data.data.posts.data);
+                        setfeaturedPosts(featuredResponse.data.data.posts.data);
                         setLatestPosts(response.data.data.latestposts);
                         setCategoryArticles(categoryResponse.data.data);
                     }
@@ -231,7 +223,7 @@ export default function PublicSite() {
         return () => {
             active = false;
         };
-    }, [slug, page, /* search,*/ category]);
+    }, [slug, page, search, category]);
     
     async function submitComment(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -266,14 +258,22 @@ export default function PublicSite() {
         }
     }
     
-    /*
-    const allCategories = useMemo(() => {
-        const unique = new Map <string, Category> ();
-        (posts?.data || []).forEach((item) => item.categories.forEach((cat) => unique.set(cat.slug, cat)));
-        return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
-    }, [posts]);
-    */
-
+    const categories = useMemo(() => {
+        const unique = new Map<string, Category>();
+    
+        categoryArticles.forEach((item) => {
+            unique.set(item.slug, {
+                id: item.id,
+                name: item.name,
+                slug: item.slug,
+            });
+        });
+    
+        return [...unique.values()].sort((a, b) =>
+            a.name.localeCompare(b.name, 'id'),
+        );
+    }, [categoryArticles]);
+    
     return (
         <>
             <Header />
@@ -391,7 +391,7 @@ export default function PublicSite() {
                                                         delay: 4000,
                                                         disableOnInteraction: false,
                                                     }}
-                                                    loop={featuredposts?.length > 1}
+                                                    loop={featuredPosts?.length > 1}
                                                     breakpoints={ {
                                                         640: {
                                                             slidesPerView: 2,
@@ -1070,7 +1070,7 @@ export default function PublicSite() {
                                         {/*/Search Widget */}
                 
                                         {/* Categories Widget */}
-                                        {categories.length > 0 (
+                                        {categories.length > 0 && (
                                             <div className="categories-widget widget-item">
                                                 <h3 className="widget-title">Categories</h3>
                                                 <ul className="mt-3">
@@ -1082,7 +1082,7 @@ export default function PublicSite() {
                                         )}
                                         
                                         {/* 5 Recent Posts Widget */}
-                                        {latestPosts.length > 0 (
+                                        {latestPosts.length > 0 && (
                                             <div className="recent-posts-widget widget-item">
                     
                                                 <h3 className="widget-title">Recent Posts</h3>
