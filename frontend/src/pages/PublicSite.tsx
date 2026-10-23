@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import '../public-site.css';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
+import Header from '../components/public/Header';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 
@@ -263,76 +264,18 @@ export default function PublicSite() {
             setCommentBusy(false);
         }
     }
-
+    
+    /*
     const allCategories = useMemo(() => {
         const unique = new Map <string, Category> ();
         (posts?.data || []).forEach((item) => item.categories.forEach((cat) => unique.set(cat.slug, cat)));
         return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
     }, [posts]);
+    */
 
     return (
         <>
-            <header id="header" className="header position-relative">
-                <div className="container-fluid container-xl position-relative">
-        
-                    <div className="top-row d-flex align-items-center justify-content-between">
-                        <a href="index" className="logo d-flex align-items-end">
-                            {/* Uncomment the line below if you also wish to use an image logo */}
-                            {/* <img src="assets/img/logo.webp" alt=""> */}
-                            <h1 className="sitename">Blogy</h1><span>.</span>
-                        </a>
-        
-                        <div className="d-flex align-items-center">
-                            <div className="social-links">
-                                <a href="#" className="facebook"><i className="bi bi-facebook"></i></a>
-                                <a href="#" className="twitter"><i className="bi bi-twitter"></i></a>
-                                <a href="#" className="instagram"><i className="bi bi-instagram"></i></a>
-                            </div>
-        
-                            <form className="search-form ms-4">
-                                <input type="text" placeholder="Search..." className="form-control" />
-                                <button type="submit" className="btn"><i className="bi bi-search"></i></button>
-                            </form>
-                        </div>
-                    </div>
-        
-                </div>
-                <div className="nav-wrap">
-                    <div className="container d-flex justify-content-center position-relative">
-                        <nav id="navmenu" className="navmenu">
-                            <ul>
-                                <li><a href="index" className="active">Home</a></li>
-                                <li><a href="about">About</a></li>
-                                <li><a href="category">Category</a></li>
-                                <li><a href="blog-details">Blog Details</a></li>
-                                <li><a href="author-profile">Author Profile</a></li>
-                                <li className="dropdown"><a href="#"><span>Pages</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
-                                    <ul>
-                                        <li><a href="about">About</a></li>
-                                        <li><a href="category">Category</a></li>
-                                        <li><a href="blog-details">Blog Details</a></li>
-                                        <li><a href="author-profile">Author Profile</a></li>
-                                        <li><a href="search-results">Search Results</a></li>
-                                        <li><a href="404">404 Not Found Page</a></li>
-        
-                                        <li className="dropdown"><a href="#"><span>Deep Dropdown</span> <i className="bi bi-chevron-down toggle-dropdown"></i></a>
-                                            <ul>
-                                                <li><a href="#">Deep Dropdown 1</a></li>
-                                                <li><a href="#">Deep Dropdown 2</a></li>
-                                                <li><a href="#">Deep Dropdown 3</a></li>
-                                                <li><a href="#">Deep Dropdown 4</a></li>
-                                                <li><a href="#">Deep Dropdown 5</a></li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li><a href="contact">Contact</a></li>
-                            </ul>
-                            <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
-                        </nav>
-                    </div>
-                </div>
-            </header>
+            <Header />
 
             <main className="main">
                 {!slug ? (
@@ -1150,7 +1093,7 @@ export default function PublicSite() {
             <footer id="footer" className="footer">
                 <div className="container footer-top">
                     <div className="row gy-4">
-                        <div className="col-lg-4 col-md-6 footer-about">
+                        <div className="col-lg-4 col-md-3 col-sm-6 footer-about">
                             <a href="index" className="logo d-flex align-items-center">
                                 <span className="sitename">Blogy</span>
                             </a>
@@ -1176,7 +1119,7 @@ export default function PublicSite() {
                             </div>
                         </div>
         
-                        <div className="col-lg-2 col-md-3 footer-links">
+                        <div className="col-lg-2 col-md-3 col-sm-6 footer-links">
                             <h4>Useful Links</h4>
                             <ul>
                                 <li><a href="#">Home</a></li>
@@ -1187,7 +1130,7 @@ export default function PublicSite() {
                             </ul>
                         </div>
         
-                        <div className="col-lg-2 col-md-3 footer-links">
+                        <div className="col-lg-2 col-md-3 col-sm-6 footer-links">
                             <h4>Our Services</h4>
                             <ul>
                                 <li><a href="#">Web Design</a></li>
@@ -1198,7 +1141,7 @@ export default function PublicSite() {
                             </ul>
                         </div>
         
-                        <div className="col-lg-2 col-md-3 footer-links">
+                        <div className="col-lg-2 col-md-3 col-sm-6 footer-links">
                             <h4>Hic solutasetp</h4>
                             <ul>
                                 <li><a href="#">Molestiae accusamus iure</a></li>
@@ -1209,7 +1152,7 @@ export default function PublicSite() {
                             </ul>
                         </div>
         
-                        <div className="col-lg-2 col-md-3 footer-links">
+                        <div className="col-lg-2 col-md-3 col-sm-6 footer-links">
                             <h4>Nobis illum</h4>
                             <ul>
                                 <li><a href="#">Ipsam</a></li>

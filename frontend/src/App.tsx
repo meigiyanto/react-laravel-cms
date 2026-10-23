@@ -1,6 +1,6 @@
 import PublicSite from './pages/PublicSite';
 import AdminApp from './pages/AdminApp';
-
+import AOSInitializer from './components/public/AOSInitializer';
 import 'bootstrap-icons/font/bootstrap-icons.min.css';
 
 function App() {
@@ -8,7 +8,10 @@ function App() {
 
     if (path !== '/admin' && !path.startsWith('/admin/')) {
         if (path !== '/login') {
-            return <PublicSite />;
+            return <>
+                <PublicSite />
+                <AOSInitializer />
+            </>
         }
     }
     return <AdminApp />;
