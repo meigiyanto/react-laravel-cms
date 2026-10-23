@@ -1,10 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState, type FormEvent } from 'react';
 
 const mainLinks = [
-    { label: 'Home', to: '/', end: true },
-    { label: 'About', to: '/about', end: false },
-    { label: 'Category', to: '/category', end: false },
+    { label: 'Home', to: '/' },
+    { label: 'About', to: '/about' },
+    { label: 'Category', to: '/category' },
 ];
 
 const pageLinks = [
@@ -136,13 +136,12 @@ export default function Header() {
                         <ul>
                             {mainLinks.map((link) => (
                                 <li key={link.to}>
-                                    <Link
+                                    <NavLink
                                         to={link.to}
-                                        end={link.end}
                                         onClick={closeMobileNav}
                                     >
                                         {link.label}
-                                    </Link>
+                                    </NavLink>
                                 </li>
                             ))}
                         
@@ -214,9 +213,7 @@ export default function Header() {
                             </li>
                         </ul>
 
-                       
-                        {/* Tombol hamburger */}
-                        <button
+                       <button
                             type="button"
                             className="mobile-nav-toggle d-xl-none"
                             aria-label={mobileNavOpen ? 'Close navigation' : 'Open navigation'}

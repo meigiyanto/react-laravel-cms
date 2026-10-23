@@ -89,6 +89,11 @@ h6 {
     font-family: var(--heading-font);
 }
 
+button {
+    border: none;
+    background-color: inherit;
+}
+
 /* Pulsating Play Button
 ------------------------------*/
 .pulsating-play-btn {

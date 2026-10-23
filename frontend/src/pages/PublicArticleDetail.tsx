@@ -31,6 +31,12 @@ type Post = {
     allow_comments?: boolean;
 };
 
+type Author = {
+    id: number;
+    name: string;
+    profile_photo_path?: string | null;
+} | null;
+
 type CommentItem = {
     id: number;
     name: string;
@@ -57,21 +63,16 @@ const publicApi = axios.create({
 
 function getImageUrl(media: Post['featured_image']): string {
     if (!media) return '';
-
     const raw = media.url || (media.path ? `/storage/${media.path.replace(/^\/+/, '')}` : '');
-
     if (!raw) return '';
     if (/^https?:\/\//i.test(raw)) return raw;
-
     const origin = API_BASE.replace(/\/api\/?$/, '');
     return new URL(raw, `${origin || window.location.origin}/`).toString();
 }
 
 function formatDate(value: string | null | undefined): string {
     if (!value) return 'Tanggal tidak tersedia';
-
     const date = new Date(value);
-
     if (Number.isNaN(date.getTime())) {
         return 'Tanggal tidak tersedia';
     }
@@ -80,6 +81,13 @@ function formatDate(value: string | null | undefined): string {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
+    });
+}
+
+function authorImageUrl(author: Author): string {
+    if (!author?.profile_photo_path) return '';
+    return getImageUrl({
+        path: author.profile_photo_path,
     });
 }
 
@@ -108,73 +116,107 @@ function getErrorMessage(error: unknown): string {
 
 export default function PublicArticleDetail() {
     const { slug } = useParams<{ slug: string }>();
-    const [page, setPage] = useState(1);
-    
-    const [posts, setPosts] = useState<Post | null>(null);
-    // const [post, setPost] = useState<Post | null>(null);
-    
+    const [post, setPost] = useState<Post | null>(null);
     const [latestPosts, setLatestPosts] = useState<Post[]>([]);
-
     const [categories, setCategories] = useState<Category[]>([]);
-    const [category, setCategory] = useState('');
     
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    
+    const [search, setSearch] = useState('');
+    const [searchBusy, setSearchBusy] = useState(false);
+    const [searchError, setSearchError] = useState('');
+    const [searchResults, setSearchResults] = useState<Post[] | null>(null);
+    
+    async function handleSearch(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        const query = search.trim();
+        if (!query) {
+            setSearchResults(null);
+            setSearchError('Masukkan kata kunci pencarian.');
+            return;
+        }
+    
+        setSearchBusy(true);
+        setSearchError('');
+    
+        try {
+            const response = await publicApi.get('/public/posts', {
+                params: { search: query, page: 1 },
+            });
+    
+            setSearchResults(response.data.data.posts.data ?? []);
+        } catch (err: unknown) {
+            setSearchError(getErrorMessage(err))
+            setSearchResults([]);
+        } finally {
+            setSearchBusy(false);
+        }
+    }
+    
+    const [comments, setComments] = useState<Paginated<CommentItem> | null>(null);
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [body, setBody] = useState('');
     const [website, setWebsite] = useState('');
     
-    const [search, setSearch] = useState('');
-    
-    const [comments, setComments] = useState<Paginated<CommentItem> | null>(null);
     const [commentBusy, setCommentBusy] = useState(false);
     const [commentMessage, setCommentMessage] = useState('');
     const [commentError, setCommentError] = useState('');
-
+    
     useEffect(() => {
         let active = true;
     
         async function loadData() {
+            if (!slug) {
+                setError('Alamat artikel tidak valid.');
+                setLoading(false);
+                return;
+            }
+    
             setLoading(true);
             setError('');
             setPost(null);
-            
+            setComments(null);
+    
             try {
-                const [response, featuredResponse, categoryResponse] =
-                    await Promise.all([
-                        publicApi.get('/public/posts', {
-                            params: {
-                                page,
-                                search: search.trim() || undefined,
-                                category: category || undefined,
-                            },
-                        }),
-                        publicApi.get('/public/posts', {
-                            params: {
-                                featured: 1,
-                                page: 1,
-                            },
-                        }),
-                        publicApi.get('/public/categories/posts'),
-                        publicApi.get('/public/categories'),
-                    ]);
+                const [
+                    postResponse,
+                    commentsResponse,
+                    sidebarResponse,
+                    categoriesResponse,
+                ] = await Promise.all([
+                    publicApi.get(
+                        `/public/posts/${encodeURIComponent(slug)}`
+                    ),
+                    publicApi.get(
+                        `/public/posts/${encodeURIComponent(slug)}/comments`
+                    ),
+                    publicApi.get('/public/posts', {
+                        params: { page: 1 },
+                    }),
+                    publicApi.get('/public/categories/posts'),
+                ]);
     
                 if (!active) return;
     
-                setPosts(response.data.data.posts.data);
-                setFeaturedPosts(featuredResponse.data.data.posts.data);
-                setLatestPosts(response.data.data.latestposts);
-                setCategoryArticles(categoryResponse.data.data);
-                setCategories(categoryResponse.data.data);
+                setPost(postResponse.data.data);
+                setComments(commentsResponse.data.data);
+                setLatestPosts(
+                    sidebarResponse.data.data.latestposts ?? []
+                );
+                setCategories(categoriesResponse.data.data ?? []);
             } catch (err: unknown) {
-                if (active) {
-                    setError(errorText(err));
+                if (!active) return;
+    
+                if (axios.isAxiosError(err)) {
+                    setError(getErrorMessage(err));
+                } else {
+                    setError(getErrorMessage(err));
                 }
             } finally {
-                if (active) {
-                    setLoading(false);
-                }
+                if (active) setLoading(false);
             }
         }
     
@@ -183,28 +225,43 @@ export default function PublicArticleDetail() {
         return () => {
             active = false;
         };
-    }, [page, search, category, categories]);
+    }, [slug]);
 
     async function handleSubmitComment(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-
+    
         if (!slug || !post) return;
-
+    
         setCommentBusy(true);
         setCommentError('');
         setCommentMessage('');
-
+    
         try {
-            const response = await publicApi.post(`/public/posts/${encodeURIComponent(slug)}/comments`, { name, email, body, website });
-
-            setCommentMessage(response.data.message || 'Komentar berhasil dikirim dan menunggu moderasi.');
-
+            const response = await publicApi.post(`/public/posts/${encodeURIComponent(slug)}/comments`,
+                {
+                    name: name.trim(),
+                    email: email.trim(),
+                    body: body.trim(),
+                    website,
+                }
+            );
+    
+            setCommentMessage(response.data.message || 'Komentar diterima dan menunggu moderasi admin.');
+    
             setName('');
             setEmail('');
             setBody('');
             setWebsite('');
         } catch (err: unknown) {
-            setCommentError(getErrorMessage(err));
+            if (axios.isAxiosError(err)) {
+                const validationErrors = err.response?.data?.errors as
+                    | Record<string, string[]>
+                    | undefined;
+    
+                setCommentError(validationErrors ? Object.values(validationErrors).flat().join(' ') : err.response?.data?.message || 'Komentar gagal dikirim. Silakan coba lagi.')
+            } else {
+                setCommentError(getErrorMessage(err) || 'Terjadi kesalahan saat mengirim komentar.');
+            }
         } finally {
             setCommentBusy(false);
         }
@@ -231,6 +288,7 @@ export default function PublicArticleDetail() {
                     </section>
                 ) : post ? (
                     <>
+                        {/*
                         <div className="page-title">
                             <div className="container">
                                 <nav aria-label="breadcrumb">
@@ -253,260 +311,363 @@ export default function PublicArticleDetail() {
                                 </div>
                             </div>
                         </div>
-                        <div className="row">
-                            <div className="col-lg-8">
-                                
-                                <section className="blog-details section">
-                                    <div className="container">
-                                        <article className="article">
-                                            {image && (
-                                                <div className="hero-img">
-                                                    <img
-                                                        src={image}
-                                                        alt={
-                                                            post.featured_image?.alt_text ||
-                                                            post.title
-                                                        }
-                                                        className="img-fluid"
-                                                    />
-                                                </div>
-                                            )}
-        
-                                            <div className="article-content">
-                                                <div className="content-header">
-                                                    <div className="meta-categories">
-                                                        {post.categories?.map(
-                                                            (category) => (
-                                                                <span
-                                                                    className="category me-2"
-                                                                    key={category.id}
-                                                                >
-                                                                    {category.name}
-                                                                </span>
-                                                            ),
-                                                        )}
+                        */}
+                        <div className="page-title">
+                            <div className="breadcrumbs">
+                                <nav aria-label="breadcrumb">
+                                    <ol className="breadcrumb">
+                                        <li className="breadcrumb-item"><a href="#"><i className="bi bi-house"></i> Home</a></li>
+                                        <li className="breadcrumb-item"><a href="#">Category</a></li>
+                                        <li className="breadcrumb-item active current">Blog Details</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                
+                            <div className="title-wrapper">
+                                <h1>Blog Details</h1>
+                                <p>
+                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="container">
+                            <div className="row">
+                                <div className="col-lg-8">
+                                    
+                                    <section className="blog-details section">
+                                        <div className="container">
+                                            <article className="article">
+                                                
+                                                {image && (
+                                                    <div className="hero-img" data-aos="zoom-in">
+                                                        <img src={image} alt={post.featured_image?.alt_text || post.title} className="img-fluid" />
+                                                        <div className="meta-overlay">
+                                                            <div className="meta-categories">
+                                                                {post.categories?.map(
+                                                                    (category) => (
+                                                                        <Link to="#" key={category.id} className="category">{category.name}</Link>
+                                                                    )
+                                                                )}
+                                                                
+                                                            </div>
+                                                        </div>
                                                     </div>
-        
-                                                    <h1 className="title">
-                                                        {post.title}
-                                                    </h1>
-        
-                                                    <div className="author-info">
-                                                        <span>
-                                                            Oleh{' '}
-                                                            {post.user?.name || 'Redaksi'}
-                                                        </span>
-                                                        <span className="date ms-3">
-                                                            {formatDate(
-                                                                post.published_at ||
-                                                                post.created_at,
-                                                            )}
-                                                        </span>
-                                                        <span className="ms-3">
-                                                            {post.approved_comments_count ?? 0}{' '}
-                                                            komentar
-                                                        </span>
+                                                )}
+            
+                                                <div className="article-content" data-aos="fade-up" data-aos-delay="100">
+                                                    
+                                                    <div className="content-header">
+                                                        <h1 className="title">{post.title}</h1>
+                
+                                                        <div className="author-info">
+                                                            <div className="author-details">
+                                                                {authorImageUrl(post.user) ? (
+                                                                    <img src={authorImageUrl(post.user)} alt={`Foto ${post.user || 'penulis'}`} className="post-author-img" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                                                                ) : (
+                                                                    <span className="author-avatar-fallback" aria-hidden="true"> {(post.user?.name || 'T').charAt(0).toUpperCase()}</span>
+                                                                )}
+                                                                
+                                                                <div className="info">
+                                                                    <h4>{post.user || 'Reduction'}</h4>
+                                                                    {/* <span className="role">Senior Web Developer</span> */}
+                                                                </div>
+                                                            </div>
+                                                            <div className="post-meta">
+                                                                <span className="date"><i className="bi bi-calendar3"></i> {formatDate(post.published_at ||post.created_at,)}</span>
+                                                                <span className="divider">•</span>
+                                                                <span className="comments"><i className="bi bi-chat-text"></i> {post.approved_comments_count ?? 0}{' '} Comment</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
+            
+                                                    <div className="content" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(post.body || '')}} />
+                                                    
+                                                    <div className="meta-bottom">
+                                                        <div className="tags-section">
+                                                            <h4>Related Topics</h4>
+                                                            <div className="tags">
+                                                                <a href="#" className="tag">Topic/Tag</a>
+                                                            </div>
+                                                        </div>
+                
+                                                        <div className="share-section">
+                                                            <h4>Share Article</h4>
+                                                            <div className="social-links">
+                                                                <a href="#" className="twitter"><i className="bi bi-twitter-x"></i></a>
+                                                                <a href="#" className="facebook"><i className="bi bi-facebook"></i></a>
+                                                                <a href="#" className="linkedin"><i className="bi bi-linkedin"></i></a>
+                                                                <a href="#" className="copy-link" title="Copy Link"><i className="bi bi-link-45deg"></i></a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
                                                 </div>
-        
-                                                <div
-                                                    className="content"
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: DOMPurify.sanitize(
-                                                            post.body || '',
-                                                        ),
-                                                    }}
-                                                />
-                                            </div>
-                                        </article>
-                                    </div>
-                                </section>
-
-                                <section className="blog-comment-form section">
-                            <div className="container">
-                                <h2>Komentar</h2>
-
-                                {comments?.data?.length ? (
-                                    <div className="comments-list mb-5">
-                                        {comments.data.map((comment) => (
-                                            <article
-                                                className="comment-card mb-4"
-                                                key={comment.id}
-                                            >
-                                                <h4>{comment.name}</h4>
-                                                <time>
-                                                    {formatDate(comment.created_at)}
-                                                </time>
-                                                <p>{comment.body}</p>
                                             </article>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p>Belum ada komentar yang ditampilkan.</p>
-                                )}
+                                        </div>
+                                    </section>
+                                    
+                                    <section id="blog-author" className="blog-author section">
 
-                                {post.allow_comments === false ? (
-                                    <p>Komentar untuk artikel ini ditutup.</p>
-                                ) : (
-                                    <form onSubmit={handleSubmitComment}>
-                                        <h3>Tulis Komentar</h3>
-                                        <p>
-                                            Komentar akan ditampilkan setelah
-                                            melewati moderasi.
-                                        </p>
-
-                                        <div className="row gy-3">
-                                            <div className="col-md-6">
-                                                <label htmlFor="comment-name">
-                                                    Nama *
-                                                </label>
-                                                <input
-                                                    id="comment-name"
-                                                    className="form-control"
-                                                    value={name}
-                                                    onChange={(event) =>
-                                                        setName(event.target.value)
-                                                    }
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="col-md-6">
-                                                <label htmlFor="comment-email">
-                                                    Email *
-                                                </label>
-                                                <input
-                                                    id="comment-email"
-                                                    type="email"
-                                                    className="form-control"
-                                                    value={email}
-                                                    onChange={(event) =>
-                                                        setEmail(event.target.value)
-                                                    }
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div className="col-12">
-                                                <label htmlFor="comment-body">
-                                                    Komentar *
-                                                </label>
-                                                <textarea
-                                                    id="comment-body"
-                                                    className="form-control"
-                                                    rows={5}
-                                                    value={body}
-                                                    onChange={(event) =>
-                                                        setBody(event.target.value)
-                                                    }
-                                                    required
-                                                />
-                                            </div>
-
-                                            <div
-                                                className="visually-hidden"
-                                                aria-hidden="true"
-                                            >
-                                                <label htmlFor="comment-website">
-                                                    Website
-                                                </label>
-                                                <input
-                                                    id="comment-website"
-                                                    tabIndex={-1}
-                                                    autoComplete="off"
-                                                    value={website}
-                                                    onChange={(event) =>
-                                                        setWebsite(event.target.value)
-                                                    }
-                                                />
-                                            </div>
-
-                                            {commentError && (
-                                                <div
-                                                    className="text-danger"
-                                                    role="alert"
-                                                >
-                                                    {commentError}
+                                        <div className="container" data-aos="fade-up">
+                                            <div className="author-box">
+                                                <div className="row align-items-center">
+                                                    <div className="col-lg-3 col-md-4 text-center">
+                                                        {authorImageUrl(post.user) ? (
+                                                            <img src={authorImageUrl(post.user)} alt={`Foto ${post.user || 'penulis'}`} className="author-img rounded-circle" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                                                        ) : (
+                                                            <span className="author-avatar-fallback" aria-hidden="true"> {(post.user || 'T').charAt(0).toUpperCase()}</span>
+                                                        )}
+                
+                                                        <div className="author-social-links mt-3">
+                                                            <a href="https://twitter.com/#" className="twitter"><i className="bi bi-twitter-x"></i></a>
+                                                            <a href="https://linkedin.com/#" className="linkedin"><i className="bi bi-linkedin"></i></a>
+                                                            <a href="https://github.com/#" className="github"><i className="bi bi-github"></i></a>
+                                                            <a href="https://facebook.com/#" className="facebook"><i className="bi bi-facebook"></i></a>
+                                                            <a href="https://instagram.com/#" className="instagram"><i className="bi bi-instagram"></i></a>
+                                                        </div>
+                                                    </div>
+                
+                                                    <div className="col-lg-9 col-md-8">
+                                                        <div className="author-content">
+                                                            <h3 className="author-name">{post.user}</h3>
+                                                            {/*
+                                                            <span className="author-title">Senior Tech Writer &amp; Developer Advocate</span>
+                
+                                                            <div className="author-bio mt-3">
+                                                                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium. Passionate about creating content that bridges the gap between developers and end-users.
+                                                            </div>
+                
+                                                            <div className="author-website mt-3">
+                                                                <a href="#" className="website-link">
+                                                                    <i className="bi bi-globe"></i>
+                                                                    <span>sarahanderson.dev</span>
+                                                                </a>
+                                                                <a href="#" className="more-posts">
+                                                                    Read More from Sarah <i className="bi bi-arrow-right"></i>
+                                                                </a>
+                                                            </div>
+                                                            */}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            )}
-
-                                            {commentMessage && (
-                                                <div
-                                                    className="text-success"
-                                                    role="status"
-                                                >
-                                                    {commentMessage}
-                                                </div>
-                                            )}
-
-                                            <div className="col-12">
-                                                <button
-                                                    type="submit"
-                                                    className="btn btn-primary"
-                                                    disabled={commentBusy}
-                                                >
-                                                    {commentBusy
-                                                        ? 'Mengirim...'
-                                                        : 'Kirim Komentar'}
-                                                </button>
                                             </div>
                                         </div>
-                                    </form>
-                                )}
-                            </div>
-                        </section>
-
-                            </div>
-                            <div className="col-lg-4 sidebar">
-                                <div className="widgets-container" data-aos="fade-up" data-aos-delay="200">
+                
+                                    </section>
+    
+                                    <section id="blog-comments" className="blog-comments section">
+                                        <h2>
+                                            Comments ({comments?.total ?? post.approved_comments_count ?? 0})
+                                        </h2>
                                     
-                                    <div className="search-widget widget-item">
-                                
-                                        <h3 className="widget-title">Search</h3>
-                                        <form action="">
-                                            <input type="text" />
-                                            <button type="submit" title="Search"><i className="bi bi-search"></i></button>
-                                        </form>
-                                
-                                    </div>
-                                    
-                                    {categories.length > 0 && (
-                                        <div className="categories-widget widget-item">
-                                            <h3 className="widget-title">Categories</h3>
-                                            <ul className="mt-3">
-                                                {categories.map((category, index) => (
-                                                    <li><a href="#">{category.name} <span>()</span></a></li>
+                                        {comments?.data.length ? (
+                                            <div className="comments-list mb-5">
+                                                {comments.data.map((comment) => (
+                                                    <article className="comment-card mb-4" key={comment.id}>
+                                                        <h4>{comment.name}</h4>
+                                                        <time dateTime={comment.created_at}>
+                                                            {formatDate(comment.created_at)}
+                                                        </time>
+                                                        <p>{comment.body}</p>
+                                                    </article>
                                                 ))}
+                                            </div>
+                                        ) : (
+                                            <p>There are no approved comments for this article yet.</p>
+                                        )}
+                                    </section>
+                                    
+                                    <section id="blog-comment-form" className="blog-comment-form section">
+                                        {post.allow_comments === false ? (
+                                            <p>Comments for this article have been closed.</p>
+                                        ) : (
+                                            <form onSubmit={handleSubmitComment}>
+                                                <h3>Write comment</h3>
+                                                <p>Comments will be displayed after passing admin moderation.</p>
+    
+                                                <div className="row gy-3">
+                                                    <div className="col-md-6">
+                                                        <label htmlFor="comment-name">Name *</label>
+                                                        <input
+                                                            id="comment-name"
+                                                            className="form-control"
+                                                            value={name}
+                                                            onChange={(event) => setName(event.target.value)}
+                                                            minLength={2}
+                                                            maxLength={80}
+                                                            required
+                                                        />
+                                                    </div>
+                                    
+                                                    <div className="col-md-6">
+                                                        <label htmlFor="comment-email">Email *</label>
+                                                        <input
+                                                            id="comment-email"
+                                                            type="email"
+                                                            className="form-control"
+                                                            value={email}
+                                                            onChange={(event) => setEmail(event.target.value)}
+                                                            maxLength={254}
+                                                            required
+                                                        />
+                                                    </div>
+                                    
+                                                    <div className="col-12">
+                                                        <label htmlFor="comment-body">Comment *</label>
+                                                        <textarea
+                                                            id="comment-body"
+                                                            className="form-control"
+                                                            rows={5}
+                                                            value={body}
+                                                            onChange={(event) => setBody(event.target.value)}
+                                                            minLength={3}
+                                                            maxLength={3000}
+                                                            required
+                                                        />
+                                                    </div>
+                                    
+                                                    {/* Honeypot anti-spam; jangan diisi pengunjung. */}
+                                                    <div className="visually-hidden" aria-hidden="true">
+                                                        <label htmlFor="comment-website">Website</label>
+                                                        <input
+                                                            id="comment-website"
+                                                            tabIndex={-1}
+                                                            autoComplete="off"
+                                                            value={website}
+                                                            onChange={(event) => setWebsite(event.target.value)}
+                                                        />
+                                                    </div>
+                                    
+                                                    {commentError && (
+                                                        <div className="col-12 text-danger" role="alert">
+                                                            {commentError}
+                                                        </div>
+                                                    )}
+                                    
+                                                    {commentMessage && (
+                                                        <div className="col-12 text-success" role="status">
+                                                            {commentMessage}
+                                                        </div>
+                                                    )}
+                                    
+                                                    <div className="col-12">
+                                                        <button
+                                                            type="submit"
+                                                            className="btn-submit"
+                                                            disabled={commentBusy}
+                                                        >
+                                                            {commentBusy ? 'Sending...' : 'Submit Comment'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        )}
+                                    </section>
+    
+                                </div>
+                                
+                                <div className="col-lg-4 sidebar">
+                                    <div className="widgets-container" data-aos="fade-up" data-aos-delay="200">
+                                        
+                                        <div className="search-widget widget-item">
+                                    
+                                            <h3 className="widget-title">Search</h3>
+                                            <form onSubmit={handleSearch} role="search">
+                                                <div className="input-group">
+                                                    <input
+                                                        type="search"
+                                                        className="form-control"
+                                                        placeholder="Masukkan kata kunci..."
+                                                        aria-label="Cari artikel"
+                                                        value={search}
+                                                        onChange={(event) => setSearch(event.target.value)}
+                                                    />
+                                            
+                                                    <button
+                                                        type="submit"
+                                                        className="btn btn-primary"
+                                                        disabled={searchBusy}
+                                                        aria-label="Cari artikel"
+                                                    >
+                                                        <i className="bi bi-search" aria-hidden="true" />
+                                                    </button>
+                                                </div>
+                                            </form>
+                                            
+                                            {searchError && (
+                                                <p className="text-danger mt-2" role="alert">
+                                                    {searchError}
+                                                </p>
+                                            )}
+                                            
+                                            {searchBusy && (
+                                                <p role="status">Mencari artikel...</p>
+                                            )}
+                                            
+                                            {searchResults && !searchBusy && (
+                                                <div className="mt-3">
+                                                    <h4>Hasil pencarian ({searchResults.length})</h4>
+                                            
+                                                    {searchResults.length > 0 ? (
+                                                        <ul className="list-unstyled">
+                                                            {searchResults.map((result) => (
+                                                                <li key={result.id} className="mb-2">
+                                                                    <Link to={`/artikel/${result.slug}`}>
+                                                                        {result.title}
+                                                                    </Link>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    ) : (
+                                                        <p>Tidak ada artikel yang cocok.</p>
+                                                    )}
+                                                </div>
+                                            )}
+                                    
+                                        </div>
+                                        
+                                        {categories.length > 0 && (
+                                            <div className="categories-widget widget-item">
+                                                <h3 className="widget-title">Categories</h3>
+                                                <ul className="mt-3">
+                                                    {categories.map((category, index) => (
+                                                        <li key={index}><a href="#">{category.name} <span>()</span></a></li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        
+                                        {latestPosts.length > 0 && (
+                                            <div className="recent-posts-widget widget-item">
+                                                <h3 className="widget-title">Recent Posts</h3>
+                                                {latestPosts.slice(0, 6).map((post, index) => (
+                                                    <div key={index} className="post-item">
+                                                        <img
+                                                            src={getImageUrl(post.featured_image)}
+                                                            alt={post.featured_image?.alt_text || post.title}
+                                                            className="flex-shrink-0"
+                                                        />
+                                                        <div>
+                                                            <h4><Link to={`/artikel/${post.slug}`}>{post.title}</Link></h4>
+                                                            <time dateTime={post.published_at || post.created_at}>{formatDate(post.published_at)}</time>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                
+                                        <div className="tags-widget widget-item">
+                                            <h3 className="widget-title">Tags</h3>
+                                            <ul>
+                                                <li><a href="#">App</a></li>
                                             </ul>
                                         </div>
-                                    )}
                                     
-                                    {latestPosts.length > 0 && (
-                                        <div className="recent-posts-widget widget-item">
-                                            <h3 className="widget-title">Recent Posts</h3>
-                                            {latestPosts.slice(0, 6).map((post, index) => (
-                                                <div key={index} className="post-item">
-                                                    <img src={getImageUrl(post.photo_url)} alt="" className="flex-shrink-0"/>
-                                                    <div>
-                                                        <h4><Link to={`/artikel/${post.slug}`}>{post.title}</Link></h4>
-                                                        <time datetime={post.published_at || post.created_at}>{formatDate(post.published_at)}</time>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-            
-                                    <div className="tags-widget widget-item">
-                                        <h3 className="widget-title">Tags</h3>
-                                        <ul>
-                                            <li><a href="#">App</a></li>
-                                        </ul>
                                     </div>
-                                
                                 </div>
                             </div>
                         </div>
-
                     </>
                 ) : null}
             </main>

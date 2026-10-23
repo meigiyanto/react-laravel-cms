@@ -54,13 +54,6 @@ type Media = {
     alt_text?: string | null
 } | null;
 
-type Page <T> = {
-    data: T[]; 
-    current_page: number; 
-    last_page: number; 
-    total: number
-};
-
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 const publicApi = axios.create({
     baseURL: API_BASE, headers: {
@@ -114,6 +107,7 @@ export default function PublicSite() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [categoryArticles, setCategoryArticles] = useState<CategoryWithPosts[]>([]);
+    const heroPost = posts[0] ?? null;
     
     useEffect(() => {
         let active = true;
@@ -126,9 +120,7 @@ export default function PublicSite() {
                 const [response, featuredResponse, categoryResponse] =
                     await Promise.all([
                         publicApi.get('/public/posts', {
-                            params: {
-                                category: category || undefined,
-                            },
+                            params: { page: 1 },
                         }),
                         publicApi.get('/public/posts', {
                             params: { featured: 1, page: 1 },
@@ -174,28 +166,39 @@ export default function PublicSite() {
                 
                             <div className="container" data-aos="fade-up" data-aos-delay="100">
                                 <div className="blog-grid">
-                                    {posts[Math.floor(Math.random() * posts?.length)] ? (
+                                    {heroPost && (
                                         <article className="blog-item featured" data-aos="fade-up">
-                                            {posts[Math.floor(Math.random() * posts?.length)].featured_image && imageUrl(posts[Math.floor(Math.random() * posts?.length)].featured_image) ? (
-                                                <img src={imageUrl(posts[Math.floor(Math.random() * posts?.length)].featured_image)} alt={posts[Math.floor(Math.random() * posts?.length)].featured_image.alt_text || posts[Math.floor(Math.random() * posts?.length)].title} loading="lazy" />
+                                            {heroPost.featured_image && imageUrl(heroPost.featured_image) ? (
+                                                <img
+                                                    src={imageUrl(heroPost.featured_image)}
+                                                    alt={heroPost.featured_image.alt_text || heroPost.title}
+                                                    loading="lazy"
+                                                />
                                             ) : (
                                                 <div className="post-image-placeholder">
                                                     <span>JURNAL<br />IDE</span>
                                                 </div>
                                             )}
+                                    
                                             <div className="blog-content">
                                                 <div className="post-meta">
-                                                    <span className="date">{dateLabel(posts[Math.floor(Math.random() * posts?.length)].created_at || posts[Math.floor(Math.random() * posts?.length)].published_at)}</span>
-                                                    <span className="category">{posts[Math.floor(Math.random() * posts?.length)].categories[0].name}</span>
+                                                    <span className="date">
+                                                        {dateLabel(heroPost.published_at || heroPost.created_at)}
+                                                    </span>
+                                                    <span className="category">
+                                                        {heroPost.categories?.[0]?.name || 'Tanpa kategori'}
+                                                    </span>
                                                 </div>
+                                    
                                                 <h3 className="post-title">
-                                                    <Link to={`/artikel/${posts[Math.floor(Math.random() * posts?.length)].slug}`}>{posts[Math.floor(Math.random() * posts?.length)].title}</Link>
+                                                    <Link to={`/artikel/${heroPost.slug}`}>
+                                                        {heroPost.title}
+                                                    </Link>
                                                 </h3>
                                             </div>
                                         </article>
-                                        ) : null
-                                    }
-                
+                                    )}
+                                    
                                     {posts.slice(0, 4).map((post, index) => (
                                         <article key={index} className="blog-item" data-aos="fade-up" data-aos-delay="100">
                                             {post.featured_image && imageUrl(post.featured_image) ? (
@@ -208,7 +211,7 @@ export default function PublicSite() {
                                             <div className="blog-content">
                                                 <div className="post-meta">
                                                     <span className="date">{dateLabel(post.created_at || post.published_at)}</span>
-                                                    <span className="category">{post.categories[0].name}</span>
+                                                    <span className="category">{post.categories?.[0]?.name || 'Tanpa Kategori'}</span>
                                                 </div>
                                                 <h3 className="post-title">
                                                     <Link to={`/artikel/${post.slug}`}>{post.title}</Link>
@@ -301,63 +304,69 @@ export default function PublicSite() {
                             </div>
                             {categoryArticles.map((item, index) => (
                                 <div key={index}>
-                                {item.posts?.length > 0 ? (
-                                    <div className="container" data-aos="fade-up" data-aos-delay="100">
-                                        <div className="row">
-                                            {item.posts.slice(0, 3).map((article) => (
-                                                <div key={article.id} className="col-md-6 col-lg-4">
-                                                    <article className="featured-post">
-                                                        <div className="post-img">
-                                                            {article.featured_image && imageUrl(article.featured_image) && (
-                                                                <img src={imageUrl(article.featured_image)} alt={ article.featured_image.alt_text || article.title } className="img-fluid" loading="lazy" />
-                                                            )}
-                                                        </div>
-                                                        <div className="post-content">
-                                                            <div className="category-meta">
-                                                                <span className="post-category">{article.categories[0].name}</span>
-                                                                <div className="author-meta">
-                                                                    <span className="author-name"></span>
-                                                                    <span className="author-date">{dateLabel(article.created_at || article.published_at)}</span>
+                                    {item.posts?.length > 0 ? (
+                                        <div className="container" data-aos="fade-up" data-aos-delay="100">
+                                            {item.posts?.length >= 4 && (
+                                                <div className="row">
+                                                    {item.posts.slice(0, 3).map((article) => (
+                                                        <div key={article.id} className="col-md-6 col-lg-4">
+                                                            <article className="featured-post">
+                                                                <div className="post-img">
+                                                                    {article.featured_image && imageUrl(article.featured_image) && (
+                                                                        <img src={imageUrl(article.featured_image)} alt={ article.featured_image.alt_text || article.title } className="img-fluid" loading="lazy" />
+                                                                    )}
                                                                 </div>
-                                                            </div>
-                                                            <h2 className="title">
-                                                                <Link to={`/artikel/${article.slug}`}>{article.title}</Link>
-                                                            </h2>
+                                                                <div className="post-content">
+                                                                    <div className="category-meta">
+                                                                        <span className="post-category">{article.categories[0].name}</span>
+                                                                        <div className="author-meta">
+                                                                            <span className="author-name"></span>
+                                                                            <span className="author-date">{dateLabel(article.created_at || article.published_at)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <h2 className="title">
+                                                                        <Link to={`/artikel/${article.slug}`}>{article.title}</Link>
+                                                                    </h2>
+                                                                </div>
+                                                            </article>
                                                         </div>
-                                                    </article>
+                                                    ))}
                                                 </div>
-                                            ))}
-                                        </div>
-                                        
-                                        <div className="row">
-                                        {item.posts.slice(0, 6).map((article, index) => (
-                                            <div key={index} className="col-xl-4 col-lg-6">
-                                                <article className="list-post">
-                                                    <div className="post-img">
-                                                        {article.featured_image && imageUrl(article.featured_image) && (
-                                                            <img src={imageUrl(article.featured_image)} alt={ article.featured_image.alt_text || article.title } className="img-fluid" loading="lazy" />
-                                                        )}
-                                                    </div>
-                                                    <div className="post-content">
-                                                        <div className="category-meta">
-                                                            <span className="post-category">{article.categories[0].name}</span>
+                                            )}
+                                            
+                                            <div className="row">
+                                            {item.posts?.length >= 6 && (
+                                                <>
+                                                    {item.posts.slice(0, 6).map((article, index) => (
+                                                        <div key={index} className="col-xl-4 col-lg-6">
+                                                            <article className="list-post">
+                                                                <div className="post-img">
+                                                                    {article.featured_image && imageUrl(article.featured_image) && (
+                                                                        <img src={imageUrl(article.featured_image)} alt={ article.featured_image.alt_text || article.title } className="img-fluid" loading="lazy" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="post-content">
+                                                                    <div className="category-meta">
+                                                                        <span className="post-category">{article.categories[0].name}</span>
+                                                                    </div>
+                                                                    <h3 className="title">
+                                                                        <Link to={`/artikel/${article.slug}`}>{article.title}</Link>
+                                                                    </h3>
+                                                                    <div className="post-meta">
+                                                                        <span className="post-date">{dateLabel(article.created_at || article.published_at)}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </article>
                                                         </div>
-                                                        <h3 className="title">
-                                                            <Link to={`/artikel/${article.slug}`}>{article.title}</Link>
-                                                        </h3>
-                                                        <div className="post-meta">
-                                                            <span className="post-date">{dateLabel(article.created_at || article.published_at)}</span>
-                                                        </div>
-                                                    </div>
-                                                </article>
+                                                    ))}
+                                                </>
+                                            )}
                                             </div>
-                                        ))}
+                                            
                                         </div>
-                                        
-                                    </div>
-                                ) : (
-                                    <p>Belum ada artikel dalam kategori ini.</p>
-                                )}
+                                    ) : (
+                                        <p>Belum ada artikel dalam kategori ini.</p>
+                                    )}
                                 </div>
                             ))}
                         </section>
@@ -424,24 +433,18 @@ export default function PublicSite() {
                                             <p>
                                                 Proin eget tortor risus. Mauris blandit aliquet elit, eget tincidunt nibh pulvinar a. Curabitur aliquet quam id dui posuere blandit.
                                             </p>
+                                            
                                             <form action="forms/newsletter.php" method="post" className="php-email-form cta-form" data-aos="fade-up" data-aos-delay="300">
                                                 <div className="input-group mb-3">
                                                     <input type="email" className="form-control" placeholder="Email address..." aria-label="Email address" aria-describedby="button-subscribe" />
                                                     <button className="btn btn-primary" type="submit" id="button-subscribe">Subscribe</button>
-                                                </div>
-                                                <div className="loading">
-                                                    Loading
-                                                </div>
-                                                <div className="error-message"></div>
-                                                <div className="sent-message">
-                                                    Your subscription request has been sent. Thank you!
                                                 </div>
                                             </form>
                                         </div>
                                     </div>
                                     <div className="col-lg-4">
                                         <div className="cta-image" data-aos="zoom-out" data-aos-delay="200">
-                                            <img src="" alt="" className="img-fluid"/>
+                                            <img src="http://localhost:8000/storage/cms-media/1PwvRWpRVsEdutiPNHZTCAdjmMdSaNpBwsXpsGMU.webp" alt="" className="img-fluid"/>
                                         </div>
                                     </div>
                                 </div>
