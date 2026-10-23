@@ -3594,6 +3594,47 @@ section,
 }
 
 @keyframes spinning {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Public navigation and dashboard separation */
+.header .top-row {
+    gap: 16px;
+}
+
+.header .public-dashboard-link {
+    flex-shrink: 0;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.header .navmenu > ul {
+    justify-content: center;
+}
+
+.header .navmenu > ul > li > a.active {
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.header .navmenu-mobile-open > ul {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+@media (max-width: 1199px) {
+    .header .top-row .search-form {
+        display: none;
+    }
+
+    .header .navmenu-mobile-open > ul {
+        display: flex;
+    }
+
+    .header .public-dashboard-link {
+        font-size: 13px;
+        padding: 7px 10px;
+    }
 }

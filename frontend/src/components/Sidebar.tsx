@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers, faUserCircle, } from '@fortawesome/free-solid-svg-icons';
+import { faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers, faUserCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 
@@ -138,7 +138,14 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
                     ))
                 )}
             </nav>
-
+            
+            <div className="mt-3 sidebar-public-link">
+                <a href="/" className="btn btn-outline-primary w-100">
+                    <FontAwesomeIcon icon={faGlobe} className="me-2"/>
+                    Lihat Website
+                </a>
+            </div>
+            
             <div className="sidebar-bottom">
                 <div className="sidebar-label">
                     STATUS SISTEM
