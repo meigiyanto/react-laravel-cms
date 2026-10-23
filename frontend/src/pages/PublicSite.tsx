@@ -279,7 +279,7 @@ export default function PublicSite() {
             <Header />
 
             <main className="main">
-                {!loading && posts.length === 0 && (
+                {!loading && posts?.length === 0 && (
                     <div className="text-center py-5">
                         <i className="bi bi-search fs-1 text-muted" />
                 
@@ -310,17 +310,17 @@ export default function PublicSite() {
                     <>
                         {loading ? (
                             <div className="container public-loading" role="status">Menyiapkan cerita untukmu…</div> 
-                        ) : posts.length ? (
+                        ) : posts?.length ? (
                             <>
                                 {/* Blog Hero Section */}
                                 <section id="blog-hero" className="blog-hero section">
                         
                                     <div className="container" data-aos="fade-up" data-aos-delay="100">
                                         <div className="blog-grid">
-                                            {posts[Math.floor(Math.random() * posts.length)] ? (
+                                            {posts[Math.floor(Math.random() * posts?.length)] ? (
                                                 <article className="blog-item featured" data-aos="fade-up">
-                                                    {posts[Math.floor(Math.random() * posts.length)].featured_image && imageUrl(posts[Math.floor(Math.random() * posts.length)].featured_image) ? (
-                                                        <img src={imageUrl(posts[Math.floor(Math.random() * posts.length)].featured_image)} alt={posts[Math.floor(Math.random() * posts.length)].featured_image.alt_text || posts[Math.floor(Math.random() * posts.length)].title} loading="lazy" />
+                                                    {posts[Math.floor(Math.random() * posts?.length)].featured_image && imageUrl(posts[Math.floor(Math.random() * posts?.length)].featured_image) ? (
+                                                        <img src={imageUrl(posts[Math.floor(Math.random() * posts?.length)].featured_image)} alt={posts[Math.floor(Math.random() * posts?.length)].featured_image.alt_text || posts[Math.floor(Math.random() * posts?.length)].title} loading="lazy" />
                                                     ) : (
                                                         <div className="post-image-placeholder">
                                                             <span>JURNAL<br />IDE</span>
@@ -328,11 +328,11 @@ export default function PublicSite() {
                                                     )}
                                                     <div className="blog-content">
                                                         <div className="post-meta">
-                                                            <span className="date">{dateLabel(posts[Math.floor(Math.random() * posts.length)].created_at || posts[Math.floor(Math.random() * posts.length)].published_at)}</span>
-                                                            <span className="category">{posts[Math.floor(Math.random() * posts.length)].categories[0].name}</span>
+                                                            <span className="date">{dateLabel(posts[Math.floor(Math.random() * posts?.length)].created_at || posts[Math.floor(Math.random() * posts?.length)].published_at)}</span>
+                                                            <span className="category">{posts[Math.floor(Math.random() * posts?.length)].categories[0].name}</span>
                                                         </div>
                                                         <h3 className="post-title">
-                                                            <a href="blog-details" title={posts[Math.floor(Math.random() * posts.length)].title}>{posts[Math.floor(Math.random() * posts.length)].title}</a>
+                                                            <a href="blog-details" title={posts[Math.floor(Math.random() * posts?.length)].title}>{posts[Math.floor(Math.random() * posts?.length)].title}</a>
                                                         </h3>
                                                     </div>
                                                 </article>
@@ -391,7 +391,7 @@ export default function PublicSite() {
                                                         delay: 4000,
                                                         disableOnInteraction: false,
                                                     }}
-                                                    loop={featuredPosts.length > 1}
+                                                    loop={featuredposts?.length > 1}
                                                     breakpoints={ {
                                                         640: {
                                                             slidesPerView: 2,
@@ -445,7 +445,7 @@ export default function PublicSite() {
                                     </div>
                                     {categoryArticles.map((item, index) => (
                                         <div key={index}>
-                                        {item.posts.length > 0 ? (
+                                        {item.posts?.length > 0 ? (
                                             <div className="container" data-aos="fade-up" data-aos-delay="100">
                                                 <div className="row">
                                                     {item.posts.slice(0, 3).map((article) => (
@@ -996,23 +996,23 @@ export default function PublicSite() {
                 
                                                 <div className="row gy-3">
                                                     <div className="col-md-6 form-group">
-                                                        <label for="name">Full Name *</label>
+                                                        <label htmlFor="name">Full Name *</label>
                                                         <input type="text" name="name" className="form-control" id="name" placeholder="Enter your full name" required />
                                                     </div>
                 
                                                     <div className="col-md-6 form-group">
-                                                        <label for="email">Email Address *</label>
+                                                        <label htmlFor="email">Email Address *</label>
                                                         <input type="email" name="email" className="form-control" id="email" placeholder="Enter your email address" required />
                                                     </div>
                 
                                                     <div className="col-12 form-group">
-                                                        <label for="website">Website</label>
+                                                        <label htmlFor="website">Website</label>
                                                         <input type="url" name="website" className="form-control" id="website" placeholder="Your website (optional)" />
                                                     </div>
                 
                                                     <div className="col-12 form-group">
-                                                        <label for="comment">Your Comment *</label>
-                                                        <textarea className="form-control" name="comment" id="comment" rows="5" placeholder="Write your thoughts here..." required=""></textarea>
+                                                        <label htmlFor="comment">Your Comment *</label>
+                                                        <textarea className="form-control" name="comment" id="comment" rows="5" placeholder="Write your thoughts here..." required="" />
                                                     </div>
                 
                                                     <div className="col-12 text-center">
@@ -1048,16 +1048,16 @@ export default function PublicSite() {
                                             
                                                 <div className="input-group">
                                                     <input
-                                                    id="article-search"
-                                                    type="search"
-                                                    className="form-control"
-                                                    placeholder="Cari artikel berdasarkan judul..."
-                                                    value={search}
-                                                    onChange={(event)=> {
-                                                        setSearch(event.target.value);
-                                                        setPage(1);
-                                                    }}
-                                                />
+                                                        id="article-search"
+                                                        type="search"
+                                                        className="form-control"
+                                                        placeholder="Cari artikel berdasarkan judul..."
+                                                        value={search}
+                                                        onChange={(event)=> {
+                                                            setSearch(event.target.value);
+                                                            setPage(1);
+                                                        }}
+                                                    />
                                             
                                                     <button className="btn btn-primary" type="submit">
                                                         <i className="bi bi-search me-1" />
@@ -1070,49 +1070,39 @@ export default function PublicSite() {
                                         {/*/Search Widget */}
                 
                                         {/* Categories Widget */}
-                                        <div className="categories-widget widget-item">
-                
-                                            <h3 className="widget-title">Categories</h3>
-                                            <ul className="mt-3">
-                                                <li><a href="#">General <span>(25)</span></a></li>
-                                                <li><a href="#">Lifestyle <span>(12)</span></a></li>
-                                                <li><a href="#">Travel <span>(5)</span></a></li>
-                                                <li><a href="#">Design <span>(22)</span></a></li>
-                                                <li><a href="#">Creative <span>(8)</span></a></li>
-                                                <li><a href="#">Educaion <span>(14)</span></a></li>
-                                            </ul>
-                
-                                        </div>
-                
-                                        {/* Categories Widget */}
-                                        <div className="categories-widget widget-item">
-                
-                                            <h3 className="widget-title">Categories</h3>
-                                            <ul className="mt-3">
-                                                <li><a href="#">General <span>(25)</span></a></li>
-                                                <li><a href="#">Lifestyle <span>(12)</span></a></li>
-                                                <li><a href="#">Travel <span>(5)</span></a></li>
-                                                <li><a href="#">Design <span>(22)</span></a></li>
-                                                <li><a href="#">Creative <span>(8)</span></a></li>
-                                                <li><a href="#">Educaion <span>(14)</span></a></li>
-                                            </ul>
-                
-                                        </div>
+                                        {categories.length > 0 (
+                                            <div className="categories-widget widget-item">
+                                                <h3 className="widget-title">Categories</h3>
+                                                <ul className="mt-3">
+                                                    {categories.map((category, index) => (
+                                                        <li key={index}><a href="#">{category.name} <span>(0)</span></a></li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                         
                                         {/* 5 Recent Posts Widget */}
-                                        <div className="recent-posts-widget widget-item">
-                
-                                            <h3 className="widget-title">Recent Posts</h3>
-                
-                                            <div className="post-item">
-                                                <img src="assets/img/blog/blog-post-square-1.webp" alt="" className="flex-shrink-0"/>
-                                                <div>
-                                                    <h4><a href="blog-details">Nihil blanditiis at in nihil autem</a></h4>
-                                                    <time datetime="2020-01-01">Jan 1, 2020</time>
+                                        {latestPosts.length > 0 (
+                                            <div className="recent-posts-widget widget-item">
+                    
+                                                <h3 className="widget-title">Recent Posts</h3>
+                                                {latestPosts.map((post, index) => (
+                                                    <div key={index} className="post-item">
+                                                    {post.featured_image && imageUrl(post.featured_image) ? (
+                                                        <img src={imageUrl(post.featured_image)} alt={post.featured_image.alt_text || post.title} loading="lazy" className="flex-shrink-0"/>
+                                                    ) : (
+                                                        <div className="post-image-placeholder">
+                                                            <span>JURNAL<br />IDE</span>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <h4><a href="blog-details">{post.title}</a></h4>
+                                                        <time dateTime="2020-01-01">{dateLabel(post.created_at || post.published_at)}</time>
+                                                    </div>
                                                 </div>
+                                                ))}
                                             </div>
-                
-                                        </div>
+                                        )}
                 
                                         {/* Tags Widget */}
                                         <div className="tags-widget widget-item">
