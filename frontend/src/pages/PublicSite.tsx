@@ -199,6 +199,7 @@ export default function PublicSite() {
                             publicApi.get('/public/posts', {
                                 params: {
                                     page,
+                                    search: search.trim() || undefined,
                                     category: category || undefined,
                                 },
                             }),
@@ -278,50 +279,86 @@ export default function PublicSite() {
             <Header />
 
             <main className="main">
+                {!loading && posts.length === 0 && (
+                    <div className="text-center py-5">
+                        <i className="bi bi-search fs-1 text-muted" />
+                
+                        <h3 className="mt-3">
+                          {search.trim() ? 'Artikel tidak ditemukan' : 'Belum ada artikel'}
+                        </h3>
+                    
+                        <p className="text-muted">
+                          {search.trim() ? `Tidak ada artikel yang cocok dengan "${search}". Coba kata kunci lain.` : 'Artikel akan ditampilkan di sini ketika tersedia.'}
+                        </p>
+                
+                        {search.trim() && (
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary"
+                                onClick={() => {
+                                    setSearch('');
+                                    setPage(1);
+                                }}
+                            >
+                                Hapus pencarian
+                            </button>
+                       )}
+                    </div>
+                )}
+                
                 {!slug ? (
                     <>
                         {loading ? (
-                            <div className="public-loading" role="status">Menyiapkan cerita untukmu…</div> 
+                            <div className="container public-loading" role="status">Menyiapkan cerita untukmu…</div> 
                         ) : posts.length ? (
                             <>
                                 {/* Blog Hero Section */}
                                 <section id="blog-hero" className="blog-hero section">
                         
                                     <div className="container" data-aos="fade-up" data-aos-delay="100">
-                        
                                         <div className="blog-grid">
-                        
-                                            {/* Featured Post (Large) */}
-                                            <article className="blog-item featured" data-aos="fade-up">
-                                                <div className="post-image-placeholder">
-                                                    <span>JURNAL<br />IDE</span>
-                                                </div>
-                                                <div className="blog-content">
-                                                    <div className="post-meta">
-                                                        <span className="date">Apr. 14th, 2025</span>
-                                                        <span className="category">Technology</span>
+                                            {posts[Math.floor(Math.random() * posts.length)] ? (
+                                                <article className="blog-item featured" data-aos="fade-up">
+                                                    {posts[Math.floor(Math.random() * posts.length)].featured_image && imageUrl(posts[Math.floor(Math.random() * posts.length)].featured_image) ? (
+                                                        <img src={imageUrl(posts[Math.floor(Math.random() * posts.length)].featured_image)} alt={posts[Math.floor(Math.random() * posts.length)].featured_image.alt_text || posts[Math.floor(Math.random() * posts.length)].title} loading="lazy" />
+                                                    ) : (
+                                                        <div className="post-image-placeholder">
+                                                            <span>JURNAL<br />IDE</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="blog-content">
+                                                        <div className="post-meta">
+                                                            <span className="date">{dateLabel(posts[Math.floor(Math.random() * posts.length)].created_at || posts[Math.floor(Math.random() * posts.length)].published_at)}</span>
+                                                            <span className="category">{posts[Math.floor(Math.random() * posts.length)].categories[0].name}</span>
+                                                        </div>
+                                                        <h3 className="post-title">
+                                                            <a href="blog-details" title={posts[Math.floor(Math.random() * posts.length)].title}>{posts[Math.floor(Math.random() * posts.length)].title}</a>
+                                                        </h3>
                                                     </div>
-                                                    <h2 className="post-title">
-                                                        <a href="blog-details" title="Lorem ipsum dolor sit amet, consectetur adipiscing elit">Lorem ipsum dolor sit amet, consectetur adipiscing elit</a>
-                                                    </h2>
-                                                </div>
-                                            </article>
+                                                </article>
+                                                ) : null
+                                            }
                         
-                                            {/* 4 Regular Posts */}
-                                            <article className="blog-item" data-aos="fade-up" data-aos-delay="100">
-                                                <div className="post-image-placeholder">
-                                                    <span>JURNAL<br />IDE</span>
-                                                </div>
-                                                <div className="blog-content">
-                                                    <div className="post-meta">
-                                                        <span className="date">Apr. 14th, 2025</span>
-                                                        <span className="category">Security</span>
+                                            {posts.slice(0, 4).map((post, index) => (
+                                                <article key={index} className="blog-item" data-aos="fade-up" data-aos-delay="100">
+                                                    {post.featured_image && imageUrl(post.featured_image) ? (
+                                                        <img src={imageUrl(post.featured_image)} alt={post.featured_image.alt_text || post.title} loading="lazy" />
+                                                    ) : (
+                                                        <div className="post-image-placeholder">
+                                                            <span>JURNAL<br />IDE</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="blog-content">
+                                                        <div className="post-meta">
+                                                            <span className="date">{dateLabel(post.created_at || post.published_at)}</span>
+                                                            <span className="category">{post.categories[0].name}</span>
+                                                        </div>
+                                                        <h3 className="post-title">
+                                                            <a href="blog-details" title={post.title}>{post.title}</a>
+                                                        </h3>
                                                     </div>
-                                                    <h3 className="post-title">
-                                                        <a href="blog-details" title="Sed do eiusmod tempor incididunt ut labore">Sed do eiusmod tempor incididunt ut labore</a>
-                                                    </h3>
-                                                </div>
-                                            </article>
+                                                </article>
+                                            ))}
 
                                         </div>
                         
@@ -399,7 +436,6 @@ export default function PublicSite() {
                         
                                 </section>
                                 
-                                
                                 <section id="category-section" className="category-section section">
                                     <div className="container section-title" data-aos="fade-up">
                                         <h2>Category Section</h2>
@@ -471,8 +507,7 @@ export default function PublicSite() {
                                         </div>
                                     ))}
                                 </section>
-                                
-                                
+
                                 {/* Latest Posts */}
                                 <section id="latest-posts" className="latest-posts section">
                         
@@ -568,15 +603,6 @@ export default function PublicSite() {
                             </div>
                             ) : null
                         }
-                        
-                        {posts && posts.last_page > 1 && (
-                            <div className="public-pagination">
-                                <button disabled={page <= 1} onClick={() => { setPage((p) => p - 1); window.scrollTo({ top: 500, behavior: 'smooth' }); }}>← Sebelumnya</button>
-                                <span>Halaman {posts.current_page} dari {posts.last_page}</span>
-                                <button disabled={page >= posts.last_page} onClick={() => { setPage((p) => p + 1); window.scrollTo({ top: 500, behavior: 'smooth' }); }}>Berikutnya →</button>
-                            </div>
-                        )}
-
                     </>
                 ) : (
                     <>
@@ -1008,9 +1034,36 @@ export default function PublicSite() {
                                         <div className="search-widget widget-item">
                 
                                             <h3 className="widget-title">Search</h3>
-                                            <form action="">
-                                                <input type="text"/>
-                                                <button type="submit" title="Search"><i className="bi bi-search"></i></button>
+                                            <form
+                                                className="public-search-form mb-4"
+                                                role="search"
+                                                onSubmit={(event)=>{
+                                                    event.preventDefault();
+                                                    setPage(1);
+                                                }}
+                                                >
+                                                <label htmlFor="article-search" className="visually-hidden">
+                                                    Cari artikel
+                                                </label>
+                                            
+                                                <div className="input-group">
+                                                    <input
+                                                    id="article-search"
+                                                    type="search"
+                                                    className="form-control"
+                                                    placeholder="Cari artikel berdasarkan judul..."
+                                                    value={search}
+                                                    onChange={(event)=> {
+                                                        setSearch(event.target.value);
+                                                        setPage(1);
+                                                    }}
+                                                />
+                                            
+                                                    <button className="btn btn-primary" type="submit">
+                                                        <i className="bi bi-search me-1" />
+                                                        Cari
+                                                    </button>
+                                                </div>
                                             </form>
                 
                                         </div>

@@ -5,15 +5,11 @@ const mainLinks = [
     { label: 'Home', to: '/', end: 'true' },
     { label: 'About', to: '/about' },
     { label: 'Category', to: '/category' },
-    { label: 'Blog Details', to: '/blog-details' },
-    { label: 'Author Profile', to: '/author-profile' },
 ];
 
 const pageLinks = [
     { label: 'About', to: '/about' },
     { label: 'Category', to: '/category' },
-    { label: 'Blog Details', to: '/blog-details' },
-    { label: 'Author Profile', to: '/author-profile' },
     { label: 'Search Results', to: '/search-results' },
     { label: '404 Not Found Page', to: '/404' },
 ];
@@ -117,14 +113,14 @@ export default function Header() {
             
                         <form className="search-form ms-4" onSubmit={handleSearch}>
                             <input
-                            type="search"
-                            name="q"
-                            placeholder="Search..."
-                            className="form-control"
-                            aria-label="Search articles"
-                            value={search}
-                            onChange={(event)=> setSearch(event.target.value)}
-                        />
+                                type="search"
+                                name="q"
+                                placeholder="Search..."
+                                className="form-control"
+                                aria-label="Search articles"
+                                value={search}
+                                onChange={(event)=> setSearch(event.target.value)}
+                            />
             
                             <button type="submit" className="btn" aria-label="Search">
                                 <i className="bi bi-search" />
@@ -160,18 +156,6 @@ export default function Header() {
                                 </Link>
                             </li>
                     
-                            <li>
-                                <Link to="/blog-details" onClick={closeMobileNav}>
-                                    Blog Details
-                                </Link>
-                            </li>
-                    
-                            <li>
-                                <Link to="/author-profile" onClick={closeMobileNav}>
-                                    Author Profile
-                                </Link>
-                            </li>
-                    
                             {/* Dropdown Pages */}
                             <li className={`dropdown ${pagesDropdownOpen ? 'active' : ''}`}>
                                 <a
@@ -181,7 +165,7 @@ export default function Header() {
                                     event.preventDefault();
                                     togglePagesDropdown();
                                     }}
-                                    >
+                                >
                                     <span>Pages</span>
                                     {' '}
                                     <i className="bi bi-chevron-down toggle-dropdown" />
@@ -196,16 +180,6 @@ export default function Header() {
                                     <li>
                                         <Link to="/category" onClick={closeMobileNav}>
                                             Category
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link to="/blog-details" onClick={closeMobileNav}>
-                                            Blog Details
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link to="/author-profile" onClick={closeMobileNav}>
-                                            Author Profile
                                         </Link>
                                     </li>
                                     <li>
@@ -225,11 +199,11 @@ export default function Header() {
                                             href="#deep-dropdown"
                                             aria-expanded={deepDropdownOpen}
                                             onClick={(event)=> {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                            toggleDeepDropdown();
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                toggleDeepDropdown();
                                             }}
-                                            >
+                                        >
                                             <span>Deep Dropdown</span>
                                             {' '}
                                             <i className="bi bi-chevron-down toggle-dropdown" />
@@ -241,7 +215,7 @@ export default function Header() {
                                                 <a
                                                     href={`#deep-dropdown-${number}`}
                                                     onClick={closeMobileNav}
-                                                    >
+                                                >
                                                     Deep Dropdown {number}
                                                 </a>
                                             </li>

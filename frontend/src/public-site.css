@@ -82,9 +82,6 @@ a:hover {
     text-decoration: none;
 }
 
-h1,
-h2,
-h3,
 h4,
 h5,
 h6 {
@@ -3622,4 +3619,17 @@ section,
 .btn-link {
     text-decoration: none;
     color: inherit;
+}
+
+.public-search-form {
+    max-width: 680px;
+}
+
+.public-search-form .form-control,
+.public-search-form .btn {
+    min-height: 44px;
+}
+
+.public-search-form .form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgb(13 110 253 / 15%);
 }
