@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
-
 import Header from '../components/public/Header';
 import '../public-site.css';
 
@@ -12,6 +11,12 @@ type Category = {
     slug: string;
 };
 
+type Author = {
+    id: number;
+    name: string;
+    profile_photo_path?: string | null;
+} | null;
+
 type Post = {
     id: number;
     title: string;
@@ -20,7 +25,7 @@ type Post = {
     body: string;
     published_at: string | null;
     created_at: string;
-    user?: { name: string } | null;
+    user?: Author;
     categories?: Category[];
     featured_image?: {
         url?: string;
@@ -30,12 +35,6 @@ type Post = {
     approved_comments_count?: number;
     allow_comments?: boolean;
 };
-
-type Author = {
-    id: number;
-    name: string;
-    profile_photo_path?: string | null;
-} | null;
 
 type CommentItem = {
     id: number;
@@ -84,10 +83,17 @@ function formatDate(value: string | null | undefined): string {
     });
 }
 
-function authorImageUrl(author: Author): string {
-    if (!author?.profile_photo_path) return '';
+function authorImageUrl(author: Author|undefined): string {
+    const path = author?.profile_photo_path?.trim();
+
+    if (!path) return '';
+
+    if (/^https?:\/\//i.test(path)) {
+        return path;
+    }
+
     return getImageUrl({
-        path: author.profile_photo_path,
+        path: path.replace(/^\/storage\//, ''),
     });
 }
 
@@ -363,14 +369,23 @@ export default function PublicArticleDetail() {
                                                         <div className="author-info">
                                                             <div className="author-details">
                                                                 {authorImageUrl(post.user) ? (
-                                                                    <img src={authorImageUrl(post.user)} alt={`Foto ${post.user || 'penulis'}`} className="post-author-img" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                                                                    <img
+                                                                        src={authorImageUrl(post.user)}
+                                                                        alt={`Foto ${post.user?.name || 'penulis'}`}
+                                                                        className="author-img"
+                                                                        loading="lazy"
+                                                                        onError={(event) => {
+                                                                            event.currentTarget.style.display = 'none';
+                                                                        }}
+                                                                    />
                                                                 ) : (
-                                                                    <span className="author-avatar-fallback" aria-hidden="true"> {(post.user?.name || 'T').charAt(0).toUpperCase()}</span>
+                                                                    <span className="author-avatar-fallback" aria-hidden="true">
+                                                                        {(post.user?.name || 'P').charAt(0).toUpperCase()}
+                                                                    </span>
                                                                 )}
-                                                                
+                                                            
                                                                 <div className="info">
-                                                                    <h4>{post.user || 'Reduction'}</h4>
-                                                                    {/* <span className="role">Senior Web Developer</span> */}
+                                                                    <h4>{post.user?.name || 'Redaksi'}</h4>
                                                                 </div>
                                                             </div>
                                                             <div className="post-meta">
@@ -414,23 +429,25 @@ export default function PublicArticleDetail() {
                                                 <div className="row align-items-center">
                                                     <div className="col-lg-3 col-md-4 text-center">
                                                         {authorImageUrl(post.user) ? (
-                                                            <img src={authorImageUrl(post.user)} alt={`Foto ${post.user || 'penulis'}`} className="author-img rounded-circle" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                                                            <img
+                                                                src={authorImageUrl(post.user)}
+                                                                alt={`Foto ${post.user?.name || 'penulis'}`}
+                                                                className="author-img rounded-circle"
+                                                                loading="lazy"
+                                                                onError={(event) => {
+                                                                    event.currentTarget.style.display = 'none';
+                                                                }}
+                                                            />
                                                         ) : (
-                                                            <span className="author-avatar-fallback" aria-hidden="true"> {(post.user || 'T').charAt(0).toUpperCase()}</span>
+                                                            <span className="author-avatar-fallback" aria-hidden="true">
+                                                                {(post.user?.name || 'P').charAt(0).toUpperCase()}
+                                                            </span>
                                                         )}
-                
-                                                        <div className="author-social-links mt-3">
-                                                            <a href="https://twitter.com/#" className="twitter"><i className="bi bi-twitter-x"></i></a>
-                                                            <a href="https://linkedin.com/#" className="linkedin"><i className="bi bi-linkedin"></i></a>
-                                                            <a href="https://github.com/#" className="github"><i className="bi bi-github"></i></a>
-                                                            <a href="https://facebook.com/#" className="facebook"><i className="bi bi-facebook"></i></a>
-                                                            <a href="https://instagram.com/#" className="instagram"><i className="bi bi-instagram"></i></a>
-                                                        </div>
                                                     </div>
-                
+                                                    
                                                     <div className="col-lg-9 col-md-8">
                                                         <div className="author-content">
-                                                            <h3 className="author-name">{post.user}</h3>
+                                                            <h3 className="author-name">{post.user?.name || 'Redaksi'}</h3>
                                                             {/*
                                                             <span className="author-title">Senior Tech Writer &amp; Developer Advocate</span>
                 

@@ -1,4 +1,4 @@
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState, type FormEvent } from 'react';
 
 const mainLinks = [
@@ -27,6 +27,13 @@ export default function Header() {
     const [pagesDropdownOpen, setPagesDropdownOpen] = useState(false);
     const [deepDropdownOpen, setDeepDropdownOpen] = useState(false);
     const [search, setSearch] = useState('');
+    const [searchParams] = useSearchParams();
+    const currentQuery = searchParams.get('q') || '';
+    
+    useEffect(() => {
+        setSearch(currentQuery);
+    }, [currentQuery]);
+    
     const navigate = useNavigate();
         
     useEffect(() => {
@@ -115,7 +122,13 @@ export default function Header() {
                                 className="form-control"
                                 aria-label="Search articles"
                                 value={search}
-                                onChange={(event)=> setSearch(event.target.value)}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    setSearch(value);
+                                    if (!value.trim() && currentQuery) {
+                                        navigate('/', { replace: true });
+                                    }
+                                }}
                             />
             
                             <button type="submit" className="btn" aria-label="Search">

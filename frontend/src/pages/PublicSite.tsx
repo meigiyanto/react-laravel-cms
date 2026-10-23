@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import '../public-site.css';
 import axios from 'axios';
 // import DOMPurify from 'dompurify';
@@ -109,6 +109,13 @@ export default function PublicSite() {
     const [categoryArticles, setCategoryArticles] = useState<CategoryWithPosts[]>([]);
     const heroPost = posts[0] ?? null;
     
+    const [searchParams] = useSearchParams();
+    const searchQuery = (searchParams.get('q') || '').trim();
+    
+    const [searchResults, setSearchResults] = useState<Post[]>([]);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [searchError, setSearchError] = useState('');
+    
     useEffect(() => {
         let active = true;
     
@@ -151,11 +158,174 @@ export default function PublicSite() {
         };
     }, []);
     
+    useEffect(() => {
+    let active = true;
+
+    async function searchArticles() {
+        if (!searchQuery) {
+            setSearchResults([]);
+            setSearchError('');
+            setSearchLoading(false);
+            return;
+        }
+
+        setSearchLoading(true);
+        setSearchError('');
+
+        try {
+            const response = await publicApi.get('/public/posts', {
+                params: {
+                    search: searchQuery,
+                    page: 1,
+                },
+            });
+
+            if (active) {
+                setSearchResults(
+                    response.data?.data?.posts?.data ?? []
+                );
+            }
+        } catch (error: unknown) {
+            if (active) {
+                setSearchError(errorText(error));
+                setSearchResults([]);
+            }
+        } finally {
+            if (active) {
+                setSearchLoading(false);
+            }
+        }
+    }
+        void searchArticles();
+    
+        return () => {
+            active = false;
+        };
+    }, [searchQuery]);
+    
     return (
         <>
             <Header />
             <main className="main">
-                {loading ? (
+                {searchQuery ? (
+                    <>
+                        <div className="page-title">
+                            <div className="breadcrumbs">
+                                <nav aria-label="breadcrumb">
+                                    <ol className="breadcrumb">
+                                        <li className="breadcrumb-item"><a href="#"><i className="bi bi-house"></i> Home</a></li>
+                                        <li className="breadcrumb-item"><a href="#">Category</a></li>
+                                        <li className="breadcrumb-item active current">Search Results</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                
+                            <div className="title-wrapper">
+                                <h1>Search Results</h1>
+                                <p>We found <strong>{searchResults.length}</strong> results for your search term <strong>{searchQuery}</strong></p>
+                            </div>
+                        </div>
+                        
+                        {searchLoading ? (
+                            <div className="public-loading" role="status">
+                                <FontAwesomeIcon
+                                    icon={faSpinner}
+                                    style={{
+                                        animation: 'spinning 1s linear infinite',
+                                    }}
+                                />
+                                {' '}Mencari artikel...
+                            </div>
+                        ) : searchError ? (
+                            <p className="alert alert-danger" role="alert">
+                                {searchError}
+                            </p>
+                        ) : searchResults.length === 0 ? (
+                            <div className="public-empty">
+                                <h3>Artikel tidak ditemukan</h3>
+                                <p>Coba gunakan kata kunci yang berbeda.</p>
+                            </div>
+                        ) : (
+                            <section id="search-results-posts" className="search-results-posts section">
+                                <div className="container" data-aos="fade-up" data-aos-delay="100">
+                                    <div className="row gy-4">
+                                        {searchResults.map((post) => (
+                                            <div key={post.id} className="col-md-6 col-lg-4">
+                                                <article>
+
+                                                    <div className="post-img">
+                                                        {post.featured_image && imageUrl(post.featured_image) ? (
+                                                            <img
+                                                                src={imageUrl(post.featured_image)}
+                                                                alt={post.featured_image.alt_text ||post.title}
+                                                                className="img-fluid"
+                                                                loading="lazy"
+                                                            />
+                                                        ) : (
+                                                            <div className="post-image-placeholder">
+                                                                <span>JURNAL<br />IDE</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                        
+                                                    <p className="post-category">
+                                                        {post.categories?.[0]?.name || 'Tanpa kategori'}
+                                                    </p>
+                        
+                                                    <h2 className="title">
+                                                        <Link to={`/artikel/${post.slug}`}>
+                                                            {post.title}
+                                                        </Link>
+                                                    </h2>
+                        
+                                                    <div className="d-flex align-items-center">
+                                                        {authorImageUrl(post.user) ? (
+                                                            <img src={authorImageUrl(post.user)} alt={`Foto ${post.user?.name || 'penulis'}`} className="img-fluid post-author-img flex-shrink-0" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
+                                                        ) : (
+                                                            <span className="author-avatar-fallback" aria-hidden="true"> {(post.user?.name || 'T').charAt(0).toUpperCase()}</span>
+                                                        )}
+                                                        
+                                                        <div className="post-meta">
+                                                            <p className="post-author">
+                                                                {post.user?.name}
+                                                            </p>
+                                                            <p className="post-date">
+                                                                <time dateTime={post.published_at || post.created_at}>{dateLabel(post.published_at || post.created_at)}</time>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                        
+                                                </article>
+                                                
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+                        )}
+                        
+                        {searchResults.length > 12 && (
+                            <section id="pagination-3" className="pagination-3 section">
+
+                                <div className="container">
+                                    <div className="d-flex justify-content-center">
+                                        <ul>
+                                            <li><a href="#"><i className="bi bi-chevron-left"></i></a></li>
+                                            <li><a href="#">1</a></li>
+                                            <li><a href="#" className="active">2</a></li>
+                                            <li><a href="#">3</a></li>
+                                            <li><a href="#">4</a></li>
+                                            <li>...</li>
+                                            <li><a href="#">10</a></li>
+                                            <li><a href="#"><i className="bi bi-chevron-right"></i></a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                    
+                            </section>
+                        )}
+                    </>
+                ) : loading ? (
                     <div className="container public-loading" role="status">
                         <FontAwesomeIcon icon={faSpinner} style={{ animation: 'spinning 1s linear infinite' }}/> Menyiapkan cerita untukmu…
                     </div> 
@@ -234,6 +404,7 @@ export default function PublicSite() {
                                 <h2>Featured Posts</h2>
                                 <div>
                                     <span>Check Our</span> <span className="description-title">Featured Posts</span>
+                                    <a href="#" className="float-end">View all posts</a>
                                 </div>
                             </div>
                 
@@ -299,7 +470,8 @@ export default function PublicSite() {
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Category Section</h2>
                                 <div>
-                                    <span className="description-title">Category Section</span>
+                                    <span className="description-title">Check Our Category Posts</span>
+                                    <a href="#" className="float-end">View all posts</a>
                                 </div>
                             </div>
                             {categoryArticles.map((item, index) => (
@@ -379,6 +551,7 @@ export default function PublicSite() {
                                 <h2>Latest Posts</h2>
                                 <div>
                                     <span>Check Our</span> <span className="description-title">Latest Posts</span>
+                                    <a href="#" className="float-end">View all posts</a>
                                 </div>
                             </div>
                 
@@ -408,10 +581,11 @@ export default function PublicSite() {
                                                 ) : (
                                                     <span className="author-avatar-fallback" aria-hidden="true"> {(post.user?.name || 'T').charAt(0).toUpperCase()}</span>
                                                 )}
+                                                
                                                 <div className="post-meta">
                                                     <p className="post-author">{post.user?.name}</p>
                                                     <p className="post-date">
-                                                        <time dateTime="2022-01-01">{dateLabel(post.created_at || post.published_at)}</time>
+                                                        <time dateTime={post.created_at || post.published_at}>{dateLabel(post.created_at || post.published_at)}</time>
                                                     </p>
                                                 </div>
                                             </div>
@@ -442,7 +616,7 @@ export default function PublicSite() {
                                             </form>
                                         </div>
                                     </div>
-                                    <div className="col-lg-4">
+                                    <div className="d-sm-none d-md-block col-lg-4">
                                         <div className="cta-image" data-aos="zoom-out" data-aos-delay="200">
                                             <img src="http://localhost:8000/storage/cms-media/1PwvRWpRVsEdutiPNHZTCAdjmMdSaNpBwsXpsGMU.webp" alt="" className="img-fluid"/>
                                         </div>

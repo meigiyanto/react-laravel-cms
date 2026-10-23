@@ -87,7 +87,7 @@ class PublicPostController extends Controller
             ->where('slug', $slug)
             ->where('status', 'published')
             ->with([
-                'user:id,name',
+                'user:id,name,profile_photo_path',
                 'categories:id,name,slug',
                 'tags:id,name,slug',
                 'featuredImage',
