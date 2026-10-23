@@ -134,84 +134,86 @@ export default function Header() {
                         aria-label="Main navigation"
                     >
                         <ul>
-                        {mainLinks.map((link) => (
-                            <li>
-                                <Link
-                                    to={link.to}
-                                    end={link.end}
-                                    onClick={closeMobileNav}
-                                >
-                                    {link.label}
-                                </Link>
-                            </li>
-                        ))}
-                    
-                        {/* Dropdown Pages */}
-                        <li className={`dropdown ${pagesDropdownOpen ? 'active' : ''}`}>
-                            <a
-                                href="#pages"
-                                aria-expanded={pagesDropdownOpen}
-                                onClick={(event) => {
-                                    event.preventDefault();
-                                    togglePagesDropdown();
-                                }}
-                            >
-                                <span>Pages</span>
-                                {' '}
-                                <i className="bi bi-chevron-down toggle-dropdown" />
-                            </a>
-                    
-                            <ul className={pagesDropdownOpen ? 'dropdown-active' : ''}>
-                                {pageLinks.map((link) => (
-                                    <li key={link.to}>
-                                        <Link to={link.to} onClick={closeMobileNav}>
-                                            {link.label}
-                                        </Link>
-                                    </li>
-                                ))}
-                    
-                                {/* Dropdown bertingkat */}
-                                <li className={`dropdown ${deepDropdownOpen ? 'active' : ''}`}>
-                                    <a
-                                        href="#deep-dropdown"
-                                        aria-expanded={deepDropdownOpen}
-                                        onClick={(event) => {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                            toggleDeepDropdown();
-                                        }}
+                            {mainLinks.map((link) => (
+                                <li key={link.to}>
+                                    <Link
+                                        to={link.to}
+                                        end={link.end}
+                                        onClick={closeMobileNav}
                                     >
-                                        <span>Deep Dropdown</span>
-                                        {' '}
-                                        <i className="bi bi-chevron-down toggle-dropdown" />
-                                    </a>
-                    
-                                    <ul className={deepDropdownOpen ? 'dropdown-active' : ''}>
-                                        {deepLinks.map((link) => (
-                                            <li key={link.label}>
-                                                <a
-                                                    href={link.to}
-                                                    onClick={(event) => {
-                                                        if (link.to === '#') {
-                                                            event.preventDefault();
-                                                        }
-                                                        closeMobileNav();
-                                                    }}
-                                                >
-                                                    {link.label}
-                                                </a>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                        {link.label}
+                                    </Link>
                                 </li>
-                            </ul>
-                        </li>
+                            ))}
+                        
+                            {/* Dropdown Pages */}
+                            <li className={`dropdown ${pagesDropdownOpen ? 'active' : ''}`}>
+                                <a
+                                    href="#pages"
+                                    aria-expanded={pagesDropdownOpen}
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        togglePagesDropdown();
+                                    }}
+                                >
+                                    <span>Pages</span>
+                                    {' '}
+                                    <i className="bi bi-chevron-down toggle-dropdown" />
+                                </a>
+                        
+                                <ul className={pagesDropdownOpen ? 'dropdown-active' : ''}>
+                                    {pageLinks.map((link) => (
+                                        <li key={link.to}>
+                                            <Link to={link.to} onClick={closeMobileNav}>
+                                                {link.label}
+                                            </Link>
+                                        </li>
+                                    ))}
+                        
+                                    {/* Dropdown bertingkat */}
+                                    <li className={`dropdown ${deepDropdownOpen ? 'active' : ''}`}>
+                                        <a
+                                            href="#deep-dropdown"
+                                            aria-expanded={deepDropdownOpen}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                toggleDeepDropdown();
+                                            }}
+                                        >
+                                            <span>Deep Dropdown</span>
+                                            {' '}
+                                            <i className="bi bi-chevron-down toggle-dropdown" />
+                                        </a>
+                        
+                                        <ul className={deepDropdownOpen ? 'dropdown-active' : ''}>
+                                            {deepLinks.map((link) => (
+                                                <li key={link.label}>
+                                                    <a
+                                                        href={link.to}
+                                                        onClick={(event) => {
+                                                            if (link.to === '#') {
+                                                                event.preventDefault();
+                                                            }
+                                                            closeMobileNav();
+                                                        }}
+                                                    >
+                                                        {link.label}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        
                             <li>
                                 <Link to="/contact" onClick={closeMobileNav}>
                                     Contact
                                 </Link>
                             </li>
                         </ul>
+
                        
                         {/* Tombol hamburger */}
                         <button
