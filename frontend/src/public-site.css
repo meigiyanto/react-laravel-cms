@@ -201,6 +201,7 @@ button {
     color: var(--heading-color);
     font-family: var(--heading-font);
     margin: 0;
+    padding: 0 0 0 20px;
 }
 
 .header .top-row .logo span {
@@ -872,6 +873,11 @@ section,
     font-weight: 700;
     text-transform: uppercase;
     font-family: var(--heading-font);
+}
+
+.section-title div span,
+.section-title div a {
+    font-size: 16px;
 }
 
 /*--------------------------------------------------------------
@@ -1559,6 +1565,63 @@ section,
     50% {
         transform: translateY(-10px);
     }
+}
+
+/*--------------------------------------------------------------
+# All Articles
+--------------------------------------------------------------*/
+.all-articles article {
+    background-color: var(--surface-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    height: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.all-articles .post-img {
+    max-height: 240px;
+    margin: -30px -30px 15px -30px;
+    overflow: hidden;
+}
+
+.all-articles .post-category {
+    font-size: 16px;
+    color: color-mix(in srgb, var(--default-color), transparent 40%);
+    margin-bottom: 10px;
+}
+
+.all-articles .title {
+    font-size: 20px;
+    font-weight: 700;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+.all-articles .title a {
+    color: var(--heading-color);
+    transition: 0.3s;
+}
+
+.all-articles .title a:hover {
+    color: var(--accent-color);
+}
+
+.all-articles .post-author-img {
+    width: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.all-articles .post-author {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.all-articles .post-date {
+    font-size: 14px;
+    color: color-mix(in srgb, var(--default-color), transparent 40%);
+    margin-bottom: 0;
 }
 
 /*--------------------------------------------------------------
@@ -3212,7 +3275,7 @@ section,
 # Pagination 3 Section
 --------------------------------------------------------------*/
 .pagination-3 {
-    padding-top: 0;
+    padding-top: 10px;
     color: color-mix(in srgb, var(--default-color), transparent 40%);
 }
 
@@ -3559,7 +3622,7 @@ section,
 
 .post-image-placeholder {
     width: 100%;
-    height: 100%;
+    height: 220px;
     display: flex;
     align-items: center;
     justify-content: space-between;

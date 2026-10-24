@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import '../public-site.css';
 import axios from 'axios';
 // import DOMPurify from 'dompurify';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import Header from '../components/public/Header';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+
+import Header from '../../components/public/Header';
+import Footer from '../../components/public/Footer';
+import BackToTop from '../../components/public/BackToTop';
+import '../../public-site.css';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -100,7 +101,7 @@ function excerpt(post: Post): string {
     return text.trim().slice(0, 180) + (text.trim().length > 180 ? '…': '');
 }
 
-export default function PublicSite() {
+export default function Home() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [latestPosts, setLatestPosts] = useState<Post[]>([]);
     const [featuredPosts, setfeaturedPosts] = useState<Post[]>([]);
@@ -227,14 +228,9 @@ export default function PublicSite() {
                         </div>
                         
                         {searchLoading ? (
-                            <div className="public-loading" role="status">
-                                <FontAwesomeIcon
-                                    icon={faSpinner}
-                                    style={{
-                                        animation: 'spinning 1s linear infinite',
-                                    }}
-                                />
-                                {' '}Mencari artikel...
+                            <div className="public-loading py-5 text-center" role="status">
+                                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+                                Loading article...
                             </div>
                         ) : searchError ? (
                             <p className="alert alert-danger" role="alert">
@@ -242,7 +238,7 @@ export default function PublicSite() {
                             </p>
                         ) : searchResults.length === 0 ? (
                             <div className="public-empty">
-                                <h3>Artikel tidak ditemukan</h3>
+                                <h3>blog tidak ditemukan</h3>
                                 <p>Coba gunakan kata kunci yang berbeda.</p>
                             </div>
                         ) : (
@@ -273,7 +269,7 @@ export default function PublicSite() {
                                                     </p>
                         
                                                     <h2 className="title">
-                                                        <Link to={`/artikel/${post.slug}`}>
+                                                        <Link to={`/blog/${post.slug}`}>
                                                             {post.title}
                                                         </Link>
                                                     </h2>
@@ -326,12 +322,12 @@ export default function PublicSite() {
                         )}
                     </>
                 ) : loading ? (
-                    <div className="container public-loading" role="status">
-                        <FontAwesomeIcon icon={faSpinner} style={{ animation: 'spinning 1s linear infinite' }}/> Menyiapkan cerita untukmu…
-                    </div> 
+                    <div className="public-loading py-5 text-center" role="status">
+                        <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+                        Loading article...
+                    </div>
                 ) : posts?.length ? (
                     <>
-                        {/* Blog Hero Section */}
                         <section id="blog-hero" className="blog-hero section">
                 
                             <div className="container" data-aos="fade-up" data-aos-delay="100">
@@ -339,11 +335,7 @@ export default function PublicSite() {
                                     {heroPost && (
                                         <article className="blog-item featured" data-aos="fade-up">
                                             {heroPost.featured_image && imageUrl(heroPost.featured_image) ? (
-                                                <img
-                                                    src={imageUrl(heroPost.featured_image)}
-                                                    alt={heroPost.featured_image.alt_text || heroPost.title}
-                                                    loading="lazy"
-                                                />
+                                                <img src={imageUrl(heroPost.featured_image)} alt={heroPost.featured_image.alt_text || heroPost.title} loading="lazy" />
                                             ) : (
                                                 <div className="post-image-placeholder">
                                                     <span>JURNAL<br />IDE</span>
@@ -361,7 +353,7 @@ export default function PublicSite() {
                                                 </div>
                                     
                                                 <h3 className="post-title">
-                                                    <Link to={`/artikel/${heroPost.slug}`}>
+                                                    <Link to={`/blog/${heroPost.slug}`}>
                                                         {heroPost.title}
                                                     </Link>
                                                 </h3>
@@ -384,7 +376,7 @@ export default function PublicSite() {
                                                     <span className="category">{post.categories?.[0]?.name || 'Tanpa Kategori'}</span>
                                                 </div>
                                                 <h3 className="post-title">
-                                                    <Link to={`/artikel/${post.slug}`}>{post.title}</Link>
+                                                    <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                                                 </h3>
                                             </div>
                                         </article>
@@ -396,15 +388,13 @@ export default function PublicSite() {
                 
                         </section>
                         
-                        {/* Featured Posts Section */}
                         <section id="featured-posts" className="featured-posts section">
                 
-                            {/* Section Title */}
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Featured Posts</h2>
                                 <div>
                                     <span>Check Our</span> <span className="description-title">Featured Posts</span>
-                                    <a href="#" className="float-end">View all posts</a>
+                                    <Link to="/blog" className="float-end">View all posts</Link>
                                 </div>
                             </div>
                 
@@ -450,9 +440,9 @@ export default function PublicSite() {
                                                                 <span><i className="bi bi-clock"></i> {dateLabel(item.created_at || item.published_at)}</span>
                                                                 <span><i className="bi bi-labels"></i> {item.categories[0].name}</span>
                                                             </div>
-                                                            <h2><Link to={`/artikel/${item.slug}`}>{item.title}</Link></h2>
+                                                            <h2><Link to={`/blog/${item.slug}`}>{item.title}</Link></h2>
                                                             <p>{excerpt(item)}</p>
-                                                            <Link className="read-more" to={`/artikel/${item.slug}`}> <i className="bi bi-arrow-right"></i></Link>
+                                                            <Link className="read-more" to={`/blog/${item.slug}`}> <i className="bi bi-arrow-right"></i></Link>
                                                         </div>
                                                     </div>
                                                 </SwiperSlide>
@@ -471,7 +461,7 @@ export default function PublicSite() {
                                 <h2>Category Section</h2>
                                 <div>
                                     <span className="description-title">Check Our Category Posts</span>
-                                    <a href="#" className="float-end">View all posts</a>
+                                    <Link to="/blog" className="float-end">View all posts</Link>
                                 </div>
                             </div>
                             {categoryArticles.map((item, index) => (
@@ -484,9 +474,13 @@ export default function PublicSite() {
                                                         <div key={article.id} className="col-md-6 col-lg-4">
                                                             <article className="featured-post">
                                                                 <div className="post-img">
-                                                                    {article.featured_image && imageUrl(article.featured_image) && (
-                                                                        <img src={imageUrl(article.featured_image)} alt={ article.featured_image.alt_text || article.title } className="img-fluid" loading="lazy" />
-                                                                    )}
+                                                                    {article.featured_image && imageUrl(article.featured_image) ? (
+                                                    <img src={imageUrl(article.featured_image)} alt={article.featured_image.alt_text || article.title} loading="lazy" className="img-fluid"/>
+                                                ) : (
+                                                    <div className="post-image-placeholder">
+                                                        <span>JURNAL<br />IDE</span>
+                                                    </div>
+                                                )}
                                                                 </div>
                                                                 <div className="post-content">
                                                                     <div className="category-meta">
@@ -497,7 +491,7 @@ export default function PublicSite() {
                                                                         </div>
                                                                     </div>
                                                                     <h2 className="title">
-                                                                        <Link to={`/artikel/${article.slug}`}>{article.title}</Link>
+                                                                        <Link to={`/blog/${article.slug}`}>{article.title}</Link>
                                                                     </h2>
                                                                 </div>
                                                             </article>
@@ -522,7 +516,7 @@ export default function PublicSite() {
                                                                         <span className="post-category">{article.categories[0].name}</span>
                                                                     </div>
                                                                     <h3 className="title">
-                                                                        <Link to={`/artikel/${article.slug}`}>{article.title}</Link>
+                                                                        <Link to={`/blog/${article.slug}`}>{article.title}</Link>
                                                                     </h3>
                                                                     <div className="post-meta">
                                                                         <span className="post-date">{dateLabel(article.created_at || article.published_at)}</span>
@@ -537,21 +531,19 @@ export default function PublicSite() {
                                             
                                         </div>
                                     ) : (
-                                        <p>Belum ada artikel dalam kategori ini.</p>
+                                        <p>Belum ada blog dalam kategori ini.</p>
                                     )}
                                 </div>
                             ))}
                         </section>
 
-                        {/* Latest Posts */}
                         <section id="latest-posts" className="latest-posts section">
                 
-                            {/* Section Title */}
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Latest Posts</h2>
                                 <div>
                                     <span>Check Our</span> <span className="description-title">Latest Posts</span>
-                                    <a href="#" className="float-end">View all posts</a>
+                                    <Link to="/blog" className="float-end">View all posts</Link>
                                 </div>
                             </div>
                 
@@ -572,7 +564,7 @@ export default function PublicSite() {
                 
                                             <p className="post-category">{post.categories[0]?.name}</p>
                                             <h2 className="title">
-                                                <Link to={`/artikel/${post.slug}`}>{post.title}</Link>
+                                                <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                                             </h2>
                 
                                             <div className="d-flex align-items-center">
@@ -629,94 +621,14 @@ export default function PublicSite() {
                 ) : !error ? (
                     <div className="public-empty">
                         <span>✳</span>
-                        <h3>Belum ada artikel untuk ditampilkan</h3>
-                        <p>Artikel yang telah dipublikasikan akan muncul di sini.</p>
+                        <h3>Belum ada blog untuk ditampilkan</h3>
+                        <p>blog yang telah dipublikasikan akan muncul di sini.</p>
                     </div>
                     ) : null
                 }
             </main>
-        
-            <footer id="footer" className="footer">
-                <div className="container footer-top">
-                    <div className="row gy-4">
-                        <div className="col-lg-4 col-md-3 col-sm-6 footer-about">
-                            <a href="index" className="logo d-flex align-items-center">
-                                <span className="sitename">Blogy</span>
-                            </a>
-                            <div className="footer-contact pt-3">
-                                <p>
-                                    A108 Adam Street
-                                </p>
-                                <p>
-                                    New York, NY 535022
-                                </p>
-                                <p className="mt-3">
-                                    <strong>Phone:</strong> <span>+1 5589 55488 55</span>
-                                </p>
-                                <p>
-                                    <strong>Email:</strong> <span>info@example.com</span>
-                                </p>
-                            </div>
-                            <div className="social-links d-flex mt-4">
-                                <a href=""><i className="bi bi-twitter-x"></i></a>
-                                <a href=""><i className="bi bi-facebook"></i></a>
-                                <a href=""><i className="bi bi-instagram"></i></a>
-                                <a href=""><i className="bi bi-linkedin"></i></a>
-                            </div>
-                        </div>
-        
-                        <div className="col-lg-2 col-md-3 col-sm-6 footer-links">
-                            <h4>Useful Links</h4>
-                            <ul>
-                                <li><a href="#">Home</a></li>
-                                <li><a href="#">About us</a></li>
-                                <li><a href="#">Services</a></li>
-                                <li><a href="#">Terms of service</a></li>
-                                <li><a href="#">Privacy policy</a></li>
-                            </ul>
-                        </div>
-        
-                        <div className="col-lg-2 col-md-3 col-sm-6 footer-links">
-                            <h4>Our Services</h4>
-                            <ul>
-                                <li><a href="#">Web Design</a></li>
-                                <li><a href="#">Web Development</a></li>
-                                <li><a href="#">Product Management</a></li>
-                                <li><a href="#">Marketing</a></li>
-                                <li><a href="#">Graphic Design</a></li>
-                            </ul>
-                        </div>
-        
-                        <div className="col-lg-2 col-md-3 col-sm-6 footer-links">
-                            <h4>Hic solutasetp</h4>
-                            <ul>
-                                <li><a href="#">Molestiae accusamus iure</a></li>
-                                <li><a href="#">Excepturi dignissimos</a></li>
-                                <li><a href="#">Suscipit distinctio</a></li>
-                                <li><a href="#">Dilecta</a></li>
-                                <li><a href="#">Sit quas consectetur</a></li>
-                            </ul>
-                        </div>
-        
-                        <div className="col-lg-2 col-md-3 col-sm-6 footer-links">
-                            <h4>Nobis illum</h4>
-                            <ul>
-                                <li><a href="#">Ipsam</a></li>
-                                <li><a href="#">Laudantium dolorum</a></li>
-                                <li><a href="#">Dinera</a></li>
-                                <li><a href="#">Trodelas</a></li>
-                                <li><a href="#">Flexo</a></li>
-                            </ul>
-                        </div>
-        
-                    </div>
-                </div>
-                <div className="container copyright text-center mt-4">
-                </div>
-            </footer>
-        
-            {/* Scroll Top */}
-            <a href="#" id="scroll-top" className="scroll-top d-flex align-items-center justify-content-center"><i className="bi bi-arrow-up-short"></i></a>
+            <Footer />
+            <BackToTop />
         </>
     );
 }

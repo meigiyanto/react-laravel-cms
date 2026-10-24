@@ -1,10 +1,14 @@
 import { Route, Routes, useLocation } from 'react-router-dom';
-import PublicSite from './pages/PublicSite';
-import PublicArticleDetail from './pages/PublicArticleDetail';
-import AdminApp from './pages/AdminApp';
-import AllArticles from './pages/AllArticles';
 import AOSInitializer from './components/public/AOSInitializer';
 import 'bootstrap-icons/font/bootstrap-icons.min.css';
+
+import Home from './pages/public/Home';
+import About from './pages/public/About';
+import Contact from './pages/public/Contact';
+import ArticleDetail from './pages/public/ArticleDetail';
+import AllArticles from './pages/public/AllArticles';
+import AdminApp from './pages/AdminApp';
+
 
 function App() {
     const { pathname: path } = useLocation();
@@ -15,16 +19,24 @@ function App() {
                 <>
                     <Routes>
                         <Route
-                            path="/artikel"
+                            path="/contact"
+                            element={<Contact />}
+                        />
+                        <Route
+                            path="/about"
+                            element={<About />}
+                        />
+                        <Route
+                            path="/blog"
                             element={<AllArticles />}
                         />
                         <Route
-                            path="/artikel/:slug"
-                            element={<PublicArticleDetail />}
+                            path="/blog/:slug"
+                            element={<ArticleDetail />}
                         />
                         <Route
                             path="*"
-                            element={<PublicSite />}
+                            element={<Home />}
                         />
                     </Routes>
 

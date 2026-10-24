@@ -4,8 +4,8 @@ import { useEffect, useState, type FormEvent } from 'react';
 
 const mainLinks = [
     { label: 'Home', to: '/' },
+    { label: 'Blog', to: '/blog' },
     { label: 'About', to: '/about' },
-    { label: 'Category', to: '/category' },
     { label: 'Contact', to: '/contact' },
 ];
 

@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import Header from '../components/public/Header';
-import '../public-site.css';
+import Header from '../../components/public/Header';
+import Footer from '../../components/public/Footer';
+import BackToTop from '../../components/public/BackToTop';
+import '../../public-site.css';
 
 type Category = {
     id: number;
@@ -66,12 +68,7 @@ const publicApi = axios.create({
 
 function imageUrl(media: Media): string {
     if (!media) return '';
-
-    const raw =
-        media.url ||
-        (media.path
-            ? `/storage/${media.path.replace(/^\/+/, '')}`
-            : '');
+    const raw = media.url || (media.path ? `/storage/${media.path.replace(/^\/+/, '')}` : '');
 
     if (!raw) return '';
 
@@ -81,10 +78,7 @@ function imageUrl(media: Media): string {
 
     const apiOrigin = API_BASE.replace(/\/api\/?$/, '');
 
-    return new URL(
-        raw,
-        `${apiOrigin || window.location.origin}/`,
-    ).toString();
+    return new URL(raw,`${apiOrigin || window.location.origin}/`).toString();
 }
 
 function dateLabel(value: string | null | undefined): string {
@@ -108,14 +102,8 @@ function excerpt(post: Post): string {
         return post.excerpt;
     }
 
-    const text =
-        new DOMParser()
-            .parseFromString(post.body || '', 'text/html')
-            .body.textContent?.trim() || '';
-
-    return text.length > 180
-        ? `${text.slice(0, 180)}…`
-        : text;
+    const text = new DOMParser().parseFromString(post.body || '', 'text/html').body.textContent?.trim() || '';
+    return text.length > 180 ? `${text.slice(0, 180)}…` : text;
 }
 
 function errorText(error: unknown): string {
@@ -128,26 +116,17 @@ function errorText(error: unknown): string {
             return Object.values(errors).flat().join(' ');
         }
 
-        return (
-            error.response?.data?.message ||
-            'Tidak dapat menghubungi server. Silakan coba lagi.'
-        );
+        return (error.response?.data?.message || 'Unable to contact the server. Please try again.');
     }
 
-    return 'Terjadi kesalahan. Silakan coba lagi.';
+    return 'An error occurred. Please try again.';
 }
 
-function getPageNumbers(
-    currentPage: number,
-    lastPage: number,
-): number[] {
+function getPageNumbers(currentPage: number,lastPage: number): number[] {
     const start = Math.max(1, currentPage - 2);
     const end = Math.min(lastPage, currentPage + 2);
 
-    return Array.from(
-        { length: end - start + 1 },
-        (_, index) => start + index,
-    );
+    return Array.from({ length: end - start + 1 },(_, index) => start + index,);
 }
 
 export default function AllArticles() {
@@ -155,10 +134,7 @@ export default function AllArticles() {
 
     const query = (searchParams.get('q') || '').trim();
     const category = (searchParams.get('category') || '').trim();
-    const page = Math.max(
-        1,
-        Number.parseInt(searchParams.get('page') || '1', 10) || 1,
-    );
+    const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1', 10) || 1);
 
     const [searchInput, setSearchInput] = useState(query);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -178,9 +154,7 @@ export default function AllArticles() {
 
         async function loadCategories() {
             try {
-                const response = await publicApi.get(
-                    '/public/categories/posts',
-                );
+                const response = await publicApi.get('/public/categories/posts',);
 
                 if (active) {
                     setCategories(response.data?.data ?? []);
@@ -205,8 +179,7 @@ export default function AllArticles() {
             setError('');
 
             try {
-                const response = await publicApi.get<ApiResponse>(
-                    '/public/posts',
+                const response = await publicApi.get<ApiResponse>('/public/posts',
                     {
                         params: {
                             page,
@@ -278,10 +251,7 @@ export default function AllArticles() {
     }
 
     function goToPage(nextPage: number) {
-        if (
-            !pagination ||
-            nextPage < 1 ||
-            nextPage > pagination.last_page
+        if ( !pagination || nextPage < 1 || nextPage > pagination.last_page
         ) {
             return;
         }
@@ -301,87 +271,54 @@ export default function AllArticles() {
     return (
         <>
             <Header />
-
             <main className="main">
+                <div className="page-title">
+                    <div className="breadcrumbs">
+                        <nav aria-label="breadcrumb">
+                            <ol className="breadcrumb">
+                                <li className="breadcrumb-item"><a href="#"><i className="bi bi-house"></i> Home</a></li>
+                                
+                                <li className="breadcrumb-item active current">All Articless</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <div className="title-wrapper">
+                        <h1>All Atrticles</h1>
+                        <p>
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.
+                        </p>
+                    </div>
+                </div>
+                
                 <section className="section">
                     <div className="container">
+                        
                         <div className="section-title">
-                            <h2>Semua Artikel</h2>
-                            <p>
-                                Jelajahi artikel terbaru dan temukan
-                                informasi yang kamu butuhkan.
-                            </p>
+                            <h2>All Article</h2>
+                            <p>Explore the latest articles and find the information you need.</p>
                         </div>
 
                         <div className="row g-3 align-items-end mb-4">
                             <div className="col-lg-8">
-                                <form
-                                    onSubmit={handleSearch}
-                                    role="search"
-                                    aria-label="Cari artikel"
-                                >
-                                    <label
-                                        htmlFor="article-search"
-                                        className="form-label"
-                                    >
-                                        Cari artikel
-                                    </label>
-
+                                <form onSubmit={handleSearch} role="search" aria-label="Cari artikel">
+                                    <label htmlFor="article-search" className="form-label">Search article</label>
                                     <div className="input-group">
-                                        <input
-                                            id="article-search"
-                                            type="search"
-                                            className="form-control"
-                                            placeholder="Masukkan judul atau kata kunci..."
-                                            value={searchInput}
-                                            maxLength={120}
-                                            onChange={(event) =>
-                                                setSearchInput(
-                                                    event.target.value,
-                                                )
-                                            }
-                                        />
-
-                                        <button
-                                            type="submit"
-                                            className="btn btn-primary"
-                                        >
+                                        <input id="article-search" type="search" className="form-control" placeholder="Input title or category..." value={searchInput} maxLength={120} onChange={(event) => setSearchInput(event.target.value)} />
+                                        <button type="submit" className="btn btn-outline-primary">
                                             <i className="bi bi-search me-1" />
-                                            Cari
+                                            Search
                                         </button>
                                     </div>
                                 </form>
                             </div>
 
                             <div className="col-lg-4">
-                                <label
-                                    htmlFor="article-category"
-                                    className="form-label"
-                                >
-                                    Filter kategori
-                                </label>
-
-                                <select
-                                    id="article-category"
-                                    className="form-select"
-                                    value={category}
-                                    onChange={(event) =>
-                                        handleCategoryChange(
-                                            event.target.value,
-                                        )
-                                    }
-                                >
-                                    <option value="">
-                                        Semua kategori
-                                    </option>
-
+                                <label htmlFor="article-category" className="form-label">Filter category</label>
+                                <select id="article-category" className="form-select" value={category} onChange={(event) => handleCategoryChange(event.target.value)}>
+                                    <option value="">All Category</option>
                                     {categories.map((item) => (
-                                        <option
-                                            key={item.id}
-                                            value={item.slug}
-                                        >
-                                            {item.name}
-                                        </option>
+                                        <option key={item.id} value={item.slug}>{item.name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -391,148 +328,57 @@ export default function AllArticles() {
                             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
                                 <p className="mb-0">
                                     {query && (
-                                        <>
-                                            Hasil pencarian untuk{' '}
-                                            <strong>{query}</strong>.{' '}
-                                        </>
+                                        <>Search result for{' '} <strong>{query}</strong>.{' '}</>
                                     )}
 
                                     {category && (
-                                        <>
-                                            Kategori:{' '}
-                                            <strong>
-                                                {categories.find(
-                                                    (item) =>
-                                                        item.slug ===
-                                                        category,
-                                                )?.name || category}
-                                            </strong>.{' '}
-                                        </>
+                                        <>Category:{' '} <strong>{categories.find((item) => item.slug === category) ?.name || category}</strong>.{' '}</>
                                     )}
 
-                                    Menampilkan{' '}
-                                    <strong>
-                                        {pagination.total === 0
-                                            ? 0
-                                            : pagination.from ?? 0}
-                                        –
-                                        {pagination.to ?? 0}
-                                    </strong>{' '}
-                                    dari{' '}
-                                    <strong>{pagination.total}</strong>{' '}
-                                    artikel
+                                    Showing{' '}<strong>{pagination.total === 0 ? 0 : pagination.from ?? 0} – {pagination.to ?? 0}</strong>{' '}of{' '}<strong>{pagination.total}</strong>{' '}article
                                 </p>
 
                                 {(query || category) && (
-                                    <button
-                                        type="button"
-                                        className="btn btn-outline-secondary btn-sm"
-                                        onClick={() => {
-                                            setSearchInput('');
-                                            setSearchParams({});
-                                        }}
-                                    >
-                                        <i className="bi bi-x-circle me-1" />
-                                        Hapus filter
-                                    </button>
+                                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => {setSearchInput('');setSearchParams({});}}><i className="bi bi-x-circle me-1" />Reset filter </button>
                                 )}
                             </div>
                         )}
 
                         {loading ? (
-                            <div
-                                className="public-loading py-5 text-center"
-                                role="status"
-                            >
-                                <span
-                                    className="spinner-border spinner-border-sm me-2"
-                                    aria-hidden="true"
-                                />
-                                Memuat artikel...
+                            <div className="public-loading py-5 text-center" role="status">
+                                <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+                                Loading article...
                             </div>
                         ) : error ? (
                             <div className="alert alert-danger" role="alert">
                                 <p className="mb-2">{error}</p>
-
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-danger btn-sm"
-                                    onClick={() =>
-                                        setSearchParams(
-                                            new URLSearchParams(
-                                                searchParams,
-                                            ),
-                                        )
-                                    }
-                                >
-                                    Coba lagi
-                                </button>
+                                <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setSearchParams(new URLSearchParams(searchParams))}>Coba lagi</button>
                             </div>
                         ) : posts.length === 0 ? (
                             <div className="public-empty text-center py-5">
-                                <i
-                                    className="bi bi-journal-x fs-1"
-                                    aria-hidden="true"
-                                />
-
-                                <h3 className="mt-3">
-                                    Artikel tidak ditemukan
-                                </h3>
-
-                                <p>
-                                    Coba kata kunci atau kategori lain.
-                                </p>
-
+                                <i className="bi bi-journal-x fs-1" aria-hidden="true" />
+                                <h3 className="mt-3">Article not found</h3>
+                                <p>Please try another keyword or category</p>
                                 {(query || category) && (
-                                    <button
-                                        type="button"
-                                        className="btn btn-primary"
-                                        onClick={() => {
-                                            setSearchInput('');
-                                            setSearchParams({});
-                                        }}
-                                    >
-                                        Tampilkan semua artikel
-                                    </button>
+                                    <button type="button" className="btn btn-primary" onClick={() => {setSearchInput('');setSearchParams({}); }}>Show all article</button>
                                 )}
                             </div>
                         ) : (
                             <>
                                 <div className="row gy-4">
                                     {posts.map((post) => {
-                                        const image = imageUrl(
-                                            post.featured_image,
-                                        );
+                                        const image = imageUrl(post.featured_image);
 
                                         return (
-                                            <div
-                                                key={post.id}
-                                                className="col-md-6 col-lg-4"
-                                            >
-                                                <article className="h-100">
+                                            <div key={post.id} className="col-md-6 col-lg-4 all-articles">
+                                                <article>
                                                     <div className="post-img">
                                                         {image ? (
-                                                            <Link
-                                                                to={`/artikel/${post.slug}`}
-                                                                aria-label={`Baca ${post.title}`}
-                                                            >
-                                                                <img
-                                                                    src={image}
-                                                                    alt={
-                                                                        post.featured_image
-                                                                            ?.alt_text ||
-                                                                        post.title
-                                                                    }
-                                                                    className="img-fluid"
-                                                                    loading="lazy"
-                                                                />
+                                                            <Link to={`/artikel/${post.slug}`} aria-label={`Read ${post.title}`}>
+                                                                <img src={image} alt={post.featured_image ?.alt_text || post.title } className="img-fluid" loading="lazy" />
                                                             </Link>
                                                         ) : (
-                                                            <Link
-                                                                to={`/artikel/${post.slug}`}
-                                                                className="post-image-placeholder d-flex align-items-center justify-content-center"
-                                                                aria-label={`Baca ${post.title}`}
-                                                            >
+                                                            <Link to={`/artikel/${post.slug}`} className="post-image-placeholder d-flex align-items-center justify-content-center" aria-label={`Read ${post.title}`}>
                                                                 <span>JURNAL<br />IDE</span>
                                                             </Link>
                                                         )}
@@ -540,51 +386,34 @@ export default function AllArticles() {
 
                                                     <div className="pt-3">
                                                         <p className="post-category">
-                                                            {post.categories
-                                                                ?.length ? (
-                                                                post.categories.map(
-                                                                    (item) => (
-                                                                        <button key={ item.id } type="button" className="btn btn-link p-0 me-2" onClick={() =>handleCategoryChange(item.slug) }>
-                                                                            {item.name}
-                                                                        </button>
-                                                                    ),
-                                                                )
+                                                            {post.categories?.length ? (post.categories.map((item) => (
+                                                                    <button key={ item.id } type="button" className="btn btn-link p-0 me-2" onClick={() => handleCategoryChange(item.slug) }>{item.name}</button>))
                                                             ) : (
                                                                 <span>Tanpa kategori</span>
                                                             )}
                                                         </p>
 
                                                         <h2 className="title">
-                                                            <Link
-                                                                to={`/artikel/${post.slug}`}
-                                                            >
-                                                                {post.title}
-                                                            </Link>
+                                                            <Link to={`/artikel/${post.slug}`}>{post.title}</Link>
                                                         </h2>
 
-                                                        <p>{excerpt(post)}</p>
+                                                        {/* <p>{excerpt(post)}</p> */}
 
                                                         <div className="d-flex align-items-center">
-                                                            <span className="author-avatar-fallback me-2" aria-hidden="true"
-                                                            >
+                                                            <span className="author-avatar-fallback me-2" aria-hidden="true">
                                                                 {( post.user ?.name || 'R').charAt(0).toUpperCase()}
                                                             </span>
 
                                                             <div className="post-meta">
-                                                                <p className="post-author mb-0">
-                                                                    {post.user ?.name || 'Redaksi'}
-                                                                </p>
-
+                                                                <p className="post-author mb-0">{post.user ?.name || 'Redaksi'}</p>
                                                                 <p className="post-date mb-0">
-                                                                    <time dateTime={post.published_at ||post.created_at }>
-                                                                        {dateLabel(post.published_at || post.created_at,)}
-                                                                    </time>
+                                                                    <time dateTime={post.published_at ||post.created_at }>{dateLabel(post.published_at || post.created_at,)}</time>
                                                                 </p>
                                                             </div>
                                                         </div>
 
                                                         <Link to={`/artikel/${post.slug}`} className="read-more d-inline-block mt-3">
-                                                            Baca selengkapnya
+                                                            Read more
                                                             <i className="bi bi-arrow-right ms-1" />
                                                         </Link>
                                                     </div>
@@ -631,6 +460,8 @@ export default function AllArticles() {
                     </div>
                 </section>
             </main>
+            <Footer />
+            <BackToTop />
         </>
     );
 }

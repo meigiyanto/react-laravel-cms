@@ -2,8 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
-import Header from '../components/public/Header';
-import '../public-site.css';
+import Header from '../../components/public/Header';
+import Footer from '../../components/public/Footer';
+import BackToTop from '../../components/public/BackToTop';
+import '../../public-site.css';
 
 type Category = {
     id: number;
@@ -120,7 +122,7 @@ function getErrorMessage(error: unknown): string {
     return 'Terjadi kesalahan. Silakan coba lagi.';
 }
 
-export default function PublicArticleDetail() {
+export default function ArticleDetail() {
     const { slug } = useParams<{ slug: string }>();
     const [post, setPost] = useState<Post | null>(null);
     const [latestPosts, setLatestPosts] = useState<Post[]>([]);
@@ -278,7 +280,6 @@ export default function PublicArticleDetail() {
     return (
         <>
             <Header />
-
             <main className="main">
                 {loading ? (
                     <div className="container public-loading" role="status">
@@ -294,30 +295,6 @@ export default function PublicArticleDetail() {
                     </section>
                 ) : post ? (
                     <>
-                        {/*
-                        <div className="page-title">
-                            <div className="container">
-                                <nav aria-label="breadcrumb">
-                                    <ol className="breadcrumb">
-                                        <li className="breadcrumb-item">
-                                            <Link to="/">Beranda</Link>
-                                        </li>
-                                        <li className="breadcrumb-item">
-                                            <Link to="/artikel">Artikel</Link>
-                                        </li>
-                                        <li className="breadcrumb-item active">
-                                            {post.title}
-                                        </li>
-                                    </ol>
-                                </nav>
-
-                                <div className="title-wrapper">
-                                    <h1>{post.title}</h1>
-                                    {post.excerpt && <p>{post.excerpt}</p>}
-                                </div>
-                            </div>
-                        </div>
-                        */}
                         <div className="page-title">
                             <div className="breadcrumbs">
                                 <nav aria-label="breadcrumb">
@@ -688,12 +665,8 @@ export default function PublicArticleDetail() {
                     </>
                 ) : null}
             </main>
-
-            <footer className="footer">
-                <div className="container copyright text-center mt-4">
-                    <p>© Blogy</p>
-                </div>
-            </footer>
+            <Footer />
+            <BackToTop />
         </>
     );
 }
