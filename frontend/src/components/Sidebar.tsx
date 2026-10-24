@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers, faUserCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
@@ -115,8 +116,8 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
     }
 
     return (
-        <aside id="admin-sidebar" aria-label="Menu admin">
-            <nav aria-label="Navigasi utama" className="cms-sidebar d-flex flex-column flex-shrink-0 position-fixed">
+        <aside id="admin-sidebar" aria-label="Menu admin" className="cms-sidebar d-flex flex-column flex-shrink-0 position-fixed">
+            <nav aria-label="Navigasi utama">
                 <button class="toggle-btn" onClick={() => toggleSidebar()}>
                     <FontAwesomeIcon icon={faChevronLeft} />
                 </button>
@@ -151,19 +152,19 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
                 )}
                 
                 <div className="mt-3 sidebar-public-link">
-                    <button type="button" className="cms-sidebar-link nav-item">
-                        <span className="hide-on-collapse">
+                    <Link to="/" className="cms-sidebar-link nav-item">
+                        <span aria-hidden="true">
                             <FontAwesomeIcon icon={faGlobe} className="me-2" />
-                            Lihat Website
                         </span>
-                    </button>
+                        <span className="hide-on-collapse">Lihat website</span>
+                    </Link>
                 </div>
             
-                <div className="sidebar-bottom">
+                <div className="hide-on-collapse sidebar-bottom">
                     <div className="sidebar-label">STATUS SISTEM</div>
     
                     <div className="system-status">
-                        <span className="hide-on-collapse status-dot" />API terhubung
+                        <span className="status-dot"/>API terhubung
                     </div>
             
                     <small>React · Laravel · MariaDB</small>

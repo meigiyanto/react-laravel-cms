@@ -18,6 +18,7 @@ export default function AdminLayout({ active, onNavigate, title, onLogout, bread
     return (
         <div className="cms-shell">
             <Sidebar active={active} onNavigate={onNavigate} />
+            
             <main className="cms-main">
                 <header className="topbar">
                     <div className="topbar-heading">

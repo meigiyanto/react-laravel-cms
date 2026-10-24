@@ -438,11 +438,11 @@ export default function Home() {
                                                             <div className="post-meta">
                                                                 <span><i className="bi bi-person"></i> {item.user?.name || 'Redaksi'}</span>
                                                                 <span><i className="bi bi-clock"></i> {dateLabel(item.created_at || item.published_at)}</span>
-                                                                <span><i className="bi bi-labels"></i> {item.categories[0].name}</span>
+                                                                <span><i className="bi bi-tag"></i> {item.categories[0].name}</span>
                                                             </div>
                                                             <h2><Link to={`/blog/${item.slug}`}>{item.title}</Link></h2>
                                                             <p>{excerpt(item)}</p>
-                                                            <Link className="read-more" to={`/blog/${item.slug}`}> <i className="bi bi-arrow-right"></i></Link>
+                                                            <Link className="read-more" to={`/blog/${item.slug}`}>Read more <i className="bi bi-arrow-right"></i></Link>
                                                         </div>
                                                     </div>
                                                 </SwiperSlide>
@@ -475,18 +475,18 @@ export default function Home() {
                                                             <article className="featured-post">
                                                                 <div className="post-img">
                                                                     {article.featured_image && imageUrl(article.featured_image) ? (
-                                                    <img src={imageUrl(article.featured_image)} alt={article.featured_image.alt_text || article.title} loading="lazy" className="img-fluid"/>
-                                                ) : (
-                                                    <div className="post-image-placeholder">
-                                                        <span>JURNAL<br />IDE</span>
-                                                    </div>
-                                                )}
+                                                                        <img src={imageUrl(article.featured_image)} alt={article.featured_image.alt_text || article.title} loading="lazy" className="img-fluid"/>
+                                                                    ) : (
+                                                                        <div className="post-image-placeholder">
+                                                                            <span>JURNAL<br />IDE</span>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                                 <div className="post-content">
                                                                     <div className="category-meta">
                                                                         <span className="post-category">{article.categories[0].name}</span>
                                                                         <div className="author-meta">
-                                                                            <span className="author-name"></span>
+                                                                            <span className="author-name">{article.user?.name}</span>
                                                                             <span className="author-date">{dateLabel(article.created_at || article.published_at)}</span>
                                                                         </div>
                                                                     </div>

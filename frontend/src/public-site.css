@@ -8,6 +8,7 @@
     --default-font: "Roboto",  system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --heading-font: "Nunito", sans-serif;
     --nav-font: "Poppins", sans-serif;
+    scroll-behavior: smooth;
 }
 
 /* Global Colors - The following color variables are used throughout the website. Updating them here will change the color scheme of the entire website */
@@ -55,11 +56,6 @@
     --heading-color: #ffffff;
     --surface-color: #252525;
     --contrast-color: #ffffff;
-}
-
-/* Smooth scroll */
-:root {
-    scroll-behavior: smooth;
 }
 
 /*--------------------------------------------------------------

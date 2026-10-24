@@ -12,16 +12,13 @@ export default function Footer() {
                         </Link>
                         <div className="footer-contact pt-3">
                             <p>
-                                A108 Adam Street
-                            </p>
-                            <p>
-                                New York, NY 535022
+                                Central Java, Indonesia , 53191
                             </p>
                             <p className="mt-3">
-                                <strong>Phone:</strong> <span>+1 5589 55488 55</span>
+                                <strong>Phone:</strong> <span>+62 852 8276 9582</span>
                             </p>
                             <p>
-                                <strong>Email:</strong> <span>info@example.com</span>
+                                <strong>Email:</strong> <span>denmasgie0@gmail.com</span>
                             </p>
                         </div>
                         <div className="social-links d-flex mt-4">
@@ -60,7 +57,7 @@ export default function Footer() {
             <div className="container copyright text-center mt-4">
               <p>© <span>Copyright</span> <strong className="px-1 sitename">Content HUB</strong> <span>All Rights Reserved</span></p>
               <div className="credits">
-                Designed by <Link to="https://bootstrapmade.com/">BootstrapMade</Link> | <Link to="https://bootstrapmade.com/tools/">DevTools</Link>
+                Made with <i className="text-danger bi bi-heart-fill"></i> designed by Mei Giyanto
               </div>
             </div>
     
