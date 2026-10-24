@@ -276,6 +276,10 @@ button {
     .header .social-links {
         padding-right: 40px;
     }
+    
+    .header .search-form {
+        display: none;
+    }
 }
 
 .header .search-form {
@@ -321,12 +325,6 @@ button {
 
 .header .search-form button:hover {
     color: var(--accent-color);
-}
-
-@media (max-width: 1200px) {
-    .header .search-form {
-        display: none;
-    }
 }
 
 .header .nav-wrap {
@@ -585,6 +583,12 @@ button {
     .mobile-nav-active .navmenu>ul {
         display: block;
     }
+    
+    .navmenu ul li button {
+        font-size: 18px;
+        font-weight: 500;
+        padding: 10px 20px;
+    }
 }
 
 /*--------------------------------------------------------------
@@ -703,41 +707,6 @@ button {
 .footer .credits {
     margin-top: 8px;
     font-size: 13px;
-}
-
-/*--------------------------------------------------------------
-# Preloader
---------------------------------------------------------------*/
-#preloader {
-    position: fixed;
-    inset: 0;
-    z-index: 999999;
-    overflow: hidden;
-    background: var(--background-color);
-    transition: all 0.6s ease-out;
-}
-
-#preloader:before {
-    content: "";
-    position: fixed;
-    top: calc(50% - 30px);
-    left: calc(50% - 30px);
-    border: 6px solid #ffffff;
-    border-color: var(--accent-color) transparent var(--accent-color) transparent;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: animate-preloader 1.5s linear infinite;
-}
-
-@keyframes animate-preloader {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
 }
 
 /*--------------------------------------------------------------

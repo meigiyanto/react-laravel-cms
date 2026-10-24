@@ -207,13 +207,7 @@ export default function Header() {
                                         <ul className={deepDropdownOpen ? 'dropdown-active' : ''}>
                                             {deepLinks.map((link) => (
                                                 <li key={link.label}>
-                                                    <a href={link.to} onClick={(event) => {
-                                                            if (link.to === '#') {
-                                                                event.preventDefault();
-                                                            }
-                                                            closeMobileNav();
-                                                        }}
-                                                    >
+                                                    <a href={link.to} onClick={(event) => { if (link.to === '#') { event.preventDefault(); } closeMobileNav(); }}>
                                                         {link.label}
                                                     </a>
                                                 </li>

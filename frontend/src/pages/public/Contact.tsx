@@ -106,7 +106,7 @@ export default function Contact() {
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div className="form-group mt-3">
+                                            <div className="form-group my-3">
                                                 <div className="input-group">
                                                     <span className="input-group-text"><i className="bi bi-chat-dots"></i></span>
                                                     <textarea className="form-control" name="message" rows={6} placeholder="Write a message*" required />

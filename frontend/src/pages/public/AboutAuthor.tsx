@@ -1,71 +1,10 @@
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { useState } from 'react';
-import { AuthProfileContext, type AuthProfile } from '../auth/AuthProfileContext';
 import Header from '../../components/public/Header';
 import Footer from '../../components/public/Footer';
 import BackToTop from '../../components/public/BackToTop';
 
-type Author = {
-    id: number;
-    name: string;
-    profile_photo_path?: string | null;
-} | null;
-
-type Media = {
-    url?: string; 
-    path?: string; 
-    original_name?: string; 
-    alt_text?: string | null
-} | null;
-
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
-const publicApi = axios.create({
-    baseURL: API_BASE, headers: {
-        Accept: 'application/json'
-    }, timeout: 12000
-});
-
-function imageUrl(media: Media): string {
-    if (!media) return '';
-    const raw = media.url || (media.path ? `/storage/${media.path.replace(/^\/+/, '')}`: '');
-    if (!raw) return '';
-    if (/^https?:\/\//i.test(raw)) return raw;
-    const apiOrigin = API_BASE.replace(/\/api\/?$/, '');
-    return new URL(raw, `${apiOrigin || window.location.origin}/`).toString();
-}
-
-function authorImageUrl(author: Author): string {
-    if (!author?.profile_photo_path) return '';
-    return imageUrl({
-        path: author.profile_photo_path,
-    });
-}
-
 export default function AbouAuthor() {
-    const [profile, setProfile] = useState<AuthProfile | null>(null);
-    
-    async function loadProfile(): Promise<AuthProfile> {
-        const response = await api.get('/auth/me');
-        const data = response.data?.data;
-    
-        if (!data ||
-            !Array.isArray(data.permissions) ||
-            !data.role?.slug
-        ) {
-            throw new Error('Profil atau hak akses tidak valid.');
-        }
-    
-        return {
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            profile_photo_url: data.profile_photo_url ?? null,
-            role: data.role,
-            permissions: data.permissions,
-        };
-    }
-    
+
     return (
         <>
             <Header />
@@ -74,8 +13,9 @@ export default function AbouAuthor() {
                     <div className="breadcrumbs">
                         <nav aria-label="breadcrumb">
                             <ol className="breadcrumb">
-                                <li className="breadcrumb-item"><Link to="#"><i className="bi bi-house"></i> Home</Link></li>
-                                <li className="breadcrumb-item active current">Author Author</li>
+                                <li className="breadcrumb-item"><Link to="/"><i className="bi bi-house" aria-hidden="true"></i> Home</Link></li>
+                                <li className="breadcrumb-item active current" aria-current="page">Author Author</li>
+                                
                             </ol>
                         </nav>
                     </div>
@@ -87,20 +27,25 @@ export default function AbouAuthor() {
                 </div>
                 
                 <section id="author-profile" className="author-profile section">
+                    
                     <div className="container" data-aos="fade-up" data-aos-delay="100">
+                        
                         <div className="author-profile-1">
+                            
                             <div className="row">
                                 <div className="col-lg-4 mb-4 mb-lg-0">
                                     <div className="author-card" data-aos="fade-up">
                                         <div className="author-image">
-                                            <img src="assets/img/person/person-m-5.webp" alt="Author" className="img-fluid rounded" />
-                                            {authorImageUrl(post.user) ? (
-                                                <img src={authorImageUrl(post.user)} alt={`Foto ${post.user?.name}`} className="img-fluid rounded" loading="lazy" onError={(event) => { event.currentTarget.style.display = 'none'; }} />
-                                            ) : (
-                                                <span className="author-avatar-fallback" aria-hidden="true"> {(post.user?.name || 'T').charAt(0).toUpperCase()}</span>
-                                            )}
+                                            <img
+                                                src="http://localhost:8000/storage/cms-media/ui9aloareOIxJcrAR4VhHaZj7FKkyKx3eaAjyq2z.webp"
+                                                alt="Foto penulis"
+                                                className="img-fluid rounded"
+                                                loading="lazy"
+                                                onError={(event) => {
+                                                    event.currentTarget.style.display = 'none';
+                                                }}
+                                            />
                                         </div>
-        
                                         <div className="author-info">
                                             <h2>Kevin Anderson</h2>
                                             <p className="designation">
@@ -170,7 +115,7 @@ export default function AbouAuthor() {
                                                     <div className="col-md-6" data-aos="fade-up" data-aos-delay="300">
                                                         <article className="article-card">
                                                             <div className="article-img">
-                                                                <img src="assets/img/blog/blog-post-10.webp" alt="Article" className="img-fluid" />
+                                                                <img src="http://localhost:8000/storage/cms-media/blog-post-10.webp" alt="Article" className="img-fluid" />
                                                             </div>
                                                             <div className="article-details">
                                                                 <div className="post-category">
@@ -188,7 +133,7 @@ export default function AbouAuthor() {
                                                     <div className="col-md-6" data-aos="fade-up" data-aos-delay="400">
                                                         <article className="article-card">
                                                             <div className="article-img">
-                                                                <img src="assets/img/blog/blog-post-6.webp" alt="Article" className="img-fluid" />
+                                                                <img src="http://localhost:8000/storage/cms-media/blog-post-6.webp" alt="Article" className="img-fluid" />
                                                             </div>
                                                             <div className="article-details">
                                                                 <div className="post-category">
