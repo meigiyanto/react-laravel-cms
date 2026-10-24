@@ -300,111 +300,111 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             )}
 
             <section className="content-panel mt-4">
-                    <div className="panel-heading">
-                        <div>
-                            <h3>Daftar Halaman</h3>
-                            <p>Kelola halaman statis dan status publikasinya.</p>
-                        </div>
-                        <span className="total-badge">{total} halaman</span>
+                <div className="panel-heading">
+                    <div>
+                        <h3>Daftar Halaman</h3>
+                        <p>Kelola halaman statis dan status publikasinya.</p>
                     </div>
+                    <span className="total-badge">{total} halaman</span>
+                </div>
 
-                    <div className="toolbar">
-                        <div className="search-box">
-                            <span aria-hidden="true">⌕</span>
-                            <input className="form-control" type="search" placeholder="Cari judul atau slug..." aria-label="Cari halaman" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }}/>
-                        </div>
-                        <select className="form-select status-filter" value={statusFilter} aria-label="Filter status halaman" onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}>
-                            <option value="">Semua status</option>
-                            <option value="draft">Draf</option>
-                            <option value="published">Dipublikasikan</option>
-                            <option value="archived">Diarsipkan</option>
-                        </select>
+                <div className="toolbar">
+                    <div className="search-box">
+                        <span aria-hidden="true">⌕</span>
+                        <input className="form-control" type="search" placeholder="Cari judul atau slug..." aria-label="Cari halaman" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }}/>
                     </div>
+                    <select className="form-select status-filter" value={statusFilter} aria-label="Filter status halaman" onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}>
+                        <option value="">Semua status</option>
+                        <option value="draft">Draf</option>
+                        <option value="published">Dipublikasikan</option>
+                        <option value="archived">Diarsipkan</option>
+                    </select>
+                </div>
 
-                    <div className="table-responsive">
-                        <table className="table cms-table align-middle">
-                            <thead>
+                <div className="table-responsive">
+                    <table className="table cms-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>JUDUL HALAMAN</th>
+                                <th>STATUS</th>
+                                <th>DIPERBARUI</th>
+                                <th className="text-end">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr><td colSpan={4} className="empty-state">Memuat halaman...</td></tr>
+                            ): pages.length === 0 ? (
                                 <tr>
-                                    <th>JUDUL HALAMAN</th>
-                                    <th>STATUS</th>
-                                    <th>DIPERBARUI</th>
-                                    <th className="text-end">AKSI</th>
+                                    <td colSpan={4} className="empty-state">
+                                        <div className="empty-icon">
+                                            <FontAwesomeIcon icon={faBookOpen} />
+                                        </div>
+                                        <strong>Belum ada halaman</strong>
+                                        <p>
+                                            Buat halaman pertama atau ubah filter pencarian.
+                                        </p>
+                                        {canCreatePage && (
+                                        <button className="btn btn-outline-primary btn-sm"
+                                            type="button" onClick={openCreateForm}>
+                                            Buat halaman
+                                        </button>
+                                        )}
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan={4} className="empty-state">Memuat halaman...</td></tr>
-                                ): pages.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={4} className="empty-state">
-                                            <div className="empty-icon">
-                                                <FontAwesomeIcon icon={faBookOpen} />
+                            ): pages.map((item) => (
+                                    <tr key={item.id}>
+                                        <td>
+                                            <div className="post-title">
+                                                {item.title}
                                             </div>
-                                            <strong>Belum ada halaman</strong>
-                                            <p>
-                                                Buat halaman pertama atau ubah filter pencarian.
-                                            </p>
-                                            {canCreatePage && (
-                                            <button className="btn btn-outline-primary btn-sm"
-                                                type="button" onClick={openCreateForm}>
-                                                Buat halaman
-                                            </button>
+                                            <div className="post-slug">
+                                                /{item.slug}
+                                            </div>
+                                            {item.featured_image && (
+                                                <div className="post-slug">
+                                                    Gambar: {item.featured_image.original_name}
+                                                </div>
                                             )}
                                         </td>
+                                        <td><StatusBadge status={item.status} /></td>
+                                        <td className="date-cell">
+                                            {new Date(item.updated_at).toLocaleDateString('id-ID', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                year: 'numeric',
+                                            })}
+                                        </td>
+                                        <td>
+                                            <div className="d-flex justify-content-end gap-2">
+                                                <button className="btn btn-sm btn-light" type="button"
+                                                    disabled={deletingId !== null}
+                                                    onClick={() => void openEditForm(item)}>
+                                                    Edit
+                                                </button>
+                                                <button className="btn btn-sm btn-outline-danger" type="button"
+                                                    disabled={deletingId !== null}
+                                                    onClick={() => void deletePage(item)}>
+                                                    {deletingId === item.id ? 'Menghapus...': 'Hapus'}
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
-                                ): pages.map((item) => (
-                                        <tr key={item.id}>
-                                            <td>
-                                                <div className="post-title">
-                                                    {item.title}
-                                                </div>
-                                                <div className="post-slug">
-                                                    /{item.slug}
-                                                </div>
-                                                {item.featured_image && (
-                                                    <div className="post-slug">
-                                                        Gambar: {item.featured_image.original_name}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td><StatusBadge status={item.status} /></td>
-                                            <td className="date-cell">
-                                                {new Date(item.updated_at).toLocaleDateString('id-ID', {
-                                                    day: '2-digit',
-                                                    month: 'short',
-                                                    year: 'numeric',
-                                                })}
-                                            </td>
-                                            <td>
-                                                <div className="d-flex justify-content-end gap-2">
-                                                    <button className="btn btn-sm btn-light" type="button"
-                                                        disabled={deletingId !== null}
-                                                        onClick={() => void openEditForm(item)}>
-                                                        Edit
-                                                    </button>
-                                                    <button className="btn btn-sm btn-outline-danger" type="button"
-                                                        disabled={deletingId !== null}
-                                                        onClick={() => void deletePage(item)}>
-                                                        {deletingId === item.id ? 'Menghapus...': 'Hapus'}
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                            </tbody>
-                        </table>
-                    </div>
-    
-                    <Pagination
-                        currentPage={page}
-                        lastPage={lastPage}
-                        total={total}
-                        perPage={10}
-                        loading={loading}
-                        itemLabel="halaman"
-                        onPageChange={setPage}
-                    />
-                </section>
+                                ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <Pagination
+                    currentPage={page}
+                    lastPage={lastPage}
+                    total={total}
+                    perPage={10}
+                    loading={loading}
+                    itemLabel="halaman"
+                    onPageChange={setPage}
+                />
+            </section>
 
             {showForm && (
                 <div className="modal-backdrop-custom" role="presentation">

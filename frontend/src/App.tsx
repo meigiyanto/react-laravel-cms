@@ -5,10 +5,11 @@ import 'bootstrap-icons/font/bootstrap-icons.min.css';
 import Home from './pages/public/Home';
 import About from './pages/public/About';
 import Contact from './pages/public/Contact';
+import { PageNotFound as PublicPageNotFound } from './pages/public/PageNotFound';
+import PageNotFound from './pages/PageNotFound';
 import ArticleDetail from './pages/public/ArticleDetail';
 import AllArticles from './pages/public/AllArticles';
 import AdminApp from './pages/AdminApp';
-
 
 function App() {
     const { pathname: path } = useLocation();
@@ -35,14 +36,20 @@ function App() {
                             element={<ArticleDetail />}
                         />
                         <Route
-                            path="*"
+                            path="/"
                             element={<Home />}
+                        />
+                        <Route
+                            path="*"
+                            element={<PublicPageNotFound />}
                         />
                     </Routes>
 
                     <AOSInitializer />
                 </>
             );
+        } else {
+            return <PageNotFound />;
         }
     }
 

@@ -3,16 +3,13 @@ import Header from '../../components/public/Header';
 import Footer from '../../components/public/Footer';
 import BackToTop from '../../components/public/BackToTop';
 
-export default function 404() {
+export function PageNotFound() {
     return (
         <>
             <Header />
             <main className="main">
-
                 <section id="error-404" className="error-404 section">
-        
                     <div className="container" data-aos="fade-up" data-aos-delay="100">
-        
                         <div className="text-center">
                             <div className="error-icon mb-4" data-aos="zoom-in" data-aos-delay="200">
                                 <i className="bi bi-exclamation-circle"></i>
@@ -43,10 +40,7 @@ export default function 404() {
                         </div>
         
                     </div>
-        
                 </section>
-                <!-- /Error 404 Section -->
-        
             </main>
             <Footer />
             <BackToTop />
