@@ -5,11 +5,12 @@ import { useEffect, useState, type FormEvent } from 'react';
 const mainLinks = [
     { label: 'Home', to: '/' },
     { label: 'Blog', to: '/blog' },
-    { label: 'About', to: '/about' },
     { label: 'Contact', to: '/contact' },
 ];
 
 const pageLinks = [
+    { label: 'About', to: '/about' },
+    { label: 'About Author', to: '/about-author' },
     { label: 'Search Results', to: '/search-results' },
     { label: '404 Not Found Page', to: '/404' },
 ];

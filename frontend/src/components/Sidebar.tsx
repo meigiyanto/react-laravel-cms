@@ -12,11 +12,6 @@ export type ActiveModule =
 | 'users'
 | 'profile';
 
-type SidebarProps = {
-    active: ActiveModule;
-    onNavigate: (module: ActiveModule) => void;
-};
-
 type SidebarItem = {
     id: ActiveModule;
     label: string;
@@ -77,7 +72,14 @@ const items: SidebarItem[] = [
     },
 ];
 
-export default function Sidebar({ active, onNavigate }: SidebarProps) {
+type SidebarProps = {
+    active: ActiveModule;
+    onNavigate: (module: ActiveModule) => void;
+    mobileOpen: boolean;
+    onClose: () => void;
+};
+
+export default function Sidebar({ active, onNavigate, mobileOpen, onClose }: SidebarProps) {
     const profile = useAuthProfile();
     const loadingProfile = profile === null;
 
@@ -110,7 +112,7 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
     });
 
     return (
-        <aside className="cms-sidebar">
+        <aside id="admin-sidebar" className={`cms-sidebar ${mobileOpen ? 'is-open' : ''}`} aria-label="Menu admin">
             <div className="cms-brand">
                 <span className="brand-mark">C</span>
                 <div>
@@ -118,18 +120,25 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
                     <small>CMS Dashboard</small>
                 </div>
             </div>
+        
+            <div className="sidebar-label">WORKSPACE</div>
 
-            <div className="sidebar-label">
-                WORKSPACE
-            </div>
             <nav aria-label="Navigasi utama">
                 {loadingProfile ? (
-                    <p className="px-3 text-secondary">
-                        Memuat hak akses...
-                    </p>
-                ): (
+                    <p className="px-3 text-secondary">Memuat hak akses...</p>
+                ) : (
                     visibleItems.map((item) => (
-                        <button key={item.id} type="button" className={`nav-item ${active === item.id ? 'active': ''}`} aria-current={active === item.id ? 'page': undefined } onClick={() => onNavigate(item.id)}>
+                        <button key={item.id} type="button" className={`nav-item ${
+                                active === item.id ? 'active' : ''
+                            }`}
+                            aria-current={
+                                active === item.id ? 'page' : undefined
+                            }
+                            onClick={() => {
+                                onNavigate(item.id);
+                                onClose();
+                            }}
+                        >
                             <span aria-hidden="true">
                                 <FontAwesomeIcon icon={item.icon} />
                             </span>
@@ -138,22 +147,21 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
                     ))
                 )}
             </nav>
-            
+        
             <div className="mt-3 sidebar-public-link">
-                <a href="/" className="btn btn-outline-primary w-100">
-                    <FontAwesomeIcon icon={faGlobe} className="me-2"/>
+                <a href="/" className="btn btn-outline-primary w-100" onClick={onClose}>
+                    <FontAwesomeIcon icon={faGlobe} className="me-2" />
                     Lihat Website
                 </a>
             </div>
-            
+        
             <div className="sidebar-bottom">
-                <div className="sidebar-label">
-                    STATUS SISTEM
-                </div>
+                <div className="sidebar-label">STATUS SISTEM</div>
+
                 <div className="system-status">
-                    <span className="status-dot" />
-                    API terhubung
+                    <span className="status-dot" />API terhubung
                 </div>
+        
                 <small>React · Laravel · MariaDB</small>
             </div>
         </aside>

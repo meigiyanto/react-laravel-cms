@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../api/client';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faPencil } from '@fortawesome/free-solid-svg-icons';
 import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import RichContent from '../components/RichContent';
@@ -59,8 +61,7 @@ type Props = {
 
 function getErrorMessage(error: unknown): string {
     if (axios.isAxiosError(error)) {
-        return error.response?.data?.message
-            || 'Gagal memuat detail artikel dari server.';
+        return error.response?.data?.message || 'Gagal memuat detail artikel dari server.';
     }
 
     return 'Terjadi kesalahan yang tidak diketahui.';
@@ -80,8 +81,7 @@ function formatDate(value: string | null | undefined): string {
 }
 
 function getMediaUrl(media: MediaAsset): string {
-    const url = media.url
-        || `/storage/${media.path.replace(/^\/+/, '')}`;
+    const url = media.url || `/storage/${media.path.replace(/^\/+/, '')}`;
 
     if (/^https?:\/\//i.test(url)) {
         return url;
@@ -109,7 +109,6 @@ function StatusBadge({ status }: { status: Status }) {
 }
 
 export default function PostDetailPage({ onNavigate, postId, onLogout, onBack, onEdit }: Props) {
-    
     const [post, setPost] = useState<PostDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -160,6 +159,7 @@ export default function PostDetailPage({ onNavigate, postId, onLogout, onBack, o
                         type="button"
                         onClick={() => onEdit(post.id)}
                     >
+                        <FontAwesomeIcon icon={faPencil} />
                         Edit Artikel
                     </button>
                 ) : undefined
@@ -172,7 +172,8 @@ export default function PostDetailPage({ onNavigate, postId, onLogout, onBack, o
                     type="button"
                     onClick={onBack}
                 >
-                    ← Kembali ke Daftar Artikel
+                    <FontAwesomeIcon icon={faArrowLeft} />
+                    Kembali ke Daftar Artikel
                 </button>
             </div>
 

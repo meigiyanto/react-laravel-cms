@@ -4,6 +4,7 @@ import 'bootstrap-icons/font/bootstrap-icons.min.css';
 
 import Home from './pages/public/Home';
 import About from './pages/public/About';
+// import AboutAuthor from './pages/public/AboutAuthor';
 import Contact from './pages/public/Contact';
 import { PageNotFound as PublicPageNotFound } from './pages/public/PageNotFound';
 import PageNotFound from './pages/PageNotFound';
@@ -12,48 +13,32 @@ import AllArticles from './pages/public/AllArticles';
 import AdminApp from './pages/AdminApp';
 
 function App() {
-    const { pathname: path } = useLocation();
+    const { pathname } = useLocation();
+    const path = pathname.replace(/\/+$/, '') || '/';
 
-    if (path !== '/admin' && !path.startsWith('/admin/')) {
-        if (path !== '/login') {
-            return (
-                <>
-                    <Routes>
-                        <Route
-                            path="/contact"
-                            element={<Contact />}
-                        />
-                        <Route
-                            path="/about"
-                            element={<About />}
-                        />
-                        <Route
-                            path="/blog"
-                            element={<AllArticles />}
-                        />
-                        <Route
-                            path="/blog/:slug"
-                            element={<ArticleDetail />}
-                        />
-                        <Route
-                            path="/"
-                            element={<Home />}
-                        />
-                        <Route
-                            path="*"
-                            element={<PublicPageNotFound />}
-                        />
-                    </Routes>
-
-                    <AOSInitializer />
-                </>
-            );
-        } else {
-            return <PageNotFound />;
-        }
+    if (path === '/admin' || path === '/login') {
+        return <AdminApp />;
     }
 
-    return <AdminApp />;
+    if (path.startsWith('/admin/')) {
+        return <PageNotFound />;
+    }
+
+    return (
+        <>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                {/* <Route path="/about-author" element={<AboutAuthor />} /> */}
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/blog" element={<AllArticles />} />
+                <Route path="/blog/:slug" element={<ArticleDetail />} />
+                <Route path="*" element={<PublicPageNotFound />} />
+            </Routes>
+
+            <AOSInitializer />
+        </>
+    );
 }
 
 export default App;

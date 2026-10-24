@@ -1,4 +1,6 @@
 import AdminLayout from '../components/AdminLayout';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 type NavigationProps = {
     onNavigate: (module: ActiveModule) => void;
@@ -23,9 +25,17 @@ export default function PageNotFound({ onNavigate, onLogout } : NavigationProps)
             </section>
             
             <section className="content-panel mt-4">
-                <div className="panel-heading">
-                    <div>
-                        <h3>Halaman Tidak Ditemukan</h3>
+                <div className="text-center">
+                    <h3>Halaman Tidak Ditemukan</h3>
+                    <div className="mt-3 mb-3">
+                        <button
+                            className="btn btn-outline-secondary"
+                            type="button"
+                            onClick={() => window.location.href = '/admin'}
+                        >
+                            <FontAwesomeIcon icon={faArrowLeft} />
+                            Kembali ke Dashboard
+                        </button>
                     </div>
                 </div>
             </section>

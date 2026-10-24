@@ -8,8 +8,6 @@ export default function About() {
         <>
             <Header />
             <main className="main">
-
-                {/* Page Title */}
                 <div className="page-title">
                     <div className="breadcrumbs">
                         <nav aria-label="breadcrumb">
@@ -27,9 +25,6 @@ export default function About() {
                         </p>
                     </div>
                 </div>
-                {/* End Page Title */}
-        
-                {/* About Section */}
                 <section id="about" className="about section">
         
                     <div className="container" data-aos="fade-up" data-aos-delay="100">
@@ -102,9 +97,6 @@ export default function About() {
                     </div>
         
                 </section>
-                {/* /About Section */}
-        
-                {/* Team Section */}
                 <section id="team" className="team section light-background">
         
                     {/* Section Title */}
@@ -257,8 +249,6 @@ export default function About() {
                     </div>
         
                 </section>
-                {/* /Team Section */}
-    
             </main>
             <Footer />
             <BackToTop />
