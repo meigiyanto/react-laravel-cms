@@ -10,6 +10,7 @@ const mainLinks = [
 
 const pageLinks = [
     { label: 'About', to: '/about' },
+    { label: 'About Author', to: '/about-author' },
     { label: 'Search Results', to: '/search-results' },
     { label: '404 Not Found Page', to: '/404' },
 ];
@@ -206,9 +207,7 @@ export default function Header() {
                                         <ul className={deepDropdownOpen ? 'dropdown-active' : ''}>
                                             {deepLinks.map((link) => (
                                                 <li key={link.label}>
-                                                    <a
-                                                        href={link.to}
-                                                        onClick={(event) => {
+                                                    <a href={link.to} onClick={(event) => {
                                                             if (link.to === '#') {
                                                                 event.preventDefault();
                                                             }
@@ -231,7 +230,7 @@ export default function Header() {
                                             <Link to="/admin" onClick={closeMobileNav}>Dashboard</Link>
                                         </li>
                                         <li>
-                                            <Link onClick={() => void handleLogout()}>Logout</Link>
+                                            <button type="button" className="nav-link" onClick={() => void handleLogout()}>Logout</button>
                                         </li>
                                     </>
                                 ) : (

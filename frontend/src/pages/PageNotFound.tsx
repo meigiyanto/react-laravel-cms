@@ -1,3 +1,4 @@
+import type { ActiveModule } from '../components/Sidebar';
 import AdminLayout from '../components/AdminLayout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';

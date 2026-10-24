@@ -112,13 +112,13 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
     
     function toggleSidebar() {
         const sidebar = document.querySelector('.cms-sidebar');
-        sidebar.classList.toggle('collapsed');
+        sidebar?.classList.toggle('collapsed');
     }
 
     return (
         <aside id="admin-sidebar" aria-label="Menu admin" className="cms-sidebar d-flex flex-column flex-shrink-0 position-fixed">
             <nav aria-label="Navigasi utama">
-                <button class="toggle-btn" onClick={() => toggleSidebar()}>
+                <button type="button" className="toggle-btn" onClick={toggleSidebar} aria-label="Ciutkan atau perluas sidebar">
                     <FontAwesomeIcon icon={faChevronLeft} />
                 </button>
                 
