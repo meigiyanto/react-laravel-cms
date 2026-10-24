@@ -112,7 +112,7 @@ export default function Sidebar({ active, onNavigate, mobileOpen, onClose }: Sid
     });
 
     return (
-        <aside id="admin-sidebar" className={`cms-sidebar ${mobileOpen ? 'is-open' : ''}`} aria-label="Menu admin">
+        <aside id="admin-sidebar" className={`cms-sidebar ${mobileOpen ? 'is-open' : '' }`} aria-label="Menu admin">
             <div className="cms-brand">
                 <span className="brand-mark">C</span>
                 <div>
@@ -128,17 +128,7 @@ export default function Sidebar({ active, onNavigate, mobileOpen, onClose }: Sid
                     <p className="px-3 text-secondary">Memuat hak akses...</p>
                 ) : (
                     visibleItems.map((item) => (
-                        <button key={item.id} type="button" className={`nav-item ${
-                                active === item.id ? 'active' : ''
-                            }`}
-                            aria-current={
-                                active === item.id ? 'page' : undefined
-                            }
-                            onClick={() => {
-                                onNavigate(item.id);
-                                onClose();
-                            }}
-                        >
+                        <button key={item.id} type="button" className={`nav-item ${active === item.id ? 'active' : '' }`} aria-current={active === item.id ? 'page' : undefined} onClick={() => { onNavigate(item.id); onClose(); }}>
                             <span aria-hidden="true">
                                 <FontAwesomeIcon icon={item.icon} />
                             </span>

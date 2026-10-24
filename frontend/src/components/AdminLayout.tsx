@@ -26,7 +26,6 @@ export default function AdminLayout({ active, onNavigate, onLogout, title, bread
         
             <main className="cms-main">
                 <header className="topbar">
-                    
                     <div className="topbar-heading">
                         <button type="button" className="mobile-menu-toggle" aria-label={ mobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'} aria-controls="admin-sidebar" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((open) => !open)}>
                             <FontAwesomeIcon icon={faBars} />
@@ -37,7 +36,6 @@ export default function AdminLayout({ active, onNavigate, onLogout, title, bread
                             <h1>{title}</h1>
                         </div>
                     </div>
-                    
                 </header>
                 
                 {children}
