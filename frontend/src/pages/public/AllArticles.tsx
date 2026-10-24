@@ -417,26 +417,48 @@ export default function AllArticles() {
                                     <section id="pagination-3" className="pagination-3 section mt-3">
                                         <div className="container">
                                             <ul className="pagination justify-content-center">
-                                                <li className={`${page <= 1 ? 'disabled' : ''}`}>
-                                                    <Link disabled={page <= 1} onClick={() => goToPage(page - 1)} aria-label="Halaman sebelumnya">
-                                                        <i className="bi bi-chevron-left" />
-                                                    </Link>
+                                                <li className={page <= 1 ? 'disabled' : ''}>
+                                                    <button
+                                                        type="button"
+                                                        className="page-link"
+                                                        disabled={page <= 1}
+                                                        onClick={() => goToPage(page - 1)}
+                                                        aria-label="Halaman sebelumnya"
+                                                    >
+                                                        <i className="bi bi-chevron-left" aria-hidden="true" />
+                                                    </button>
                                                 </li>
-
+                                            
                                                 {getPageNumbers(page, pagination.last_page).map((pageNumber) => (
-                                                    <li key={pageNumber} className={`${pageNumber === page ? 'active' : ''}`}>
-                                                        <Link className="page-link" aria-current={pageNumber === page ? 'page' : undefined} onClick={() => goToPage(pageNumber)}>
+                                                    <li
+                                                        key={pageNumber}
+                                                        className={pageNumber === page ? 'active' : ''}
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            className="page-link"
+                                                            aria-current={pageNumber === page ? 'page' : undefined}
+                                                            disabled={pageNumber === page}
+                                                            onClick={() => goToPage(pageNumber)}
+                                                        >
                                                             {pageNumber}
-                                                        </Link>
+                                                        </button>
                                                     </li>
                                                 ))}
-
-                                                <li className={`${ page >= pagination.last_page ? 'disabled' : ''}`}>
-                                                    <Link disabled={page >= pagination.last_page } onClick={() => goToPage(page + 1) } aria-label="Halaman berikutnya">
-                                                        <i className="bi bi-chevron-right" />
-                                                    </Link>
+                                            
+                                                <li className={page >= pagination.last_page ? 'disabled' : ''}>
+                                                    <button
+                                                        type="button"
+                                                        className="page-link"
+                                                        disabled={page >= pagination.last_page}
+                                                        onClick={() => goToPage(page + 1)}
+                                                        aria-label="Halaman berikutnya"
+                                                    >
+                                                        <i className="bi bi-chevron-right" aria-hidden="true" />
+                                                    </button>
                                                 </li>
                                             </ul>
+
                                         </div>
 
                                         <p className="mt-3 text-center text-muted small">
