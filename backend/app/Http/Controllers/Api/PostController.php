@@ -47,7 +47,6 @@ class PostController extends Controller
         ]);
     }
 
-
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -57,7 +56,7 @@ class PostController extends Controller
         ]);
 
         $posts = Post::query()
-            ->with(['user', 'categories', 'tags', 'featuredImage'])
+            ->with(['user.role', 'categories', 'tags', 'featuredImage'])
             ->when(
                 filled($validated['search'] ?? null),
                 function ($query) use ($validated) {
@@ -113,6 +112,8 @@ class PostController extends Controller
             'category_ids.*' => ['required', 'integer', 'distinct', 'exists:categories,id'],
             'tag_ids' => ['sometimes', 'array'],
             'tag_ids.*' => ['required', 'integer', 'distinct', 'exists:tags,id'],
+            'is_featured' => ['sometimes', 'boolean'],
+            'allow_comments' => ['sometimes', 'boolean'],
             'featured_image_id' => ['sometimes', 'nullable', 'integer', 'exists:media,id'],
             'meta_title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
@@ -139,6 +140,8 @@ class PostController extends Controller
                 'body' => $validated['body'],
                 'status' => $validated['status'],
                 'published_at' => $validated['status'] === 'published' ? now() : null,
+                'is_featured' => $validated['is_featured'] ?? false,
+                'allow_comments' => $validated['allow_comments'] ?? true,
                 'featured_image_id' => $validated['featured_image_id'] ?? null,
                 'meta_title' => $this->nullableTrim($validated['meta_title'] ?? null),
                 'meta_description' => $this->nullableTrim($validated['meta_description'] ?? null),
@@ -153,7 +156,7 @@ class PostController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Artikel berhasil dibuat.',
-            'data' => $post->load(['user', 'categories', 'tags', 'featuredImage']),
+            'data' => $post->load(['user.role', 'categories', 'tags', 'featuredImage']),
         ], 201);
     }
 
@@ -170,7 +173,7 @@ class PostController extends Controller
         
         return response()->json([
             'success' => true,
-            'data' => $post->load(['user', 'categories', 'tags', 'featuredImage']),
+            'data' => $post->load(['user.role', 'categories', 'tags', 'featuredImage']),
         ]);
     }
 
@@ -193,10 +196,7 @@ class PostController extends Controller
         
         $validated = $request->validate([
             'title' => ['sometimes', 'required', 'string', 'max:255'],
-            'slug' => [
-                'sometimes', 'required', 'string', 'max:255',
-                Rule::unique('posts', 'slug')->ignore($post->id),
-            ],
+            'slug' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('posts', 'slug')->ignore($post->id)],
             'excerpt' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'body' => ['sometimes', 'required', 'string'],
             'status' => ['sometimes', 'required', Rule::in(self::STATUSES)],
@@ -204,6 +204,8 @@ class PostController extends Controller
             'category_ids.*' => ['required', 'integer', 'distinct', 'exists:categories,id'],
             'tag_ids' => ['sometimes', 'array'],
             'tag_ids.*' => ['required', 'integer', 'distinct', 'exists:tags,id'],
+            'is_featured' => ['sometimes', 'boolean'],
+            'allow_comments' => ['sometimes', 'boolean'],
             'featured_image_id' => ['sometimes', 'nullable', 'integer', 'exists:media,id'],
             'meta_title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
@@ -230,9 +232,7 @@ class PostController extends Controller
             $attributes = [];
             foreach (['title', 'slug', 'body', 'status'] as $field) {
                 if (array_key_exists($field, $validated)) {
-                    $attributes[$field] = $field === 'title'
-                        ? trim($validated[$field])
-                        : $validated[$field];
+                    $attributes[$field] = $field === 'title' ? trim($validated[$field]) : $validated[$field];
                 }
             }
 
@@ -245,11 +245,15 @@ class PostController extends Controller
             if (array_key_exists('featured_image_id', $validated)) {
                 $attributes['featured_image_id'] = $validated['featured_image_id'];
             }
+            
+            foreach (['is_featured', 'allow_comments'] as $field) {
+                if (array_key_exists($field, $validated)) {
+                    $attributes[$field] = $validated[$field];
+                }
+            }
 
             if (array_key_exists('status', $validated)) {
-                $attributes['published_at'] = $nextStatus === 'published'
-                    ? ($wasPublished ? $post->published_at : now())
-                    : null;
+                $attributes['published_at'] = $nextStatus === 'published' ? ($wasPublished ? $post->published_at : now()) : null;
             }
 
             if ($attributes !== []) {
@@ -269,7 +273,7 @@ class PostController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Artikel berhasil diperbarui.',
-            'data' => $post->fresh()->load(['user', 'categories', 'tags', 'featuredImage']),
+            'data' => $post->load(['user.role', 'categories', 'tags', 'featuredImage']),
         ]);
     }
     
@@ -299,5 +303,81 @@ class PostController extends Controller
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+    
+    public function comments(string $slug): JsonResponse
+    {
+        $post = Post::query()
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->firstOrFail();
+
+        $comments = $post->comments()
+            ->where('status', 'approved')
+            ->latest()
+            ->paginate(20, ['id', 'post_id', 'name', 'body', 'created_at'], 'page');
+
+        return response()->json(['success' => true, 'data' => $comments]);
+    }
+
+    public function storeComment(Request $request, string $slug): JsonResponse
+    {
+        $post = Post::query()
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:80'],
+            'email' => ['required', 'email:rfc', 'max:254'],
+            'body' => ['required', 'string', 'min:3', 'max:3000'],
+            // Honeypot field: real users leave it blank.
+            'website' => ['nullable', 'prohibited'],
+        ]);
+
+        $comment = $post->comments()->create([
+            'user_id' => $request->user()?->id,
+            'name' => trim($validated['name']),
+            'email' => Str::lower(trim($validated['email'])),
+            'body' => trim($validated['body']),
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Komentar diterima dan menunggu moderasi admin.',
+            'data' => ['id' => $comment->id, 'status' => $comment->status],
+        ], 201);
+    }
+
+    public function moderateIndex(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => ['sometimes', 'in:pending,approved,rejected'],
+            'page' => ['sometimes', 'integer', 'min:1'],
+        ]);
+
+        $comments = Comment::query()
+            ->with(['post:id,title,slug', 'user:id,name'])
+            ->when(isset($validated['status']), fn ($query) => $query->where('status', $validated['status']))
+            ->latest()
+            ->paginate(20);
+
+        return response()->json(['success' => true, 'data' => $comments]);
+    }
+
+    public function moderateUpdate(Request $request, Comment $comment): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:approved,rejected,pending'],
+        ]);
+
+        $comment->update(['status' => $validated['status']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status komentar berhasil diperbarui.',
+            'data' => $comment->only(['id', 'post_id', 'status']),
+        ]);
     }
 }

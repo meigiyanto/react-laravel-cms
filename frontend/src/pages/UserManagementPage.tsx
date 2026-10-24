@@ -5,7 +5,7 @@ import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import Pagination from '../components/Pagination';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faSearch, faUserPlus, faUserPen } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faSearch, faUserPlus, faUserPen, faEye, faRemove } from '@fortawesome/free-solid-svg-icons';
 
 type RolesResponse = {
     success: boolean;
@@ -19,6 +19,14 @@ type CmsUser = {
     email: string;
     role: Role | null;
     created_at: string;
+};
+type CmsUserDetail = CmsUser & {
+    profile_photo_path: string | null;
+    profile_photo_url: string | null;
+    posts_count: number;
+    pages_count: number;
+    media_count: number;
+    updated_at: string;
 };
 type UserForm = { name: string; email: string; password: string; role_id: string };
 type NavigationProps = { onNavigate: (module: ActiveModule) => void; onLogout: () => void };
@@ -53,6 +61,8 @@ function formatDate(value: string): string {
 
 export default function UserManagementPage({ onNavigate, onLogout }: NavigationProps) {
     const [users, setUsers] = useState<CmsUser[]>([]);
+    const [viewing, setViewing] = useState<CmsUserDetail | null>(null);
+    const [detailLoading, setDetailLoading] = useState(false);
     const [roles, setRoles] = useState<Role[]>([]);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
@@ -70,7 +80,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
         setLoading(true);
         setError('');
         try {
-            const response = await api.get<UserListResponse>('/users', {
+            const response = await api.get<UserListResponse>('/admin/users', {
                 params: { page, per_page: 100, search: search.trim() || undefined },
             });
             const result = response.data;
@@ -94,6 +104,25 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
         }
     }, [page, search]);
 
+    async function openDetail(user: CmsUser) {
+        setViewing(null);
+        setDetailLoading(true);
+        setError('');
+    
+        try {
+            const response = await api.get<{
+                success: boolean;
+                data: CmsUserDetail;
+            }>(`/admin/users/${user.id}`);
+    
+            setViewing(response.data.data);
+        } catch (err) {
+            setError(errorMessage(err));
+        } finally {
+            setDetailLoading(false);
+        }
+    }
+    
     useEffect(() => {
         const timer = window.setTimeout(() => void loadUsers(), 250);
         return () => window.clearTimeout(timer);
@@ -104,7 +133,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
     
         async function loadRoles() {
             try {
-                const response = await api.get<RolesResponse>('/roles');
+                const response = await api.get<RolesResponse>('/admin/roles');
     
                 if (!cancelled) {
                     setRoles(
@@ -155,12 +184,12 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
         setNotice('');
         try {
             if (editing) {
-                await api.put(`/users/${editing.id}`, {
+                await api.put(`/admin/users/${editing.id}`, {
                     name: form.name.trim(),
                     email: form.email.trim(),
                 });
                 if (form.role_id && Number(form.role_id) !== editing.role?.id) {
-                    await api.put(`/users/${editing.id}/role`, { role_id: Number(form.role_id) });
+                    await api.put(`/admin/users/${editing.id}/role`, { role_id: Number(form.role_id) });
                 }
                 setNotice('Data pengguna berhasil diperbarui.');
             } else {
@@ -210,6 +239,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
                 {error}
                 <button className="btn-close float-end" type="button" aria-label="Tutup" onClick={() => setError('')} />
             </div>}
+            
             {notice && <div className="alert alert-success mt-3" role="status">
                 {notice}
                 <button className="btn-close float-end" type="button" aria-label="Tutup" onClick={() => setNotice('')} />
@@ -260,19 +290,28 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
                                     </td>
                                     <td className="date-cell">{formatDate(user.created_at)}</td>
                                     <td className="text-end">
-                                        <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditForm(user)}>
-                                            <FontAwesomeIcon icon={faUserPen} className="me-1" />Edit
-                                        </button>
+                                        <div className="d-flex justify-content-end gap-2">
+                                            <button className="btn btn-sm btn-outline-info" type="button" onClick={() => void openDetail(user)}>
+                                                <FontAwesomeIcon icon={faEye} className="me-1" />
+                                                Detail
+                                            </button>
+                                        
+                                            <button className="btn btn-sm btn-outline-primary" type="button" onClick={() => openEditForm(user)}>
+                                                <FontAwesomeIcon icon={faUserPen} className="me-1" />
+                                                Edit
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>)}
                         </tbody>
                     </table>
                 </div>
+                
                 <Pagination
                     currentPage={page}
                     lastPage={lastPage}
                     total={total}
-                    perPage={100}
+                    perPage={10}
                     loading={loading}
                     itemLabel="pengguna"
                     onPageChange={setPage}
@@ -328,6 +367,113 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
                     </form>
                 </section>
             </div>}
+
+            {(viewing || detailLoading) && (
+                <div className="modal-backdrop-custom" role="presentation" onMouseDown={(event) => {
+                        if (event.target === event.currentTarget && !detailLoading) {
+                            setViewing(null);
+                        }
+                    }}>
+                    <section className="editor-modal" role="dialog" aria-modal="true" aria-labelledby="user-detail-title">
+                        <div className="modal-heading">
+                            <div>
+                                <h2 id="user-detail-title">Detail Pengguna</h2>
+                                <p>Informasi akun dan aktivitas pengguna CMS.</p>
+                            </div>
+            
+                            <button className="btn-close" type="button" aria-label="Tutup detail" onClick={() => setViewing(null)} disabled={detailLoading}/>
+                        </div>
+            
+                        {detailLoading ? (
+                            <div className="text-center py-5" role="status">
+                                <div className="spinner-border text-primary" />
+                                <p className="mt-3 mb-0">Memuat detail pengguna...</p>
+                            </div>
+                        ) : viewing ? (
+                            <>
+                                <div className="text-center py-3">
+                                    {viewing.profile_photo_path ? (
+                                        <img src={viewing.profile_photo_url || '/default-avatar.png'} alt={`Foto ${viewing.name}`} className="rounded-circle border mb-3" style={{ width: 88, height: 88, objectFit: 'cover' }} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/default-avatar.png'; }} />
+                                    ) : (
+                                        <div className="rounded-circle bg-light border mx-auto mb-3 d-flex align-items-center justify-content-center" style={{ width: 88, height: 88, fontSize: 32 }} aria-label="Belum ada foto profil">
+                                            <span aria-hidden="true">{viewing.name.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                    )}
+            
+                                    <h3 className="h5 mb-1">{viewing.name}</h3>
+                                    <p className="text-muted mb-0">{viewing.email}</p>
+            
+                                    <div className="mt-2">
+                                        <span className="status-badge published">
+                                            {viewing.role?.name ?? 'Belum ada role'}
+                                        </span>
+                                    </div>
+                                </div>
+            
+                                <hr />
+            
+                                <dl className="row mb-4">
+                                    <dt className="col-sm-5 text-muted">ID Pengguna</dt>
+                                    <dd className="col-sm-7">{viewing.id}</dd>
+            
+                                    <dt className="col-sm-5 text-muted">Slug Role</dt>
+                                    <dd className="col-sm-7">
+                                        {viewing.role?.slug ?? '—'}
+                                    </dd>
+            
+                                    <dt className="col-sm-5 text-muted">Terdaftar</dt>
+                                    <dd className="col-sm-7">
+                                        {formatDate(viewing.created_at)}
+                                    </dd>
+            
+                                    <dt className="col-sm-5 text-muted">Terakhir diperbarui</dt>
+                                    <dd className="col-sm-7">
+                                        {formatDate(viewing.updated_at)}
+                                    </dd>
+                                </dl>
+            
+                                <h3 className="h6 mb-3">Aktivitas Konten</h3>
+            
+                                <div className="row g-2 mb-4">
+                                    <div className="col-4">
+                                        <div className="border rounded p-3 text-center h-100">
+                                            <div className="text-muted small">Artikel</div>
+                                            <strong className="fs-4">{viewing.posts_count}</strong>
+                                        </div>
+                                    </div>
+            
+                                    <div className="col-4">
+                                        <div className="border rounded p-3 text-center h-100">
+                                            <div className="text-muted small">Halaman</div>
+                                            <strong className="fs-4">{viewing.pages_count}</strong>
+                                        </div>
+                                    </div>
+            
+                                    <div className="col-4">
+                                        <div className="border rounded p-3 text-center h-100">
+                                            <div className="text-muted small">Media</div>
+                                            <strong className="fs-4">{viewing.media_count}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+            
+                                <div className="modal-actions">
+                                    <button className="btn btn-light" type="button" onClick={() => setViewing(null)}>
+                                        <FontAwesomeIcon icon={faRemove} className="me-1" />
+                                        Tutup
+                                    </button>
+            
+                                    <button className="btn btn-primary" type="button" onClick={() => { const user = viewing; setViewing(null); openEditForm(user); }}>
+                                        <FontAwesomeIcon icon={faUserPen} className="me-1" />
+                                        Edit Pengguna
+                                    </button>
+                                </div>
+                            </>
+                        ) : null}
+                    </section>
+                </div>
+            )}
+
         </AdminLayout>
     );
 }

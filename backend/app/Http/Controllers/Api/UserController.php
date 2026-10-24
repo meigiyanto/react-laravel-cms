@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -53,6 +54,31 @@ class UserController extends Controller
                 'last_page' => $users->lastPage(),
                 'per_page' => $users->perPage(),
                 'total' => $users->total(),
+            ],
+        ]);
+    }
+    
+    public function show(int $id): JsonResponse
+    {
+        $user = User::query()
+            ->with('role:id,name,slug')
+            ->withCount(['posts', 'pages', 'media'])
+            ->findOrFail($id);
+    
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role ? [ 'id' => $user->role->id, 'name' => $user->role->name, 'slug' => $user->role->slug ] : null,
+                'profile_photo_path' => $user->profile_photo_path,
+                'profile_photo_url' => $user->profile_photo_path ? Storage::disk('public')->url($user->profile_photo_path) : null,
+                'posts_count' => $user->posts_count,
+                'pages_count' => $user->pages_count,
+                'media_count' => $user->media_count,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
             ],
         ]);
     }
