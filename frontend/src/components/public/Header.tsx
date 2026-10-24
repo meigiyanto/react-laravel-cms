@@ -10,7 +10,6 @@ const mainLinks = [
 
 const pageLinks = [
     { label: 'About', to: '/about' },
-    { label: 'About Author', to: '/about-author' },
     { label: 'Search Results', to: '/search-results' },
     { label: '404 Not Found Page', to: '/404' },
 ];

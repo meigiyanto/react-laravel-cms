@@ -21,7 +21,7 @@ type Post = {
     excerpt: string | null;
     body: string;
     published_at: string | null;
-    created_at: string;
+    created_at: string | null;
     user: Author;
     categories: Category[];
     featured_image: Media;
@@ -286,7 +286,7 @@ export default function Home() {
                                                                 {post.user?.name}
                                                             </p>
                                                             <p className="post-date">
-                                                                <time dateTime={post.published_at || post.created_at}>{dateLabel(post.published_at || post.created_at)}</time>
+                                                                <time>{dateLabel(post.published_at || post.created_at)}</time>
                                                             </p>
                                                         </div>
                                                     </div>
@@ -577,7 +577,7 @@ export default function Home() {
                                                 <div className="post-meta">
                                                     <p className="post-author">{post.user?.name}</p>
                                                     <p className="post-date">
-                                                        <time dateTime={post.created_at || post.published_at}>{dateLabel(post.created_at || post.published_at)}</time>
+                                                        <time>{dateLabel(post.created_at || post.published_at)}</time>
                                                     </p>
                                                 </div>
                                             </div>

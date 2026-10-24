@@ -77,7 +77,6 @@ function imageUrl(media: Media): string {
     }
 
     const apiOrigin = API_BASE.replace(/\/api\/?$/, '');
-
     return new URL(raw,`${apiOrigin || window.location.origin}/`).toString();
 }
 
@@ -95,15 +94,6 @@ function dateLabel(value: string | null | undefined): string {
         month: 'long',
         year: 'numeric',
     });
-}
-
-function excerpt(post: Post): string {
-    if (post.excerpt?.trim()) {
-        return post.excerpt;
-    }
-
-    const text = new DOMParser().parseFromString(post.body || '', 'text/html').body.textContent?.trim() || '';
-    return text.length > 180 ? `${text.slice(0, 180)}…` : text;
 }
 
 function errorText(error: unknown): string {
@@ -424,8 +414,8 @@ export default function AllArticles() {
                                 </div>
 
                                 {pagination && pagination.last_page > 1 && (
-                                    <section id="pagination-3" class="pagination-3 section mt-3">
-                                        <div class="container">
+                                    <section id="pagination-3" className="pagination-3 section mt-3">
+                                        <div className="container">
                                             <ul className="pagination justify-content-center">
                                                 <li className={`${page <= 1 ? 'disabled' : ''}`}>
                                                     <Link disabled={page <= 1} onClick={() => goToPage(page - 1)} aria-label="Halaman sebelumnya">

@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers, faUserCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers, faUserCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 
@@ -75,11 +75,9 @@ const items: SidebarItem[] = [
 type SidebarProps = {
     active: ActiveModule;
     onNavigate: (module: ActiveModule) => void;
-    mobileOpen: boolean;
-    onClose: () => void;
 };
 
-export default function Sidebar({ active, onNavigate, mobileOpen, onClose }: SidebarProps) {
+export default function Sidebar({ active, onNavigate }: SidebarProps) {
     const profile = useAuthProfile();
     const loadingProfile = profile === null;
 
@@ -110,50 +108,67 @@ export default function Sidebar({ active, onNavigate, mobileOpen, onClose }: Sid
     
         return can(item.permission);
     });
+    
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.cms-sidebar');
+        sidebar.classList.toggle('collapsed');
+    }
 
     return (
-        <aside id="admin-sidebar" className={`cms-sidebar ${mobileOpen ? 'is-open' : '' }`} aria-label="Menu admin">
-            <div className="cms-brand">
-                <span className="brand-mark">C</span>
-                <div>
-                    <strong>ContentHub</strong>
-                    <small>CMS Dashboard</small>
+        <aside id="admin-sidebar" aria-label="Menu admin">
+            <nav aria-label="Navigasi utama" className="cms-sidebar d-flex flex-column flex-shrink-0 position-fixed">
+                <button class="toggle-btn" onClick={() => toggleSidebar()}>
+                    <FontAwesomeIcon icon={faChevronLeft} />
+                </button>
+                
+                <div className="cms-brand">
+                    <span className="brand-mark">C</span>
+                    <div className="hide-on-collapse">
+                        <strong>ContentHub</strong>
+                        <small>CMS Dashboard</small>
+                    </div>
                 </div>
-            </div>
-        
-            <div className="sidebar-label">WORKSPACE</div>
-
-            <nav aria-label="Navigasi utama">
+            
+                <div className="sidebar-label hide-on-collapse">WORKSPACE</div>
+                
                 {loadingProfile ? (
                     <p className="px-3 text-secondary">Memuat hak akses...</p>
                 ) : (
                     visibleItems.map((item) => (
-                        <button key={item.id} type="button" className={`nav-item ${active === item.id ? 'active' : '' }`} aria-current={active === item.id ? 'page' : undefined} onClick={() => { onNavigate(item.id); onClose(); }}>
+                        <button 
+                            key={item.id} 
+                            type="button" 
+                            className={`cms-sidebar-link nav-item ${active === item.id ? 'active' : '' }`} 
+                            aria-current={active === item.id ? 'page' : undefined} 
+                            onClick={() => { onNavigate(item.id); }}
+                        >
                             <span aria-hidden="true">
                                 <FontAwesomeIcon icon={item.icon} />
                             </span>
-                            {item.label}
+                            <span className="hide-on-collapse">{item.label}</span>
                         </button>
                     ))
                 )}
-            </nav>
-        
-            <div className="mt-3 sidebar-public-link">
-                <a href="/" className="btn btn-outline-primary w-100" onClick={onClose}>
-                    <FontAwesomeIcon icon={faGlobe} className="me-2" />
-                    Lihat Website
-                </a>
-            </div>
-        
-            <div className="sidebar-bottom">
-                <div className="sidebar-label">STATUS SISTEM</div>
-
-                <div className="system-status">
-                    <span className="status-dot" />API terhubung
+                
+                <div className="mt-3 sidebar-public-link">
+                    <button type="button" className="cms-sidebar-link nav-item">
+                        <span className="hide-on-collapse">
+                            <FontAwesomeIcon icon={faGlobe} className="me-2" />
+                            Lihat Website
+                        </span>
+                    </button>
                 </div>
-        
-                <small>React · Laravel · MariaDB</small>
-            </div>
+            
+                <div className="sidebar-bottom">
+                    <div className="sidebar-label">STATUS SISTEM</div>
+    
+                    <div className="system-status">
+                        <span className="hide-on-collapse status-dot" />API terhubung
+                    </div>
+            
+                    <small>React · Laravel · MariaDB</small>
+                </div>
+            </nav>
         </aside>
     );
 }

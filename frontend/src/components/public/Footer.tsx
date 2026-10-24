@@ -58,7 +58,7 @@ export default function Footer() {
             </div>
             
             <div className="container copyright text-center mt-4">
-              <p>© <span>Copyright</span> <strong class="px-1 sitename">Content HUB</strong> <span>All Rights Reserved</span></p>
+              <p>© <span>Copyright</span> <strong className="px-1 sitename">Content HUB</strong> <span>All Rights Reserved</span></p>
               <div className="credits">
                 Designed by <Link to="https://bootstrapmade.com/">BootstrapMade</Link> | <Link to="https://bootstrapmade.com/tools/">DevTools</Link>
               </div>
