@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PublicPostController;
@@ -39,6 +40,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update']);
 
     Route::get('/dashboard/stats', [PostController::class, 'stats'])->middleware('permission:posts.view');
+
+    // KOMENTAR
+    Route::get('/comments', [CommentController::class, 'index'])->middleware('permission:comments.view,exact');
+    Route::patch('/comments/{comment}/status', [CommentController::class, 'updateStatus'])->middleware('permission:comments.moderate,exact');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('permission:comments.delete,exact');
 
     // ARTIKEL
     Route::middleware('permission:posts.view')->group(function () {

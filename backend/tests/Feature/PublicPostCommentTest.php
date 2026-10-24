@@ -34,12 +34,13 @@ class PublicPostCommentTest extends TestCase
             'body' => '<p>Isi rahasia.</p>', 'status' => 'draft',
         ]);
     }
-
+    
     public function test_public_index_only_returns_published_posts(): void
     {
-        $this->getJson('/api/public/posts')->assertOk()
-            ->assertJsonPath('data.total', 1)
-            ->assertJsonPath('data.data.0.slug', 'artikel-terbit');
+        $this->getJson('/api/public/posts')
+            ->assertOk()
+            ->assertJsonPath('data.posts.total', 1)
+            ->assertJsonPath('data.posts.data.0.slug', 'artikel-terbit');
     }
 
     public function test_public_cannot_read_draft_post(): void
@@ -58,6 +59,7 @@ class PublicPostCommentTest extends TestCase
             'email' => 'pengunjung@example.com',
             'status' => 'pending',
         ]);
+        
         $this->getJson('/api/public/posts/artikel-terbit/comments')->assertJsonPath('data.total', 0);
     }
 
@@ -139,6 +141,7 @@ class PublicPostCommentTest extends TestCase
             'status' => 'published',
             'published_at' => now(),
             'is_featured' => false,
+            'allow_comments' => true,
         ]);
     
         $this->getJson('/api/public/posts?featured=1')

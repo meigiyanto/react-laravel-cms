@@ -10,14 +10,24 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('post_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('name', 80);
-            $table->string('email', 254);
+
+            $table->foreignId('post_id')
+                ->constrained('posts')
+                ->cascadeOnDelete();
+
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->string('author_name', 120);
+            $table->string('author_email')->nullable();
             $table->text('body');
-            $table->string('status', 16)->default('pending')->index();
+            $table->string('status', 20)->default('pending')->index();
+
             $table->timestamps();
-            $table->index(['post_id', 'status', 'created_at']);
+
+            $table->index(['post_id', 'status']);
         });
     }
 

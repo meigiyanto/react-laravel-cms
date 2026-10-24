@@ -7,7 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Comment extends Model
 {
-    protected $fillable = ['post_id', 'user_id', 'name', 'email', 'body', 'status'];
+    public const STATUSES = [
+        'pending',
+        'approved',
+        'rejected',
+    ];
+
+    protected $fillable = [
+        'post_id',
+        'user_id',
+        'author_name',
+        'author_email',
+        'body',
+        'status',
+    ];
 
     public function post(): BelongsTo
     {
