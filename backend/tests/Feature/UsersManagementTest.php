@@ -51,27 +51,27 @@ class UsersManagementTest extends TestCase
 
     public function test_users_endpoint_requires_authentication(): void
     {
-        $this->getJson('/api/users')->assertUnauthorized();
+        $this->getJson('/api/admin/users')->assertUnauthorized();
     }
 
     public function test_non_administrator_cannot_manage_users(): void
     {
         $this->actingAs($this->editor, 'sanctum');
 
-        $this->getJson('/api/users')->assertForbidden();
+        $this->getJson('/api/admin/users')->assertForbidden();
 
-        $this->postJson('/api/users', [
+        $this->postJson('/api/admin/users', [
             'name' => 'Pengguna Baru',
             'email' => 'baru@example.com',
             'password' => 'Password123!',
             'role_id' => $this->authorRole->id,
         ])->assertForbidden();
 
-        $this->putJson('/api/users/' . $this->editor->id, [
+        $this->putJson('/api/admin/users/' . $this->editor->id, [
             'name' => 'Nama Diubah',
         ])->assertForbidden();
 
-        $this->putJson('/api/users/' . $this->editor->id . '/role', [
+        $this->putJson('/api/admin/users/' . $this->editor->id . '/role', [
             'role_id' => $this->authorRole->id,
         ])->assertForbidden();
     }
@@ -86,19 +86,19 @@ class UsersManagementTest extends TestCase
 
         $this->actingAs($this->administrator, 'sanctum');
 
-        $this->getJson('/api/users?search=khusus')
+        $this->getJson('/api/admin/users?search=khusus')
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('meta.total', 1)
             ->assertJsonPath('data.0.email', 'khusus@example.com');
 
-        $this->getJson('/api/users?page=0')
+        $this->getJson('/api/admin/users?page=0')
             ->assertUnprocessable();
 
-        $this->getJson('/api/users?search[]=tidak-valid')
+        $this->getJson('/api/admin/users?search[]=tidak-valid')
             ->assertUnprocessable();
 
-        $this->getJson('/api/users?per_page=101')
+        $this->getJson('/api/admin/users?per_page=101')
             ->assertUnprocessable();
     }
 
@@ -106,7 +106,7 @@ class UsersManagementTest extends TestCase
     {
         $this->actingAs($this->administrator, 'sanctum');
 
-        $response = $this->postJson('/api/users', [
+        $response = $this->postJson('/api/admin/users', [
             'name' => 'Penulis Baru',
             'email' => 'penulis@example.com',
             'password' => 'Password123!',
@@ -128,7 +128,7 @@ class UsersManagementTest extends TestCase
     {
         $this->actingAs($this->administrator, 'sanctum');
 
-        $this->postJson('/api/users', [
+        $this->postJson('/api/admin/users', [
             'name' => '',
             'email' => 'bukan-email',
             'password' => '123',
@@ -146,7 +146,7 @@ class UsersManagementTest extends TestCase
     {
         $this->actingAs($this->administrator, 'sanctum');
 
-        $this->putJson('/api/users/' . $this->editor->id, [
+        $this->putJson('/api/admin/users/' . $this->editor->id, [
             'name' => 'Editor Diperbarui',
             'email' => 'editor-baru@example.com',
         ])->assertOk()
@@ -164,7 +164,7 @@ class UsersManagementTest extends TestCase
     {
         $this->actingAs($this->administrator, 'sanctum');
 
-        $this->putJson('/api/users/' . $this->editor->id . '/role', [
+        $this->putJson('/api/admin/users/' . $this->editor->id . '/role', [
             'role_id' => $this->authorRole->id,
         ])->assertOk()
           ->assertJsonPath('data.role.slug', 'author');
@@ -180,7 +180,7 @@ class UsersManagementTest extends TestCase
         $this->actingAs($this->administrator, 'sanctum');
 
         $this->putJson(
-            '/api/users/' . $this->administrator->id . '/role',
+            '/api/admin/users/' . $this->administrator->id . '/role',
             ['role_id' => $this->editorRole->id]
         )->assertUnprocessable()
          ->assertJsonValidationErrors(['role_id']);

@@ -31,7 +31,7 @@ class RolesReadTest extends TestCase
 
     public function test_roles_endpoint_requires_authentication(): void
     {
-        $this->getJson('/api/roles')
+        $this->getJson('/api/admin/roles')
             ->assertUnauthorized();
     }
 
@@ -45,7 +45,7 @@ class RolesReadTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $this->getJson('/api/roles')
+        $this->getJson('/api/admin/roles')
             ->assertForbidden();
     }
 
@@ -59,7 +59,7 @@ class RolesReadTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->getJson('/api/roles')
+        $response = $this->getJson('/api/admin/roles')
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonStructure([
