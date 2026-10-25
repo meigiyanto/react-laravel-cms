@@ -20,18 +20,32 @@ class PublicPostCommentTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $role = Role::create(['name' => 'Author', 'slug' => 'author-public-test', 'permissions' => ['*']]);
-        $this->author = User::factory()->create(['role_id' => $role->id]);
+    
+        $role = Role::create([
+            'name' => 'Author',
+            'slug' => 'author-public-test',
+            'permissions' => ['*'],
+        ]);
+    
+        $this->author = User::factory()->create([
+            'role_id' => $role->id,
+        ]);
+    
         $this->published = Post::create([
             'user_id' => $this->author->id,
-            'title' => 'Artikel Terbit', 'slug' => 'artikel-terbit',
-            'body' => '<p>Isi artikel publik.</p>', 'status' => 'published',
+            'title' => 'Artikel Terbit',
+            'slug' => 'artikel-terbit',
+            'body' => '<p>Isi artikel publik.</p>',
+            'status' => 'published',
             'published_at' => now(),
         ]);
+    
         $this->draft = Post::create([
             'user_id' => $this->author->id,
-            'title' => 'Artikel Draft', 'slug' => 'artikel-draft',
-            'body' => '<p>Isi rahasia.</p>', 'status' => 'draft',
+            'title' => 'Artikel Draft',
+            'slug' => 'artikel-draft',
+            'body' => '<p>Isi rahasia.</p>',
+            'status' => 'draft',
         ]);
     }
     
@@ -51,53 +65,56 @@ class PublicPostCommentTest extends TestCase
     public function test_public_can_submit_comment_but_it_starts_pending(): void
     {
         $this->postJson('/api/public/posts/artikel-terbit/comments', [
-            'name' => 'Pengunjung', 'email' => 'pengunjung@example.com', 'body' => 'Artikel yang menarik.',
-        ])->assertCreated()->assertJsonPath('data.status', 'pending');
-
+            'name' => 'Pengunjung',
+            'email' => 'pengunjung@example.com',
+            'body' => 'Artikel yang menarik.',
+        ])->assertCreated()
+          ->assertJsonPath('data.status', 'pending');
+        
         $this->assertDatabaseHas('comments', [
             'post_id' => $this->published->id,
-            'email' => 'pengunjung@example.com',
+            'author_email' => 'pengunjung@example.com',
+            'body' => 'Artikel yang menarik.',
             'status' => 'pending',
-        ]);
-        
+        ]);        
         $this->getJson('/api/public/posts/artikel-terbit/comments')->assertJsonPath('data.total', 0);
     }
 
     public function test_public_cannot_comment_on_draft(): void
     {
         $this->postJson('/api/public/posts/artikel-draft/comments', [
-            'name' => 'Pengunjung', 'email' => 'pengunjung@example.com', 'body' => 'Komentar pada draft.',
+            'author_name' => 'Pengunjung', 'author_email' => 'pengunjung@example.com', 'body' => 'Komentar pada draft.',
         ])->assertNotFound();
     }
 
     public function test_public_comment_requires_valid_fields_and_blank_honeypot(): void
     {
         $this->postJson('/api/public/posts/artikel-terbit/comments', [
-            'name' => 'A', 'email' => 'bukan-email', 'body' => 'x', 'website' => 'spam.example',
+            'author_name' => 'A', 'author_email' => 'bukan-author_email', 'body' => 'x', 'website' => 'spam.example',
         ])->assertUnprocessable();
     }
 
     public function test_only_approved_comments_are_public(): void
     {
         Comment::create([
-            'post_id' => $this->published->id, 'name' => 'Menunggu', 'email' => 'pending@example.com',
+            'post_id' => $this->published->id, 'author_name' => 'Menunggu', 'author_email' => 'pending@example.com',
             'body' => 'Komentar pending', 'status' => 'pending',
         ]);
         Comment::create([
-            'post_id' => $this->published->id, 'name' => 'Disetujui', 'email' => 'approved@example.com',
+            'post_id' => $this->published->id, 'author_name' => 'Disetujui', 'author_email' => 'approved@example.com',
             'body' => 'Komentar tampil', 'status' => 'approved',
         ]);
 
         $this->getJson('/api/public/posts/artikel-terbit/comments')->assertOk()
             ->assertJsonPath('data.total', 1)
-            ->assertJsonPath('data.data.0.name', 'Disetujui')
-            ->assertJsonMissing(['email' => 'approved@example.com']);
+            ->assertJsonPath('data.data.0.author_name', 'Disetujui')
+            ->assertJsonMissing(['author_email' => 'approved@example.com']);
     }
 
     public function test_admin_can_moderate_comment_but_public_cannot(): void
     {
         $comment = Comment::create([
-            'post_id' => $this->published->id, 'name' => 'Pengunjung', 'email' => 'visitor@example.com',
+            'post_id' => $this->published->id, 'author_name' => 'Pengunjung', 'author_email' => 'visitor@example.com',
             'body' => 'Komentar', 'status' => 'pending',
         ]);
 
@@ -117,15 +134,15 @@ class PublicPostCommentTest extends TestCase
         $this->published->update(['allow_comments' => false]);
     
         $this->postJson('/api/public/posts/artikel-terbit/comments', [
-            'name' => 'Pengunjung',
-            'email' => 'pengunjung@example.com',
+            'author_name' => 'Pengunjung',
+            'author_email' => 'pengunjung@example.com',
             'body' => 'Saya ingin berkomentar.',
         ])->assertForbidden()
             ->assertJsonPath('success', false);
     
         $this->assertDatabaseMissing('comments', [
             'post_id' => $this->published->id,
-            'email' => 'pengunjung@example.com',
+            'author_email' => 'pengunjung@example.com',
         ]);
     }
     
@@ -143,11 +160,11 @@ class PublicPostCommentTest extends TestCase
             'is_featured' => false,
             'allow_comments' => true,
         ]);
-    
+        
         $this->getJson('/api/public/posts?featured=1')
             ->assertOk()
-            ->assertJsonPath('data.total', 1)
-            ->assertJsonPath('data.data.0.slug', 'artikel-terbit')
-            ->assertJsonPath('data.data.0.is_featured', true);
+            ->assertJsonPath('data.posts.total', 1)
+            ->assertJsonPath('data.posts.data.0.slug', 'artikel-terbit')
+            ->assertJsonPath('data.posts.data.0.is_featured', true);
     }
 }

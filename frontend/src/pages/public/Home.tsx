@@ -438,7 +438,7 @@ export default function Home() {
                                                             <div className="post-meta">
                                                                 <span><i className="bi bi-person"></i> {item.user?.name || 'Redaksi'}</span>
                                                                 <span><i className="bi bi-clock"></i> {dateLabel(item.created_at || item.published_at)}</span>
-                                                                <span><i className="bi bi-tag"></i> {item.categories[0].name}</span>
+                                                                <span><i className="bi bi-tag"></i> {item?.categories?.[0]?.name || 'Uncategory'}</span>
                                                             </div>
                                                             <h2><Link to={`/blog/${item.slug}`}>{item.title}</Link></h2>
                                                             <p>{excerpt(item)}</p>

@@ -7,6 +7,7 @@ const PagesPage = lazy(() => import('../pages/PagesPage'));
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
 const PostsPage = lazy(() => import('../pages/PostsPage'));
 const UserManagementPage = lazy(() => import('../pages/UserManagementPage'));
+const CommentsPage = lazy(() => import('../pages/CommentsPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 import LoginPage from '../pages/LoginPage';
 import type { ActiveModule } from '../components/Sidebar';
@@ -153,6 +154,7 @@ function AdminApp() {
         pages: 'pages.view',
         users: null,
         profile: null,
+        comments: 'comments.view',
     };
     
     const hasPageAccess = activeModule === 'profile' || (activeModule === 'users' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!));
@@ -164,6 +166,17 @@ function AdminApp() {
             page = (
                 <Suspense fallback={<PageLoading />}>
                     <PostsPage
+                        onNavigate={navigation.onNavigate}
+                        onLogout={navigation.onLogout}
+                    />
+                </Suspense>
+            );
+            break;
+        
+        case 'comments':
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <CommentsPage
                         onNavigate={navigation.onNavigate}
                         onLogout={navigation.onLogout}
                     />

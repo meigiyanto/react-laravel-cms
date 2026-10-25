@@ -110,7 +110,7 @@ function getErrorMessage(error: unknown): string {
         }
 
         if (error.response?.status === 404) {
-            return 'Artikel tidak ditemukan atau tidak tersedia.';
+            return 'blog tidak ditemukan atau tidak tersedia.';
         }
 
         return (
@@ -178,7 +178,7 @@ export default function ArticleDetail() {
     
         async function loadData() {
             if (!slug) {
-                setError('Alamat artikel tidak valid.');
+                setError('Alamat blog tidak valid.');
                 setLoading(false);
                 return;
             }
@@ -283,11 +283,11 @@ export default function ArticleDetail() {
             <main className="main">
                 {loading ? (
                     <div className="container public-loading" role="status">
-                        Memuat artikel...
+                        Memuat blog...
                     </div>
                 ) : error ? (
                     <section className="container py-5">
-                        <h1>Artikel tidak tersedia</h1>
+                        <h1>blog tidak tersedia</h1>
                         <p role="alert">{error}</p>
                         <Link to="/" className="btn btn-primary">
                             Kembali ke beranda
@@ -459,11 +459,26 @@ export default function ArticleDetail() {
                                             <div className="comments-list mb-5">
                                                 {comments.data.map((comment) => (
                                                     <article className="comment-card mb-4" key={comment.id}>
-                                                        <h4>{comment.name}</h4>
-                                                        <time dateTime={comment.created_at}>
-                                                            {formatDate(comment.created_at)}
-                                                        </time>
-                                                        <p>{comment.body}</p>
+                                                        <div className="comment-header">
+                                                            <div className="user-info">
+                                                                <span className="author-avatar-fallback" aria-hidden="true">
+                                                                    {(comment?.name || 'A').charAt(0).toUpperCase()}
+                                                                </span>
+                                                                <div className="meta">
+                                                                    <h4 className="name">{comment.name}</h4>
+                                                                    <span className="date"><i className="bi bi-calendar3"></i> {formatDate(comment.created_at)}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-3 comment-content">
+                                                                <p>{comment.body}</p>
+                                                            </div>
+                                                            <div className="comment-actions">
+                                                                <button className="action-btn reply-btn">
+                                                                    <i className="bi bi-reply"></i>
+                                                                    <span>Reply</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </article>
                                                 ))}
                                             </div>
@@ -573,7 +588,7 @@ export default function ArticleDetail() {
                                                         type="search"
                                                         className="form-control"
                                                         placeholder="Masukkan kata kunci..."
-                                                        aria-label="Cari artikel"
+                                                        aria-label="Cari blog"
                                                         value={search}
                                                         onChange={(event) => setSearch(event.target.value)}
                                                     />
@@ -582,7 +597,7 @@ export default function ArticleDetail() {
                                                         type="submit"
                                                         className="btn btn-primary"
                                                         disabled={searchBusy}
-                                                        aria-label="Cari artikel"
+                                                        aria-label="Cari blog"
                                                     >
                                                         <i className="bi bi-search" aria-hidden="true" />
                                                     </button>
@@ -596,7 +611,7 @@ export default function ArticleDetail() {
                                             )}
                                             
                                             {searchBusy && (
-                                                <p role="status">Mencari artikel...</p>
+                                                <p role="status">Mencari blog...</p>
                                             )}
                                             
                                             {searchResults && !searchBusy && (
@@ -607,14 +622,14 @@ export default function ArticleDetail() {
                                                         <ul className="list-unstyled">
                                                             {searchResults.map((result) => (
                                                                 <li key={result.id} className="mb-2">
-                                                                    <Link to={`/artikel/${result.slug}`}>
+                                                                    <Link to={`/blog/${result.slug}`}>
                                                                         {result.title}
                                                                     </Link>
                                                                 </li>
                                                             ))}
                                                         </ul>
                                                     ) : (
-                                                        <p>Tidak ada artikel yang cocok.</p>
+                                                        <p>Tidak ada blog yang cocok.</p>
                                                     )}
                                                 </div>
                                             )}
@@ -643,7 +658,7 @@ export default function ArticleDetail() {
                                                             className="flex-shrink-0"
                                                         />
                                                         <div>
-                                                            <h4><Link to={`/artikel/${post.slug}`}>{post.title}</Link></h4>
+                                                            <h4><Link to={`/blog/${post.slug}`}>{post.title}</Link></h4>
                                                             <time dateTime={post.published_at || post.created_at}>{formatDate(post.published_at)}</time>
                                                         </div>
                                                     </div>

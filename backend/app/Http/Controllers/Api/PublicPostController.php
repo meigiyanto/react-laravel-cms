@@ -108,7 +108,7 @@ class PublicPostController extends Controller
         $comments = $post->comments()
             ->where('status', 'approved')
             ->latest()
-            ->paginate(20, ['id', 'post_id', 'name', 'body', 'created_at'], 'page');
+            ->paginate(20, ['id', 'post_id', 'author_name', 'body', 'created_at'], 'page');
 
         return response()->json(['success' => true, 'data' => $comments]);
     }
@@ -138,8 +138,8 @@ class PublicPostController extends Controller
 
         $comment = $post->comments()->create([
             'user_id' => $request->user()?->id,
-            'name' => trim($validated['name']),
-            'email' => Str::lower(trim($validated['email'])),
+            'author_name' => trim($validated['name']),
+            'author_email' => Str::lower(trim($validated['email'])),
             'body' => trim($validated['body']),
             'status' => 'pending',
         ]);

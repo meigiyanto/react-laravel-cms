@@ -150,7 +150,7 @@ export default function AllArticles() {
                     setCategories(response.data?.data ?? []);
                 }
             } catch {
-                // Kegagalan memuat kategori tidak menghalangi daftar artikel.
+                // Kegagalan memuat kategori tidak menghalangi daftar blog.
             }
         }
 
@@ -291,7 +291,7 @@ export default function AllArticles() {
 
                         <div className="row g-3 align-items-end mb-4">
                             <div className="col-lg-8">
-                                <form onSubmit={handleSearch} role="search" aria-label="Cari artikel">
+                                <form onSubmit={handleSearch} role="search" aria-label="Cari blog">
                                     <label htmlFor="article-search" className="form-label">Search article</label>
                                     <div className="input-group">
                                         <input id="article-search" type="search" className="form-control" placeholder="Input title or category..." value={searchInput} maxLength={120} onChange={(event) => setSearchInput(event.target.value)} />
@@ -364,11 +364,11 @@ export default function AllArticles() {
                                                 <article>
                                                     <div className="post-img">
                                                         {image ? (
-                                                            <Link to={`/artikel/${post.slug}`} aria-label={`Read ${post.title}`}>
+                                                            <Link to={`/blog/${post.slug}`} aria-label={`Read ${post.title}`}>
                                                                 <img src={image} alt={post.featured_image ?.alt_text || post.title } className="img-fluid" loading="lazy" />
                                                             </Link>
                                                         ) : (
-                                                            <Link to={`/artikel/${post.slug}`} className="post-image-placeholder d-flex align-items-center justify-content-center" aria-label={`Read ${post.title}`}>
+                                                            <Link to={`/blog/${post.slug}`} className="post-image-placeholder d-flex align-items-center justify-content-center" aria-label={`Read ${post.title}`}>
                                                                 <span>JURNAL<br />IDE</span>
                                                             </Link>
                                                         )}
@@ -384,7 +384,7 @@ export default function AllArticles() {
                                                         </p>
 
                                                         <h2 className="title">
-                                                            <Link to={`/artikel/${post.slug}`}>{post.title}</Link>
+                                                            <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                                                         </h2>
 
                                                         {/* <p>{excerpt(post)}</p> */}
@@ -402,7 +402,7 @@ export default function AllArticles() {
                                                             </div>
                                                         </div>
 
-                                                        <Link to={`/artikel/${post.slug}`} className="read-more d-inline-block mt-3">
+                                                        <Link to={`/blog/${post.slug}`} className="read-more d-inline-block mt-3">
                                                             Read more
                                                             <i className="bi bi-arrow-right ms-1" />
                                                         </Link>
