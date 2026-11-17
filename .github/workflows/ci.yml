@@ -53,9 +53,6 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Audit Composer dependencies
-        run: composer audit --locked --no-interaction
-
       - name: Prepare Laravel environment
         run: cp .env.example .env
 
@@ -70,6 +67,9 @@ jobs:
           QUEUE_CONNECTION: sync
           MAIL_MAILER: array
         run: php artisan test
+
+      - name: Audit Composer dependencies
+        run: composer audit --locked --no-interaction
 
   frontend:
     name: Frontend lint and build
