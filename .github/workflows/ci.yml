@@ -82,7 +82,7 @@ jobs:
         run: npm ci
 
       - name: Audit backend npm dependencies
-        run: npm audit --audit-level=low
+        run: node ../.github/scripts/audit-npm.mjs
 
       - name: Build backend assets
         run: npm run build
@@ -111,7 +111,7 @@ jobs:
         run: npm ci
 
       - name: Audit all npm dependencies
-        run: npm audit --audit-level=low
+        run: node ../.github/scripts/audit-npm.mjs
 
       - name: Run ESLint
         run: npm run lint
