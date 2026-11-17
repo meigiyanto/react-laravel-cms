@@ -138,6 +138,18 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
                     </div>
                 </div>
             
+                {profile && (
+                    <div className="sidebar-user" aria-label="Pengguna yang sedang login">
+                        <div className="sidebar-user-avatar" aria-hidden="true">
+                            {(profile.name || 'U').trim().charAt(0).toUpperCase()}
+                        </div>
+                        <div className="sidebar-user-details hide-on-collapse">
+                            <strong title={profile.name}>{profile.name}</strong>
+                            <small>{profile.role?.name ?? 'Tanpa role'}</small>
+                        </div>
+                    </div>
+                )}
+
                 <div className="sidebar-label hide-on-collapse">WORKSPACE</div>
                 
                 {loadingProfile ? (
