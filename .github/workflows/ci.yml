@@ -24,12 +24,15 @@ jobs:
   backend:
     name: Backend tests (PHPUnit)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: backend
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -50,6 +53,9 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      - name: Audit Composer dependencies
+        run: composer audit --locked --no-interaction
+
       - name: Prepare Laravel environment
         run: cp .env.example .env
 
@@ -68,6 +74,7 @@ jobs:
   frontend:
     name: Frontend lint and build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -85,13 +92,8 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Report dependency audit findings
-        run: |
-          npm audit --json > /tmp/npm-audit.json || true
-          node -e "const report = require('/tmp/npm-audit.json'); console.log('Dependency audit summary:', JSON.stringify(report.metadata?.vulnerabilities ?? {})); for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) console.log(name + ': ' + item.severity + ' — ' + item.via.map((entry) => typeof entry === 'string' ? entry : entry.title).join('; '));"
-
-      - name: Audit production dependencies
-        run: npm audit --omit=dev
+      - name: Audit all npm dependencies
+        run: npm audit --audit-level=low
 
       - name: Run ESLint
         run: npm run lint
