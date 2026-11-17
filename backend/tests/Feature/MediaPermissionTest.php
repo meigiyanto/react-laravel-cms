@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Media;
+use App\Models\Page;
+use App\Models\Post;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -338,6 +340,51 @@ class MediaPermissionTest extends TestCase
 
         $this->assertDatabaseMissing('posts', ['slug' => 'artikel-uji-media']);
         $this->assertDatabaseMissing('pages', ['slug' => 'halaman-uji-media']);
+    }
+
+    public function test_user_cannot_attach_foreign_featured_media_when_updating_posts_or_pages(): void
+    {
+        $role = Role::create([
+            'name' => 'Content Updater',
+            'slug' => 'content-updater-media-ownership',
+            'permissions' => ['posts.update', 'pages.update', 'media.view.own'],
+        ]);
+        $user = User::factory()->create(['role_id' => $role->id]);
+        $foreignMedia = $this->createMedia($this->otherUser, 'foreign-update.jpg');
+
+        $post = Post::create([
+            'user_id' => $this->otherUser->id,
+            'title' => 'Artikel Existing',
+            'slug' => 'artikel-existing-media',
+            'body' => '<p>Konten.</p>',
+            'status' => 'draft',
+        ]);
+        $page = Page::create([
+            'user_id' => $this->otherUser->id,
+            'title' => 'Halaman Existing',
+            'slug' => 'halaman-existing-media',
+            'body' => '<p>Konten.</p>',
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->putJson("/api/posts/{$post->id}", [
+                'featured_image_id' => $foreignMedia->id,
+            ])->assertForbidden();
+
+        $this->actingAs($user, 'sanctum')
+            ->putJson("/api/pages/{$page->id}", [
+                'featured_image_id' => $foreignMedia->id,
+            ])->assertForbidden();
+
+        $this->assertDatabaseHas('posts', [
+            'id' => $post->id,
+            'featured_image_id' => null,
+        ]);
+        $this->assertDatabaseHas('pages', [
+            'id' => $page->id,
+            'featured_image_id' => null,
+        ]);
     }
 
 }
