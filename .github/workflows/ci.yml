@@ -50,6 +50,9 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      - name: Prepare Laravel environment
+        run: cp .env.example .env
+
       - name: Run backend test suite
         env:
           APP_ENV: testing
@@ -60,7 +63,7 @@ jobs:
           SESSION_DRIVER: array
           QUEUE_CONNECTION: sync
           MAIL_MAILER: array
-        run: php artisan test --display-warnings
+        run: php artisan test
 
   frontend:
     name: Frontend lint and build
