@@ -308,4 +308,36 @@ class MediaPermissionTest extends TestCase
             'user_id' => $user->id,
         ]);
     }
+    public function test_own_media_viewer_cannot_attach_another_users_media_to_posts_or_pages(): void
+    {
+        $role = Role::create([
+            'name' => 'Content Creator',
+            'slug' => 'content-creator-media-ownership',
+            'permissions' => ['posts.create', 'pages.create', 'media.view.own'],
+        ]);
+        $user = User::factory()->create(['role_id' => $role->id]);
+        $foreignMedia = $this->createMedia($this->otherUser, 'foreign-featured.jpg');
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/posts', [
+                'title' => 'Artikel Uji',
+                'slug' => 'artikel-uji-media',
+                'body' => '<p>Konten.</p>',
+                'status' => 'draft',
+                'featured_image_id' => $foreignMedia->id,
+            ])->assertForbidden();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/pages', [
+                'title' => 'Halaman Uji',
+                'slug' => 'halaman-uji-media',
+                'body' => '<p>Konten.</p>',
+                'status' => 'draft',
+                'featured_image_id' => $foreignMedia->id,
+            ])->assertForbidden();
+
+        $this->assertDatabaseMissing('posts', ['slug' => 'artikel-uji-media']);
+        $this->assertDatabaseMissing('pages', ['slug' => 'halaman-uji-media']);
+    }
+
 }
