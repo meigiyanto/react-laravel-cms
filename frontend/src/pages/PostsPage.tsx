@@ -161,6 +161,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const profile = useAuthProfile();
     const canCreatePost = canExact(profile, 'posts.create');
+    const canPublishPost = canExact(profile, 'posts.publish');
     const canEditPost = (post: Post) => canOwnResource(profile, 'posts.update', 'posts.update.own', post.user?.id, profile?.id);
     const canDeletePost = (post: Post) => canOwnResource(profile, 'posts.delete', 'posts.delete.own', post.user?.id, profile?.id);
 
@@ -795,7 +796,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                             })}
                                         >
                                             <option value="draft">Draf</option>
-                                            <option value="published">Dipublikasikan</option>
+                                            {canPublishPost && <option value="published">Dipublikasikan</option>}
                                             <option value="archived">Diarsipkan</option>
                                         </select>
                                     </div>
