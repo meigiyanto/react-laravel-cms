@@ -266,15 +266,11 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             onLogout={onLogout}
             title="Halaman"
             breadcrumb="Workspace / Konten / Halaman"
-            actions={
-                <button
-                    className="btn btn-primary"
-                    type="button"
-                    onClick={openCreateForm}
-                >
+            actions={canCreatePage ? (
+                <button className="btn btn-primary" type="button" onClick={openCreateForm}>
                     <FontAwesomeIcon icon={faPlus} /> Halaman Baru
                 </button>
-            }
+            ) : null}
         >
             <section className="welcome-panel">
                 <div>
@@ -377,16 +373,16 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                         </td>
                                         <td>
                                             <div className="d-flex justify-content-end gap-2">
-                                                <button className="btn btn-sm btn-light" type="button"
+                                                {canEditPage && <button className="btn btn-sm btn-light" type="button"
                                                     disabled={deletingId !== null}
                                                     onClick={() => void openEditForm(item)}>
                                                     Edit
-                                                </button>
-                                                <button className="btn btn-sm btn-outline-danger" type="button"
+                                                </button>}
+                                                {canDeletePage && <button className="btn btn-sm btn-outline-danger" type="button"
                                                     disabled={deletingId !== null}
                                                     onClick={() => void deletePage(item)}>
                                                     {deletingId === item.id ? 'Menghapus...': 'Hapus'}
-                                                </button>
+                                                </button>}
                                             </div>
                                         </td>
                                     </tr>
@@ -406,7 +402,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                 />
             </section>
 
-            {showForm && (
+            {showForm && (editing ? canEditPage : canCreatePage) && (
                 <div className="modal-backdrop-custom" role="presentation">
                     <section className="editor-modal page-editor-modal" role="dialog" aria-modal="true" aria-labelledby="page-editor-title">
                         <div className="modal-heading">
