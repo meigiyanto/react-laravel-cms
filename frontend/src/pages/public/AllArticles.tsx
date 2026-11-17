@@ -133,7 +133,9 @@ export default function AllArticles() {
     const [pagination, setPagination] = useState<PaginationData | null>(
         null,
     );
-    const [loading, setLoading] = useState(true);
+    const requestKey = JSON.stringify([page, query, category]);
+    const [loadedRequestKey, setLoadedRequestKey] = useState('');
+    const loading = loadedRequestKey !== requestKey;
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -162,9 +164,6 @@ export default function AllArticles() {
         let active = true;
 
         async function loadArticles() {
-            setLoading(true);
-            setError('');
-
             try {
                 const response = await publicApi.get<ApiResponse>('/public/posts',
                     {
@@ -182,6 +181,7 @@ export default function AllArticles() {
 
                 setPosts(result?.data ?? []);
                 setPagination(result ?? null);
+                setError('');
             } catch (err: unknown) {
                 if (!active) return;
 
@@ -190,7 +190,7 @@ export default function AllArticles() {
                 setError(errorText(err));
             } finally {
                 if (active) {
-                    setLoading(false);
+                    setLoadedRequestKey(requestKey);
                 }
             }
         }

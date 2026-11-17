@@ -34,8 +34,9 @@ export default function Header() {
     const search = searchDraft.query === currentQuery ? searchDraft.value : currentQuery;
     const navigate = useNavigate();
 
+    const hasStoredToken = Boolean(localStorage.getItem(TOKEN_KEY));
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [authChecked, setAuthChecked] = useState(false);
+    const [authChecked, setAuthChecked] = useState(!hasStoredToken);
 
     useEffect(() => {
         document.body.classList.toggle('mobile-nav-active', mobileNavOpen);
@@ -70,13 +71,7 @@ export default function Header() {
         async function checkAuth() {
             const token = localStorage.getItem(TOKEN_KEY);
     
-            if (!token) {
-                if (active) {
-                    setIsAuthenticated(false);
-                    setAuthChecked(true);
-                }
-                return;
-            }
+            if (!token) return;
     
             try {
                 await api.get('/auth/me');
