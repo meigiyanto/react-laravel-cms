@@ -306,7 +306,7 @@ export default function ArticleDetail() {
                 
                             <div className="title-wrapper">
                                 <h1>Blog Details</h1>
-                                <p>{post?.category || 'Tanpa Kategori'}</p>
+                                <p>{post.categories?.map((category) => category.name).join(', ') || 'Tanpa Kategori'}</p>
                                 <p>
                                     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.
                                 </p>
