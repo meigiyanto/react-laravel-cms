@@ -1,4 +1,9 @@
 # Logs
+# Environment files (only commit sanitized examples)
+.env
+.env.*
+!.env.example
+
 logs
 *.log
 npm-debug.log*
