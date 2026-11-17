@@ -139,10 +139,10 @@ function AdminApp() {
     
     const permissions = profile?.permissions ?? [];
 
-    const can = (permission: string) =>
+    const can = (permission: string, allowOwn = true) =>
         permissions.includes('*') ||
         permissions.includes(permission) ||
-        permissions.includes(`${permission}.own`);
+        (allowOwn && permissions.includes(`${permission}.own`));
     
     const isAdministrator = profile?.role?.slug === 'administrator';
     
@@ -157,7 +157,8 @@ function AdminApp() {
         comments: 'comments.view',
     };
     
-    const hasPageAccess = activeModule === 'profile' || (activeModule === 'users' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!));
+    const exactPermissionModules: ActiveModule[] = ['categories', 'comments', 'pages'];
+    const hasPageAccess = activeModule === 'profile' || (activeModule === 'users' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!, !exactPermissionModules.includes(activeModule)));
     
     let page: React.ReactNode;
     
