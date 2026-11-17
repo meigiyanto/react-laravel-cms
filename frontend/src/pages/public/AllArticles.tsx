@@ -200,7 +200,7 @@ export default function AllArticles() {
         return () => {
             active = false;
         };
-    }, [page, query, category]);
+    }, [page, query, category, requestKey]);
 
     function updateParams(
         updates: Record<string, string>,
