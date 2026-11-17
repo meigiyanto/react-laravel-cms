@@ -153,6 +153,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [tags, setTags] = useState<Tag[]>([]);
+    const [tagSearch, setTagSearch] = useState('');
     const [mediaItems, setMediaItems] = useState<MediaAsset[]>([]);
     const [loadingOptions, setLoadingOptions] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -195,6 +196,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         setEditing(null);
         setForm(emptyForm);
         setFieldErrors({});
+        setTagSearch('');
         setError('');
         setNotice('');
         setShowForm(true);
@@ -225,6 +227,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             });
             
             setFieldErrors({});
+            setTagSearch('');
             setShowForm(true);
             void loadEditorOptions();
         } catch (err) {
@@ -355,6 +358,11 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             setLoadingOptions(false);
         }
     }, []);
+
+    const selectedTags = tags.filter((tag) => form.tag_ids.includes(tag.id));
+    const filteredTags = tags.filter((tag) =>
+        tag.name.toLocaleLowerCase().includes(tagSearch.trim().toLocaleLowerCase()),
+    );
 
     if (detailPostId !== null) {
         return (
@@ -826,30 +834,79 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                         )}
                                     </div>
                                     <div className="mb-3">
-                                        <label className="form-label" htmlFor="post-tags">Tag</label>
-                                        <select
-                                            id="post-tags"
-                                            className="form-select"
-                                            multiple
-                                            size={Math.min(Math.max(tags.length, 2), 6)}
+                                        <label className="form-label" htmlFor="post-tag-search">Tag</label>
+                                        <input
+                                            id="post-tag-search"
+                                            type="search"
+                                            className="form-control"
+                                            placeholder="Cari tag..."
+                                            value={tagSearch}
                                             disabled={loadingOptions}
-                                            value={form.tag_ids.map(String)}
-                                            onChange={(event) => {
-                                                setForm({
-                                                    ...form,
-                                                    tag_ids: Array.from(
-                                                        event.currentTarget.selectedOptions,
-                                                        (option) => Number(option.value),
-                                                    ),
-                                                });
-                                            }}
+                                            onChange={(event) => setTagSearch(event.target.value)}
+                                        />
+                                        {selectedTags.length > 0 && (
+                                            <div className="d-flex flex-wrap gap-2 mt-2" aria-label="Tag yang dipilih">
+                                                {selectedTags.map((tag) => (
+                                                    <span
+                                                        key={tag.id}
+                                                        className="badge text-bg-primary d-inline-flex align-items-center gap-2"
+                                                    >
+                                                        {tag.name}
+                                                        <button
+                                                            type="button"
+                                                            className="btn-close btn-close-white"
+                                                            aria-label={`Hapus tag ${tag.name}`}
+                                                            disabled={saving}
+                                                            onClick={() => setForm((current) => ({
+                                                                ...current,
+                                                                tag_ids: current.tag_ids.filter((id) => id !== tag.id),
+                                                            }))}
+                                                        />
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div
+                                            className="border rounded p-2 mt-2"
+                                            style={{ maxHeight: '180px', overflowY: 'auto' }}
+                                            role="group"
+                                            aria-label="Daftar tag"
                                         >
-                                            {tags.map((tag) => (
-                                                <option key={tag.id} value={tag.id}>
-                                                    {tag.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            {loadingOptions ? (
+                                                <div className="small text-muted">Memuat tag...</div>
+                                            ) : filteredTags.length > 0 ? (
+                                                filteredTags.map((tag) => (
+                                                    <label
+                                                        key={tag.id}
+                                                        className="form-check d-flex align-items-center gap-2 py-1 mb-0"
+                                                    >
+                                                        <input
+                                                            className="form-check-input mt-0"
+                                                            type="checkbox"
+                                                            checked={form.tag_ids.includes(tag.id)}
+                                                            disabled={saving}
+                                                            onChange={(event) => {
+                                                                const checked = event.currentTarget.checked;
+                                                                setForm((current) => ({
+                                                                    ...current,
+                                                                    tag_ids: checked
+                                                                        ? [...current.tag_ids, tag.id]
+                                                                        : current.tag_ids.filter((id) => id !== tag.id),
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span className="form-check-label">{tag.name}</span>
+                                                    </label>
+                                                ))
+                                            ) : (
+                                                <div className="small text-muted">
+                                                    {tags.length > 0 ? 'Tag tidak ditemukan.' : 'Belum ada tag tersedia.'}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <small className="text-muted d-block mt-2">
+                                            Cari tag lalu centang satu atau beberapa pilihan. Ketuk tag terpilih untuk menghapusnya.
+                                        </small>
                                         {fieldErrors.tag_ids && (
                                             <div className="text-danger small">
                                                 {fieldErrors.tag_ids}
