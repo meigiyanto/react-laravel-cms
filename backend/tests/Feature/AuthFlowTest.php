@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AuthFlowTest extends TestCase
@@ -114,6 +116,32 @@ class AuthFlowTest extends TestCase
 
         Auth::forgetGuards();
         $this->withToken($firstToken)->getJson('/api/auth/me')->assertUnauthorized();
+    }
+
+
+    public function test_auth_me_returns_profile_photo_url_at_top_level(): void
+    {
+        Storage::fake('public');
+
+        $role = Role::create([
+            'name' => 'Editor',
+            'slug' => 'editor-profile-photo',
+            'permissions' => ['posts.view'],
+        ]);
+
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+            'profile_photo_path' => 'profiles/avatar.webp',
+        ]);
+
+        $token = $user->createToken('cms-admin')->plainTextToken;
+        $expectedUrl = Storage::disk('public')->url('profiles/avatar.webp');
+
+        $this->withToken($token)
+            ->getJson('/api/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.profile_photo_url', $expectedUrl)
+            ->assertJsonPath('data.role.slug', 'editor-profile-photo');
     }
 
 }
