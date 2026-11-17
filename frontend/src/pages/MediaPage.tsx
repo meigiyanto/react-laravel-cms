@@ -278,7 +278,8 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                 </div>
             )}
 
-            <section className="content-panel mt-4">            <div className="panel-heading">
+            {canUploadMedia && <section className="content-panel mt-4">
+                <div className="panel-heading">
                     <div>
                         <h3>Unggah Gambar</h3>
                         <p>Format JPEG, JPG, PNG, WebP, atau GIF. Maksimum 5 MB.</p>
@@ -317,9 +318,10 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                         {uploading ? 'Mengunggah...': 'Unggah Gambar'}
                     </button>
                 </form>
-            </section>
+            </section>}
 
-            <section className="content-panel mt-4">            <div className="panel-heading">
+            <section className="content-panel mt-4">
+                <div className="panel-heading">
                     <div>
                         <h3>Perpustakaan Media</h3>
                         <p>
@@ -399,6 +401,7 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                                     className="form-control form-control-sm"
                                     maxLength={255}
                                     value={altTexts[media.id] ?? ''}
+                                    disabled={!canEditMedia(media)}
                                     onChange={(event) => setAltTexts((current) => ({
                                         ...current,
                                         [media.id]: event.target.value,
