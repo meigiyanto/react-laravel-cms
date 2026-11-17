@@ -6,6 +6,8 @@ import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
 import { faTags, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useAuthProfile } from '../auth/AuthProfileContext';
+import { canExact } from '../utils/permissions';
 
 type Category = {
     id: number;
@@ -70,6 +72,10 @@ export default function CategoriesPage({
     const [editing, setEditing] = useState <Category | null> (null);
     const [form, setForm] = useState <CategoryForm> (emptyForm);
     const [showForm, setShowForm] = useState(false);
+    const profile = useAuthProfile();
+    const canCreateCategory = canExact(profile, 'categories.create');
+    const canEditCategory = canExact(profile, 'categories.update');
+    const canDeleteCategory = canExact(profile, 'categories.delete');
 
     const loadCategories = useCallback(async () => {
         setLoading(true);
@@ -215,15 +221,11 @@ export default function CategoriesPage({
             onLogout={onLogout}
             title="Kategori"
             breadcrumb="Workspace / Konten / Kategori"
-            actions={
-                <button
-                    className="btn btn-primary"
-                    type="button"
-                    onClick={openCreateForm}
-                    >
+            actions={canCreateCategory ? (
+                <button className="btn btn-primary" type="button" onClick={openCreateForm}>
                     + Kategori Baru
                 </button>
-            }
+            ) : null}
         >
             <section className="welcome-panel">
                 <div>
@@ -304,7 +306,7 @@ export default function CategoriesPage({
                                         ? 'Coba kata kunci lain.'
                                         : 'Buat kategori pertama untuk mengelompokkan artikel.'}
                                     </p>
-                                    {!search && (
+                                    {!search && canCreateCategory && (
                                     <button
                                         className="btn btn-outline-primary btn-sm"
                                         type="button"
@@ -338,22 +340,22 @@ export default function CategoriesPage({
                                         </td>
                                         <td>
                                             <div className="d-flex justify-content-end gap-2">
-                                                <button
+                                                {canEditCategory && <button
                                                     className="btn btn-sm btn-outline-warning"
                                                     type="button"
                                                     onClick={()=> openEditForm(category)}
                                                     disabled={deletingId !== null}
                                                 >
                                                     Edit
-                                                </button>
-                                                <button
+                                                </button>}
+                                                {canDeleteCategory && <button
                                                     className="btn btn-sm btn-outline-danger"
                                                     type="button"
                                                     onClick={()=> void deleteCategory(category)}
                                                     disabled={deletingId !== null}
                                                 >
                                                     {deletingId === category.id ? 'Menghapus...' : 'Hapus'}
-                                                </button>
+                                                </button>}
                                             </div>
                                         </td>
                                     </tr>
@@ -374,7 +376,7 @@ export default function CategoriesPage({
                 />
 
             </section>
-            {showForm && (
+            {showForm && (editing ? canEditCategory : canCreateCategory) && (
                 <div className="modal-backdrop-custom" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) { setShowForm(false); }}}>
                     <section className="editor-modal" role="dialog" aria-modal="true" aria-labelledby="category-editor-title">
                         <div className="modal-heading">
