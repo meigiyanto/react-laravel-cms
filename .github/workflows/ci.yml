@@ -71,6 +71,22 @@ jobs:
       - name: Audit Composer dependencies
         run: composer audit --locked --no-interaction
 
+      - name: Set up Node.js for backend assets
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend npm dependencies
+        run: npm ci
+
+      - name: Audit backend npm dependencies
+        run: npm audit --audit-level=low
+
+      - name: Build backend assets
+        run: npm run build
+
   frontend:
     name: Frontend lint and build
     runs-on: ubuntu-latest
