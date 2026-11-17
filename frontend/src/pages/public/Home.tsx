@@ -328,8 +328,8 @@ export default function Home() {
                     </div>
                 ) : posts?.length ? (
                     <>
-                    {heroPost.length > 0 && (
                         <section id="blog-hero" className="blog-hero section">
+                
                             <div className="container" data-aos="fade-up" data-aos-delay="100">
                                 <div className="blog-grid">
                                     {heroPost && (
@@ -381,13 +381,15 @@ export default function Home() {
                                             </div>
                                         </article>
                                     ))}
+
                                 </div>
+                
                             </div>
+                
                         </section>
-                    )}
-                    
-                    {featuredPosts.length > 0 && ( 
+                        
                         <section id="featured-posts" className="featured-posts section">
+                
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Featured Posts</h2>
                                 <div>
@@ -453,9 +455,7 @@ export default function Home() {
                             </div>
                 
                         </section>
-                    )}
                         
-                    {categoryArticles.length > 0 && (
                         <section id="category-section" className="category-section section">
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Category Section</h2>
@@ -536,9 +536,7 @@ export default function Home() {
                                 </div>
                             ))}
                         </section>
-                    )}
 
-                    {latestPosts.length > 0 && (    
                         <section id="latest-posts" className="latest-posts section">
                 
                             <div className="container section-title" data-aos="fade-up">
@@ -590,7 +588,6 @@ export default function Home() {
                             </div>
                 
                         </section>
-                    )}
                 
                         {/* Call To Action Section */}
                         <section id="call-to-action" className="call-to-action section">
@@ -613,7 +610,7 @@ export default function Home() {
                                     </div>
                                     <div className="d-sm-none d-md-block col-lg-4">
                                         <div className="cta-image" data-aos="zoom-out" data-aos-delay="200">
-                                            <img src="http://localhost:8001/storage/cms-media/A4RgsKqsorjH6EVjgkyZA6YPBGlwbvaWBFjhZ7P8.webp" alt="" className="img-fluid"/>
+                                            <img src="http://localhost:8000/storage/cms-media/1PwvRWpRVsEdutiPNHZTCAdjmMdSaNpBwsXpsGMU.webp" alt="" className="img-fluid"/>
                                         </div>
                                     </div>
                                 </div>
