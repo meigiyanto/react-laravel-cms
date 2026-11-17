@@ -796,7 +796,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                             })}
                                         >
                                             <option value="draft">Draf</option>
-                                            {canPublishPost && <option value="published">Dipublikasikan</option>}
+                                            {(canPublishPost || form.status === 'published') && <option value="published" disabled={!canPublishPost}>Dipublikasikan</option>}
                                             <option value="archived">Diarsipkan</option>
                                         </select>
                                     </div>
