@@ -86,6 +86,8 @@ class PublicPostController extends Controller
         $post = Post::query()
             ->where('slug', $slug)
             ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
             ->with([
                 'user:id,name,profile_photo_path',
                 'categories:id,name,slug',
@@ -103,6 +105,8 @@ class PublicPostController extends Controller
         $post = Post::query()
             ->where('slug', $slug)
             ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
             ->firstOrFail();
 
         $comments = $post->comments()
@@ -118,6 +122,8 @@ class PublicPostController extends Controller
         $post = Post::query()
             ->where('slug', $slug)
             ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
             ->firstOrFail();
 
         
