@@ -50,6 +50,7 @@ class RoleSeeder extends Seeder
                     'media.view.own',
                     'media.create',
                     'categories.view',
+                    'tags.view',
                 ],
             ],
             [
@@ -62,6 +63,7 @@ class RoleSeeder extends Seeder
                     'media.view.own',
                     'categories.view',
                     'media.create',
+                    'tags.view',
                 ],
             ],
         ];
