@@ -7,6 +7,7 @@ const Pagination = lazy(() => import('../components/Pagination'));
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faImages } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
+import { canExact } from '../utils/permissions';
 
 type MediaItem = {
     id: number;
@@ -77,6 +78,7 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
     const [notice, setNotice] = useState('');
     
     const profile = useAuthProfile();
+    const canUploadMedia = canExact(profile, 'media.create');
 
     const canEditMedia = (media: MediaItem) => {
         const permissions = profile?.permissions ?? [];
