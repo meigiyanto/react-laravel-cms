@@ -505,8 +505,12 @@ export default function Home() {
                                                         <div key={index} className="col-xl-4 col-lg-6">
                                                             <article className="list-post">
                                                                 <div className="post-img">
-                                                                    {article.featured_image && imageUrl(article.featured_image) && (
+                                                                    {article.featured_image && imageUrl(article.featured_image) ? (
                                                                         <img src={imageUrl(article.featured_image)} alt={ article.featured_image.alt_text || article.title } className="img-fluid" loading="lazy" />
+                                                                    ) : (
+                                                                        <div className="post-image-placeholder">
+                                                                            <span>JURNAL<br />IDE</span>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                                 <div className="post-content">
