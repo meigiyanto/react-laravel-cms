@@ -13,7 +13,8 @@ class ArticleSeeder extends Seeder
     {
         // Gunakan user yang sudah tersedia sebagai penulis.
         // Buat user baru jika database belum memiliki user.
-        $userId = User::query()->value('id') ?? User::factory()->create()->id;
+        $userId = User::query()->value('id')
+            ?? User::factory()->create()->id;
 
         $articles = [
             // 30 artikel published
