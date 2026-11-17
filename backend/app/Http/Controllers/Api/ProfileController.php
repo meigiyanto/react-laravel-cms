@@ -37,8 +37,9 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        $passwordChanged = filled($validated['new_password'] ?? null);
 
-        if (filled($validated['new_password'] ?? null)) {
+        if ($passwordChanged) {
             if (! Hash::check(
                 $validated['current_password'],
                 $user->password
@@ -69,6 +70,10 @@ class ProfileController extends Controller
         }
 
         $user->save();
+
+        if ($passwordChanged) {
+            $user->tokens()->delete();
+        }
 
         return response()->json([
             'success' => true,
