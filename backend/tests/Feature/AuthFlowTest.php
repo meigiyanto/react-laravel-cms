@@ -93,4 +93,27 @@ class AuthFlowTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_password_change_revokes_all_personal_access_tokens(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('Password123!'),
+        ]);
+        $firstToken = $user->createToken('first-device')->plainTextToken;
+        $user->createToken('second-device');
+
+        $this->withToken($firstToken)->postJson('/api/profile', [
+            'name' => $user->name,
+            'current_password' => 'Password123!',
+            'new_password' => 'NewPassword123!',
+            'new_password_confirmation' => 'NewPassword123!',
+        ])->assertOk();
+
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'tokenable_id' => $user->id,
+        ]);
+
+        Auth::forgetGuards();
+        $this->withToken($firstToken)->getJson('/api/auth/me')->assertUnauthorized();
+    }
+
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Post;
+use App\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -120,6 +121,7 @@ class PostController extends Controller
         ]);
 
         $validated['body'] = ArticleHtmlSanitizer::sanitize($validated['body']);
+        $this->assertFeaturedMediaAccess($request, $validated['featured_image_id'] ?? null);
 
         $permissions = $request->user()->role?->permissions ?? [];
         
@@ -211,6 +213,10 @@ class PostController extends Controller
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
+        if (array_key_exists('featured_image_id', $validated)) {
+            $this->assertFeaturedMediaAccess($request, $validated['featured_image_id']);
+        }
+
         if (isset($validated['status'])
             && ! in_array('*', $permissions, true)
             && ! in_array('posts.publish', $permissions, true)
@@ -296,6 +302,24 @@ class PostController extends Controller
             'success' => true,
             'message' => 'Artikel berhasil dihapus.',
         ]);
+    }
+
+    private function assertFeaturedMediaAccess(Request $request, ?int $mediaId): void
+    {
+        if ($mediaId === null) {
+            return;
+        }
+
+        $permissions = $request->user()->role?->permissions ?? [];
+        if (in_array('*', $permissions, true) || in_array('media.view', $permissions, true)) {
+            return;
+        }
+
+        abort_unless(
+            Media::query()->whereKey($mediaId)->where('user_id', $request->user()->id)->exists(),
+            403,
+            'Anda hanya dapat menggunakan media milik sendiri.'
+        );
     }
 
     private function nullableTrim(?string $value): ?string

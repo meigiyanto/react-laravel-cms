@@ -28,17 +28,14 @@ export default function Header() {
     const [pagesDropdownOpen, setPagesDropdownOpen] = useState(false);
     const [deepDropdownOpen, setDeepDropdownOpen] = useState(false);
 
-    const [search, setSearch] = useState('');
+    const [searchDraft, setSearchDraft] = useState({ query: '', value: '' });
     const [searchParams] = useSearchParams();
     const currentQuery = searchParams.get('q') || '';
+    const search = searchDraft.query === currentQuery ? searchDraft.value : currentQuery;
     const navigate = useNavigate();
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authChecked, setAuthChecked] = useState(false);
-
-    useEffect(() => {
-        setSearch(currentQuery);
-    }, [currentQuery]);
 
     useEffect(() => {
         document.body.classList.toggle('mobile-nav-active', mobileNavOpen);
@@ -159,7 +156,7 @@ export default function Header() {
             
                     <div className="d-flex align-items-center">
                         <form className="search-form ms-4" onSubmit={handleSearch}>
-                            <input type="search" name="q" placeholder="Search..." className="form-control" aria-label="Search articles" value={search} onChange={(event) => { const value = event.target.value; setSearch(value); if (!value.trim() && currentQuery) {navigate('/', { replace: true });}}}/>
+                            <input type="search" name="q" placeholder="Search..." className="form-control" aria-label="Search articles" value={search} onChange={(event) => { const value = event.target.value; setSearchDraft({ query: currentQuery, value }); if (!value.trim() && currentQuery) {navigate('/', { replace: true });}}}/>
                             <button type="submit" className="btn" aria-label="Search">
                                 <i className="bi bi-search" />
                             </button>

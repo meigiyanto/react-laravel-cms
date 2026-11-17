@@ -167,4 +167,28 @@ class PublicPostCommentTest extends TestCase
             ->assertJsonPath('data.posts.data.0.slug', 'artikel-terbit')
             ->assertJsonPath('data.posts.data.0.is_featured', true);
     }
+    public function test_scheduled_posts_are_hidden_from_detail_and_comments_until_publication(): void
+    {
+        Post::create([
+            'user_id' => $this->author->id,
+            'title' => 'Artikel Terjadwal',
+            'slug' => 'artikel-terjadwal',
+            'body' => '<p>Belum boleh tampil.</p>',
+            'status' => 'published',
+            'published_at' => now()->addDay(),
+        ]);
+
+        $this->getJson('/api/public/posts/artikel-terjadwal')->assertNotFound();
+        $this->getJson('/api/public/posts/artikel-terjadwal/comments')->assertNotFound();
+        $this->postJson('/api/public/posts/artikel-terjadwal/comments', [
+            'name' => 'Pengunjung',
+            'email' => 'pengunjung@example.com',
+            'body' => 'Komentar terlalu awal.',
+        ])->assertNotFound();
+
+        $this->assertDatabaseMissing('comments', [
+            'post_id' => Post::where('slug', 'artikel-terjadwal')->value('id'),
+        ]);
+    }
+
 }

@@ -126,7 +126,8 @@ export default function AllArticles() {
     const category = (searchParams.get('category') || '').trim();
     const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1', 10) || 1);
 
-    const [searchInput, setSearchInput] = useState(query);
+    const [searchDraft, setSearchDraft] = useState({ query: '', value: '' });
+    const searchInput = searchDraft.query === query ? searchDraft.value : query;
     const [categories, setCategories] = useState<Category[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [pagination, setPagination] = useState<PaginationData | null>(
@@ -134,10 +135,6 @@ export default function AllArticles() {
     );
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-
-    useEffect(() => {
-        setSearchInput(query);
-    }, [query]);
 
     useEffect(() => {
         let active = true;
@@ -294,7 +291,7 @@ export default function AllArticles() {
                                 <form onSubmit={handleSearch} role="search" aria-label="Cari blog">
                                     <label htmlFor="article-search" className="form-label">Search article</label>
                                     <div className="input-group">
-                                        <input id="article-search" type="search" className="form-control" placeholder="Input title or category..." value={searchInput} maxLength={120} onChange={(event) => setSearchInput(event.target.value)} />
+                                        <input id="article-search" type="search" className="form-control" placeholder="Input title or category..." value={searchInput} maxLength={120} onChange={(event) => setSearchDraft({ query, value: event.target.value })} />
                                         <button type="submit" className="btn btn-outline-primary">
                                             <i className="bi bi-search me-1" />
                                             Search
@@ -329,7 +326,7 @@ export default function AllArticles() {
                                 </p>
 
                                 {(query || category) && (
-                                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => {setSearchInput('');setSearchParams({});}}><i className="bi bi-x-circle me-1" />Reset filter </button>
+                                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => {setSearchDraft({ query: '', value: '' });setSearchParams({});}}><i className="bi bi-x-circle me-1" />Reset filter </button>
                                 )}
                             </div>
                         )}
@@ -350,7 +347,7 @@ export default function AllArticles() {
                                 <h3 className="mt-3">Article not found</h3>
                                 <p>Please try another keyword or category</p>
                                 {(query || category) && (
-                                    <button type="button" className="btn btn-primary" onClick={() => {setSearchInput('');setSearchParams({}); }}>Show all article</button>
+                                    <button type="button" className="btn btn-primary" onClick={() => {setSearchDraft({ query: '', value: '' });setSearchParams({}); }}>Show all article</button>
                                 )}
                             </div>
                         ) : (

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Support\ArticleHtmlSanitizer;
+use App\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -59,6 +61,9 @@ class PageController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $validated['body'] = ArticleHtmlSanitizer::sanitize($validated['body']);
+        $this->assertFeaturedMediaAccess($request, $validated['featured_image_id'] ?? null);
+
         $validated['slug'] = $this->uniqueSlug(
             $validated['slug'] ?? $validated['title']
         );
@@ -109,6 +114,14 @@ class PageController extends Controller
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
 
+        if (array_key_exists('body', $validated)) {
+            $validated['body'] = ArticleHtmlSanitizer::sanitize($validated['body']);
+        }
+
+        if (array_key_exists('featured_image_id', $validated)) {
+            $this->assertFeaturedMediaAccess($request, $validated['featured_image_id']);
+        }
+
         if (array_key_exists('slug', $validated)) {
             $validated['slug'] = $this->uniqueSlug(
                 $validated['slug'],
@@ -153,6 +166,24 @@ class PageController extends Controller
             'success' => true,
             'message' => 'Halaman berhasil dihapus.',
         ]);
+    }
+
+    private function assertFeaturedMediaAccess(Request $request, ?int $mediaId): void
+    {
+        if ($mediaId === null) {
+            return;
+        }
+
+        $permissions = $request->user()->role?->permissions ?? [];
+        if (in_array('*', $permissions, true) || in_array('media.view', $permissions, true)) {
+            return;
+        }
+
+        abort_unless(
+            Media::query()->whereKey($mediaId)->where('user_id', $request->user()->id)->exists(),
+            403,
+            'Anda hanya dapat menggunakan media milik sendiri.'
+        );
     }
 
     private function uniqueSlug(string $value, ?int $ignoreId = null): string
