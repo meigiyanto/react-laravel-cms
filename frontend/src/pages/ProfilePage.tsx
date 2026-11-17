@@ -57,16 +57,10 @@ export default function ProfilePage({
     const [notice, setNotice] = useState('');
 
     useEffect(() => {
-        if (!photo) {
-            setPreview(null);
-            return;
-        }
-
-        const objectUrl = URL.createObjectURL(photo);
-        setPreview(objectUrl);
-
-        return () => URL.revokeObjectURL(objectUrl);
-    }, [photo]);
+        return () => {
+            if (preview) URL.revokeObjectURL(preview);
+        };
+    }, [preview]);
 
     async function saveProfile(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -101,6 +95,7 @@ export default function ProfilePage({
 
             setName(data.name);
             setPhoto(null);
+            setPreview(null);
             setCurrentPassword('');
             setNewPassword('');
             setNewPasswordConfirmation('');
@@ -187,6 +182,7 @@ export default function ProfilePage({
                                                         event.currentTarget.files?.[0] ?? null;
 
                                                     setPhoto(file);
+                                                    setPreview(file ? URL.createObjectURL(file) : null);
                                                 }}
                                             />
                                             <small className="text-muted">
