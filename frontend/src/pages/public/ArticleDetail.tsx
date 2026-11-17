@@ -262,9 +262,7 @@ export default function ArticleDetail() {
             setWebsite('');
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
-                const validationErrors = err.response?.data?.errors as
-                    | Record<string, string[]>
-                    | undefined;
+                const validationErrors = err.response?.data?.errors as | Record<string, string[]> | undefined;
     
                 setCommentError(validationErrors ? Object.values(validationErrors).flat().join(' ') : err.response?.data?.message || 'Komentar gagal dikirim. Silakan coba lagi.')
             } else {
@@ -299,7 +297,7 @@ export default function ArticleDetail() {
                             <div className="breadcrumbs">
                                 <nav aria-label="breadcrumb">
                                     <ol className="breadcrumb">
-                                        <li className="breadcrumb-item"><a href="#"><i className="bi bi-house"></i> Home</a></li>
+                                        <li className="breadcrumb-item"><a href="/"><i className="bi bi-house"></i> Home</a></li>
                                         <li className="breadcrumb-item"><a href="#">Category</a></li>
                                         <li className="breadcrumb-item active current">Blog Details</li>
                                     </ol>
@@ -308,6 +306,7 @@ export default function ArticleDetail() {
                 
                             <div className="title-wrapper">
                                 <h1>Blog Details</h1>
+                                <p>{post?.category || 'Tanpa Kategori'}</p>
                                 <p>
                                     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.
                                 </p>

@@ -263,7 +263,9 @@ export default function AllArticles() {
                     <div className="breadcrumbs">
                         <nav aria-label="breadcrumb">
                             <ol className="breadcrumb">
-                                <li className="breadcrumb-item"><a href="#"><i className="bi bi-house"></i> Home</a></li>
+                                <li className="breadcrumb-item">
+                                    <a href="/"><i className="bi bi-house"></i> Home</a>
+                                </li>
                                 
                                 <li className="breadcrumb-item active current">All Articless</li>
                             </ol>

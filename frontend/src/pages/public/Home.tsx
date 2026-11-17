@@ -329,7 +329,6 @@ export default function Home() {
                 ) : posts?.length ? (
                     <>
                         <section id="blog-hero" className="blog-hero section">
-                
                             <div className="container" data-aos="fade-up" data-aos-delay="100">
                                 <div className="blog-grid">
                                     {heroPost && (
@@ -385,11 +384,10 @@ export default function Home() {
                                 </div>
                 
                             </div>
-                
                         </section>
                         
+                        {featuredPosts.length > 0 && (
                         <section id="featured-posts" className="featured-posts section">
-                
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Featured Posts</h2>
                                 <div>
@@ -397,7 +395,6 @@ export default function Home() {
                                     <Link to="/blog" className="float-end">View all posts</Link>
                                 </div>
                             </div>
-                
                             <div className="container" data-aos="fade-up" data-aos-delay="100">
                                 <div className="blog-posts-slider">
                                     <div className="swiper-wrapper">
@@ -453,9 +450,10 @@ export default function Home() {
                                     </div>
                                 </div>
                             </div>
-                
                         </section>
+                        )}
                         
+                        {categoryArticles.length > 0 && (
                         <section id="category-section" className="category-section section">
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Category Section</h2>
@@ -536,9 +534,10 @@ export default function Home() {
                                 </div>
                             ))}
                         </section>
-
+                        )}
+                        
+                        {latestPosts.length > 0 && (
                         <section id="latest-posts" className="latest-posts section">
-                
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Latest Posts</h2>
                                 <div>
@@ -546,7 +545,6 @@ export default function Home() {
                                     <Link to="/blog" className="float-end">View all posts</Link>
                                 </div>
                             </div>
-                
                             <div className="container" data-aos="fade-up" data-aos-delay="100">
                                 <div className="row gy-4">
                                 {latestPosts.map((post, index) => (
@@ -586,10 +584,9 @@ export default function Home() {
                                 ))}
                                 </div>
                             </div>
-                
                         </section>
-                
-                        {/* Call To Action Section */}
+                        )}
+                        
                         <section id="call-to-action" className="call-to-action section">
                             <div className="container" data-aos="fade-up" data-aos-delay="100">
                                 <div className="row gy-4 justify-content-between align-items-center">
@@ -610,13 +607,12 @@ export default function Home() {
                                     </div>
                                     <div className="d-sm-none d-md-block col-lg-4">
                                         <div className="cta-image" data-aos="zoom-out" data-aos-delay="200">
-                                            <img src="http://localhost:8000/storage/cms-media/1PwvRWpRVsEdutiPNHZTCAdjmMdSaNpBwsXpsGMU.webp" alt="" className="img-fluid"/>
+                                            <img src="http://localhost:8001/storage/cms-media/A4RgsKqsorjH6EVjgkyZA6YPBGlwbvaWBFjhZ7P8.webp" alt="" className="img-fluid"/>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </section>
-
                     </>
                 ) : !error ? (
                     <div className="public-empty">
