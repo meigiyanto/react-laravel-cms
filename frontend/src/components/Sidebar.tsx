@@ -111,7 +111,7 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
             return item.id === 'dashboard' ? can('posts.view') : true;
         }
     
-        if (item.id === 'pages') {
+        if (item.id === 'categories' || item.id === 'comments' || item.id === 'pages') {
             return canExact(item.permission);
         }
     
