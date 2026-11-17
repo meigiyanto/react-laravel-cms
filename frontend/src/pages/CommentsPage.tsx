@@ -4,6 +4,8 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import Pagination from '../components/Pagination';
+import { useAuthProfile } from '../auth/AuthProfileContext';
+import { canExact } from '../utils/permissions';
 
 type CommentStatus = 'pending' | 'approved' | 'rejected';
 
@@ -97,6 +99,9 @@ export default function CommentsPage({
     const [workingId, setWorkingId] = useState<number | null>(null);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
+    const profile = useAuthProfile();
+    const canModerateComments = canExact(profile, 'comments.moderate');
+    const canDeleteComments = canExact(profile, 'comments.delete');
 
     const loadComments = useCallback(async () => {
         setLoading(true);
@@ -375,7 +380,7 @@ export default function CommentsPage({
                                                         onClick={() => void updateStatus(comment, 'approved')}
                                                     >
                                                         Setujui
-                                                    </button>
+                                                    </button>}
                                                 )}
 
                                                 {comment.status !== 'rejected' && (
@@ -386,7 +391,7 @@ export default function CommentsPage({
                                                         onClick={() => void updateStatus(comment, 'rejected')}
                                                     >
                                                         Tolak
-                                                    </button>
+                                                    </button>}
                                                 )}
 
                                                 {comment.status !== 'pending' && (
@@ -407,7 +412,7 @@ export default function CommentsPage({
                                                     onClick={() => void deleteComment(comment)}
                                                 >
                                                     Hapus
-                                                </button>
+                                                </button>}
                                             </div>
                                         </td>
                                     </tr>
