@@ -64,9 +64,10 @@ class AuthController extends Controller
                     'id' => $role->id,
                     'name' => $role->name,
                     'slug' => $role->slug,
-                    'profile_photo_url' => $user->profile_photo_path
-    ? Storage::disk('public')->url($user->profile_photo_path) : null,
                 ] : null,
+                'profile_photo_url' => $user->profile_photo_path
+                    ? Storage::disk('public')->url($user->profile_photo_path)
+                    : null,
                 'permissions' => $role?->permissions ?? [],
             ],
         ]);
