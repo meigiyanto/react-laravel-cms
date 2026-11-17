@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\Tag;
 use App\Models\User;
 use App\Models\Role;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -31,6 +32,23 @@ class PostManagementTest extends TestCase
     {
         $this->getJson('/api/posts')->assertUnauthorized();
         $this->postJson('/api/posts', [])->assertUnauthorized();
+    }
+
+    public function test_authors_and_contributors_can_load_tags_for_the_post_editor(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $tag = Tag::create(['name' => 'Laravel', 'slug' => 'laravel']);
+
+        foreach (['author', 'contributor'] as $roleSlug) {
+            $role = Role::query()->where('slug', $roleSlug)->firstOrFail();
+            $user = User::factory()->create(['role_id' => $role->id]);
+
+            $this->actingAs($user, 'sanctum')
+                ->getJson('/api/tags')
+                ->assertOk()
+                ->assertJsonCount(1, 'data')
+                ->assertJsonPath('data.0.id', $tag->id);
+        }
     }
 
     public function test_create_post_saves_categories_tags_featured_image_and_seo_metadata(): void

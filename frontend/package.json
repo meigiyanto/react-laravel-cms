@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "dev:all": "concurrently -k -n LARAVEL,VITE -c blue,green \"cd ../backend && php artisan serve --host=127.0.0.1 --port=8000\" \"npm run dev -- --host=127.0.0.1\""
+    "dev:all": "concurrently -k -n LARAVEL,VITE -c blue,green \"cd ../backend && php artisan serve --host=127.0.0.1 --port=8001\" \"npm run dev -- --host=127.0.0.1\""
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.3.1",
