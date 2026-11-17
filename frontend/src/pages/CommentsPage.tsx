@@ -392,7 +392,7 @@ export default function CommentsPage({
                                                         disabled={workingId === comment.id}
                                                         onClick={() => void deleteComment(comment)}>Hapus</button>
                                                 )}
-                                            </div>>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
