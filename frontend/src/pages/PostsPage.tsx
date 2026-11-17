@@ -8,6 +8,8 @@ import PostDetailPage from './PostDetailPage';
 import { sanitizeArticleHtml } from '../utils/sanitizeHtml';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { useAuthProfile } from '../auth/AuthProfileContext';
+import { canExact, canOwnResource } from '../utils/permissions';
 
 const RichTextEditor = lazy(() => import('../components/RichTextEditor'));
 const Pagination = lazy(() => import('../components/Pagination'));
@@ -157,6 +159,10 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     const [mediaItems, setMediaItems] = useState<MediaAsset[]>([]);
     const [loadingOptions, setLoadingOptions] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const profile = useAuthProfile();
+    const canCreatePost = canExact(profile, 'posts.create');
+    const canEditPost = (post: Post) => canOwnResource(profile, 'posts.update', 'posts.update.own', post.user?.id, profile?.id);
+    const canDeletePost = (post: Post) => canOwnResource(profile, 'posts.delete', 'posts.delete.own', post.user?.id, profile?.id);
 
     const loadPosts = useCallback(async () => {
         setLoading(true);
@@ -386,15 +392,11 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             onLogout={onLogout}
             title="Artikel"
             breadcrumb="Workspace / Konten / Artikel"
-            actions={
-                <button
-                    className="btn btn-primary"
-                    type="button"
-                    onClick={openCreateForm}
-                >
+            actions={canCreatePost ? (
+                <button className="btn btn-primary" type="button" onClick={openCreateForm}>
                     <FontAwesomeIcon icon={faPlus} /> Artikel Baru
                 </button>
-            }
+            ) : null}
         >
             
             {error && (
@@ -500,13 +502,9 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                         <p>
                                             Buat artikel pertama atau ubah filter pencarian.
                                         </p>
-                                        <button
-                                            className="btn btn-outline-primary btn-sm"
-                                            type="button"
-                                            onClick={openCreateForm}
-                                        >
+                                        {canCreatePost && <button className="btn btn-outline-primary btn-sm" type="button" onClick={openCreateForm}>
                                             Buat artikel
-                                        </button>
+                                        </button>}
                                     </td>
                                 </tr>
                             ): (
@@ -556,20 +554,20 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                                 >
                                                     Detail
                                                 </button>
-                                                <button
+                                                {canEditPost(post) && <button
                                                     className="btn btn-sm btn-outline-warning"
                                                     type="button"
                                                     onClick={() => void openEditForm(post)}
                                                 >
                                                     Edit
-                                                </button>
-                                                <button
+                                                </button>}
+                                                {canDeletePost(post) && <button
                                                     className="btn btn-sm btn-outline-danger"
                                                     type="button"
                                                     onClick={() => void deletePost(post)}
                                                 >
                                                     Hapus
-                                                </button>
+                                                </button>}
                                             </div>
                                         </td>
                                     </tr>
@@ -590,7 +588,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 />
             </section>
 
-            {showForm && (
+            {showForm && (editing ? canEditPost(editing) : canCreatePost) && (
                 <div className="modal-backdrop-custom" role="presentation">
                     <section
                         className="editor-modal"
