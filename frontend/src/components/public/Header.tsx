@@ -146,6 +146,7 @@ export default function Header() {
                     <Link to="/" className="logo d-flex align-items-end">
                         {/* Gunakan gambar logo jika diperlukan. */}
                         {/* <img src="/assets/img/logo.webp" alt="Blogy" /> */}
+                        <span className="brand-mark">C</span>
                         <h1 className="sitename">Content HUB</h1>
                     </Link>
             

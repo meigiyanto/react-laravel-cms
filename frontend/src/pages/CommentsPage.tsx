@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../api/client';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import Pagination from '../components/Pagination';
@@ -257,9 +259,8 @@ export default function CommentsPage({
                 <div className="toolbar">
                     <div className="search-box">
                         <span aria-hidden="true">
-                            <i className="bi bi-search" />
+                            <FontAwesomeIcon icon={faSearch} />
                         </span>
-
                         <input
                             className="form-control"
                             type="search"
@@ -272,21 +273,22 @@ export default function CommentsPage({
                             }}
                         />
                     </div>
-
-                    <select
-                        className="form-select"
-                        aria-label="Filter status komentar"
-                        value={statusFilter}
-                        onChange={(event) => {
-                            setStatusFilter(event.target.value);
-                            setPage(1);
-                        }}
-                    >
-                        <option value="">Semua status</option>
-                        <option value="pending">Menunggu</option>
-                        <option value="approved">Disetujui</option>
-                        <option value="rejected">Ditolak</option>
-                    </select>
+                    <div>
+                        <select
+                            className="form-select status-filter"
+                            value={statusFilter}
+                            onChange={(event) => {
+                                setStatusFilter(event.target.value);
+                                setPage(1);
+                            }}
+                            aria-label="Filter status komentar"
+                        >
+                            <option value="">Semua status</option>
+                            <option value="pending">Menunggu</option>
+                            <option value="approved">Disetujui</option>
+                            <option value="rejected">Ditolak</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div className="table-responsive">
