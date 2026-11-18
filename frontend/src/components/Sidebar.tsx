@@ -92,9 +92,11 @@ const items: SidebarItem[] = [
 type SidebarProps = {
     active: ActiveModule;
     onNavigate: (module: ActiveModule) => void;
+    mobileOpen: boolean;
+    onClose: () => void;
 };
 
-export default function Sidebar({ active, onNavigate }: SidebarProps) {
+export default function Sidebar({ active, onNavigate, mobileOpen, onClose }: SidebarProps) {
     const profile = useAuthProfile();
     const loadingProfile = profile === null;
 
@@ -132,7 +134,7 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
     }
 
     return (
-        <aside id="admin-sidebar" aria-label="Menu admin" className="cms-sidebar d-flex flex-column flex-shrink-0 position-fixed">
+        <aside id="admin-sidebar" aria-label="Menu admin" className={`cms-sidebar d-flex flex-column flex-shrink-0 position-fixed ${mobileOpen ? 'is-open' : ''}`}>
             <nav aria-label="Navigasi utama">
                 <button type="button" className="toggle-btn" onClick={toggleSidebar} aria-label="Ciutkan atau perluas sidebar">
                     <FontAwesomeIcon icon={faChevronLeft} />
@@ -169,7 +171,7 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
                             type="button" 
                             className={`cms-sidebar-link nav-item ${active === item.id ? 'active' : '' }`} 
                             aria-current={active === item.id ? 'page' : undefined} 
-                            onClick={() => { onNavigate(item.id); }}
+                            onClick={() => { onNavigate(item.id); onClose(); }}
                         >
                             <span aria-hidden="true">
                                 <FontAwesomeIcon icon={item.icon} />
