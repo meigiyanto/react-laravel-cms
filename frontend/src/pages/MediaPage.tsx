@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faImages } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 import { canExact } from '../utils/permissions';
+import { handleImageFallback } from '../utils/imageFallback';
 
 type MediaItem = {
     id: number;
@@ -384,6 +385,7 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                                         src={getMediaUrl(media)}
                                         alt={media.alt_text || media.original_name}
                                         loading="lazy"
+                                        onError={handleImageFallback}
                                     />
                             </a>
                             <div className="media-card-body">

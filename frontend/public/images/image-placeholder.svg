@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-labelledby="title desc">
+  <title id="title">Gambar tidak tersedia</title>
+  <desc id="desc">Placeholder ilustrasi gambar yang tidak dapat ditemukan</desc>
+  <rect width="800" height="500" rx="28" fill="#eef2f8"/>
+  <rect x="245" y="105" width="310" height="250" rx="22" fill="#ffffff" stroke="#cbd5e1" stroke-width="12"/>
+  <circle cx="345" cy="185" r="27" fill="#b8c5d8"/>
+  <path d="M270 320l92-91 60 58 45-42 64 75H270z" fill="#b8c5d8"/>
+  <path d="M280 385h240" stroke="#94a3b8" stroke-width="14" stroke-linecap="round"/>
+  <path d="M335 420h130" stroke="#cbd5e1" stroke-width="10" stroke-linecap="round"/>
+</svg>
