@@ -3719,3 +3719,37 @@ section,
         padding: 7px 10px;
     }
 }
+
+/* Dynamic CMS pages */
+.cms-public-page {
+    max-width: 960px;
+    margin: 0 auto;
+}
+.cms-public-page__featured-image {
+    overflow: hidden;
+    border-radius: 12px;
+}
+.cms-public-page__featured-image img {
+    display: block;
+    width: 100%;
+    max-height: 560px;
+    object-fit: contain;
+}
+.cms-public-page__content {
+    color: var(--default-color);
+    font-size: 1rem;
+    line-height: 1.85;
+    overflow-wrap: anywhere;
+}
+.cms-public-page__content > :first-child {
+    margin-top: 0;
+}
+.cms-public-page__content img {
+    max-width: 100%;
+    height: auto;
+}
+.cms-public-page__content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
