@@ -254,7 +254,7 @@ button {
 }
 
 .header .top-row .logo span {
-    color: var(--accent-color);
+    /* color: var(--accent-color); */
     font-size: 28px;
     font-weight: 700;
     line-height: 1.1;

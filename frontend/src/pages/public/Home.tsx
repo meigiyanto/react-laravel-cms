@@ -387,7 +387,7 @@ export default function Home() {
                         </section>
                         
                         {featuredPosts.length > 0 && (
-                        <section id="featured-posts" className="featured-posts section">
+                            <section id="featured-posts" className="featured-posts section">
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Featured Posts</h2>
                                 <div>
@@ -454,7 +454,7 @@ export default function Home() {
                         )}
                         
                         {categoryArticles.length > 0 && (
-                        <section id="category-section" className="category-section section">
+                            <section id="category-section" className="category-section section">
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Category Section</h2>
                                 <div>
@@ -541,7 +541,7 @@ export default function Home() {
                         )}
                         
                         {latestPosts.length > 0 && (
-                        <section id="latest-posts" className="latest-posts section">
+                            <section id="latest-posts" className="latest-posts section">
                             <div className="container section-title" data-aos="fade-up">
                                 <h2>Latest Posts</h2>
                                 <div>
@@ -609,11 +609,19 @@ export default function Home() {
                                             </form>
                                         </div>
                                     </div>
-                                    <div className="d-sm-none d-md-block col-lg-4">
+                                    
+                                    <div className="d-sm-none d-md-none d-lg-block col-lg-4">
                                         <div className="cta-image" data-aos="zoom-out" data-aos-delay="200">
                                             <img src="http://localhost:8001/storage/cms-media/A4RgsKqsorjH6EVjgkyZA6YPBGlwbvaWBFjhZ7P8.webp" alt="" className="img-fluid"/>
                                         </div>
                                     </div>
+                                    
+                                    <div className="d-sm-block d-md-block d-lg-none col-lg-4">
+                                        <div className="cta-image" data-aos="zoom-out" data-aos-delay="200">
+                                            <img src="http://localhost:8001/storage/cms-media/ehqIiRF4ue5abcyzSadfvIYsSXjG38cOMqiBoEhG.png" alt="" className="img-fluid"/>
+                                        </div>
+                                    </div>
+                                    
                                 </div>
                             </div>
                         </section>
