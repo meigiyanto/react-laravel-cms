@@ -5,7 +5,7 @@ import DOMPurify from 'dompurify';
 import Header from '../../components/public/Header';
 import Footer from '../../components/public/Footer';
 import BackToTop from '../../components/public/BackToTop';
-import { handleImageFallback } from '../../utils/imageFallback';
+import { handleDocumentImageError } from '../../utils/imageFallback';
 import '../../public-site.css';
 
 type Category = {
@@ -124,6 +124,11 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function ArticleDetail() {
+    useEffect(() => {
+        document.addEventListener('error', handleDocumentImageError, true);
+        return () => document.removeEventListener('error', handleDocumentImageError, true);
+    }, []);
+
     const { slug } = useParams<{ slug: string }>();
     const [post, setPost] = useState<Post | null>(null);
     const [latestPosts, setLatestPosts] = useState<Post[]>([]);
@@ -279,7 +284,7 @@ export default function ArticleDetail() {
     return (
         <>
             <Header />
-            <main className="main" onErrorCapture={handleImageFallback}>
+            <main className="main">
                 {loading ? (
                     <div className="container public-loading" role="status">
                         Memuat blog...
