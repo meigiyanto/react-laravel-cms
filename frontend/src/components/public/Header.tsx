@@ -42,7 +42,7 @@ export default function Header() {
 
     useEffect(() => {
         let active = true;
-        const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\\/$/, '');
+        const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
         axios.get(`${apiBase}/public/pages`, { headers: { Accept: 'application/json' }, timeout: 10000 })
             .then((response) => { if (active) setPublishedPages(response.data.data ?? []); })
