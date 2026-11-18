@@ -98,7 +98,7 @@ export default function DynamicPage() {
         }
 
         document.title = page.meta_title?.trim() || page.title;
-        if (page.meta_description) metaDescription.content = page.meta_description;
+        metaDescription.content = page.meta_description || '';
 
         return () => {
             document.title = previousTitle;
