@@ -7,7 +7,7 @@ import { type ActiveModule } from '../components/Sidebar';
 import PostDetailPage from './PostDetailPage';
 import { sanitizeArticleHtml } from '../utils/sanitizeHtml';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faPaperPlane, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 import { canExact, canOwnResource } from '../utils/permissions';
 
@@ -453,7 +453,9 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
 
                 <div className="toolbar">
                     <div className="search-box">
-                        <span aria-hidden="true">⌕</span>
+                        <span aria-hidden="true">
+                            <FontAwesomeIcon icon={faSearch} />
+                        </span>
                         <input
                             className="form-control"
                             type="search"
@@ -466,21 +468,22 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                             aria-label="Cari artikel"
                         />
                     </div>
-    
-                    <select
-                        className="form-select status-filter"
-                        value={statusFilter}
-                        onChange={(event) => {
-                            setStatusFilter(event.target.value);
-                            setPage(1);
-                        }}
-                        aria-label="Filter status artikel"
-                    >
-                        <option value="">Semua status</option>
-                        <option value="published">Dipublikasikan</option>
-                        <option value="draft">Draf</option>
-                        <option value="archived">Diarsipkan</option>
-                    </select>
+                    <div>
+                        <select
+                            className="form-select status-filter"
+                            value={statusFilter}
+                            onChange={(event) => {
+                                setStatusFilter(event.target.value);
+                                setPage(1);
+                            }}
+                            aria-label="Filter status artikel"
+                        >
+                            <option value="">Semua status</option>
+                            <option value="published">Dipublikasikan</option>
+                            <option value="draft">Draf</option>
+                            <option value="archived">Diarsipkan</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div className="table-responsive">
