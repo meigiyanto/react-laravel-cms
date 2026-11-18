@@ -28,7 +28,7 @@ class TagController extends Controller
 
         $tag = Tag::create([
             'name' => trim($validated['name']),
-            'slug' => $this->uniqueSlug($validated['slug'] ?: $validated['name']),
+            'slug' => $this->uniqueSlug(($validated['slug'] ?? null) ?: $validated['name']),
         ]);
 
         return response()->json([
@@ -51,7 +51,7 @@ class TagController extends Controller
 
         if (array_key_exists('slug', $validated) || array_key_exists('name', $validated)) {
             $validated['slug'] = $this->uniqueSlug(
-                $validated['slug'] ?: ($validated['name'] ?? $tag->name),
+                ($validated['slug'] ?? null) ?: ($validated['name'] ?? $tag->name),
                 $tag->id
             );
         }
