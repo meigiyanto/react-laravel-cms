@@ -32,10 +32,10 @@ const publicApi = axios.create({
 
 function getImageUrl(media: PublicPageData['featured_image']): string {
     if (!media) return '';
-    const raw = media.url || (media.path ? `/storage/${media.path.replace(/^\\/+/, '')}` : '');
+    const raw = media.url || (media.path ? \`/storage/\${media.path.replace(/^\/+/, '')}\` : '');
     if (!raw) return '';
-    if (/^https?:\\/\\//i.test(raw)) return raw;
-    const origin = API_BASE.replace(/\\/api\\/?$/, '');
+    if (/^https?:\/\//i.test(raw)) return raw;
+    const origin = API_BASE.replace(/\/api\/?$/, '');
     return new URL(raw, `${origin || window.location.origin}/`).toString();
 }
 
