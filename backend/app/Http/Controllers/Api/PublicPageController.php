@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 class PublicPageController extends Controller
 {
     private const RESERVED_SLUGS = [
-        'admin', 'login', 'about', 'about-author', 'contact', 'blog',
+        'admin', 'login', 'about', 'about-author', 'contact', 'blog', '404', 'search-results',
     ];
 
     public function index(): JsonResponse
