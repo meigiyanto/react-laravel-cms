@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import api, { AUTH_EXPIRED_EVENT, TOKEN_KEY } from '../api/client';
 import { AuthProfileContext, type AuthProfile } from '../auth/AuthProfileContext';
 const CategoriesPage = lazy(() => import('../pages/CategoriesPage'));
+const TagsPage = lazy(() => import('../pages/TagsPage'));
 const MediaPage = lazy(() => import('../pages/MediaPage'));
 const PagesPage = lazy(() => import('../pages/PagesPage'));
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
@@ -150,6 +151,7 @@ function AdminApp() {
         dashboard: 'posts.view',
         posts: 'posts.view',
         categories: 'categories.view',
+        tags: 'tags.view',
         media: 'media.view',
         pages: 'pages.view',
         users: null,
@@ -195,6 +197,14 @@ function AdminApp() {
             );
             break;
     
+        case 'tags':
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <TagsPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} />
+                </Suspense>
+            );
+            break;
+
         case 'media':
             page = (
                 <Suspense fallback={<PageLoading />}>

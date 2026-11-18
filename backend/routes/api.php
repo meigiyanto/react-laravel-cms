@@ -12,7 +12,7 @@ use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PublicPostController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Models\Tag;
+use App\Http\Controllers\Api\TagController;
 
 
 Route::get('/health', function () {
@@ -77,13 +77,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::match(['put', 'patch'], '/pages/{page}', [PageController::class, 'update'])->middleware('permission:pages.update,exact');
     Route::delete('/pages/{page}', [PageController::class, 'destroy'])->middleware('permission:pages.delete,exact');
 
-    // TAG
-    Route::get('/tags', function () {
-        return response()->json([
-            'success' => true,
-            'data' => Tag::query()->orderBy('name')->get(['id', 'name', 'slug']),
-        ]);
-    })->middleware('permission:tags.view');
+    // TAG: tag dibuat di modul ini sebelum dipilih pada form Post.
+    Route::get('/tags', [TagController::class, 'index'])->middleware('permission:tags.view');
+    Route::post('/tags', [TagController::class, 'store'])->middleware('permission:tags.create,exact');
+    Route::match(['put', 'patch'], '/tags/{tag}', [TagController::class, 'update'])->middleware('permission:tags.update,exact');
+    Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->middleware('permission:tags.delete,exact');
     
     // USER && ROLE
     // Manajemen pengguna: pertahankan grup administrator yang sudah ada.

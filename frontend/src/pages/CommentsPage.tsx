@@ -4,6 +4,8 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import Pagination from '../components/Pagination';
+import { useAuthProfile } from '../auth/AuthProfileContext';
+import { canExact } from '../utils/permissions';
 
 type CommentStatus = 'pending' | 'approved' | 'rejected';
 
@@ -97,6 +99,9 @@ export default function CommentsPage({
     const [workingId, setWorkingId] = useState<number | null>(null);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
+    const profile = useAuthProfile();
+    const canModerateComments = canExact(profile, 'comments.moderate');
+    const canDeleteComments = canExact(profile, 'comments.delete');
 
     const loadComments = useCallback(async () => {
         setLoading(true);
@@ -367,47 +372,26 @@ export default function CommentsPage({
 
                                         <td>
                                             <div className="d-flex justify-content-end flex-wrap gap-2">
-                                                {comment.status !== 'approved' && (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-success"
+                                                {canModerateComments && comment.status !== 'approved' && (
+                                                    <button type="button" className="btn btn-sm btn-outline-success"
                                                         disabled={workingId === comment.id}
-                                                        onClick={() => void updateStatus(comment, 'approved')}
-                                                    >
-                                                        Setujui
-                                                    </button>
+                                                        onClick={() => void updateStatus(comment, 'approved')}>Setujui</button>
                                                 )}
-
-                                                {comment.status !== 'rejected' && (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-warning"
+                                                {canModerateComments && comment.status !== 'rejected' && (
+                                                    <button type="button" className="btn btn-sm btn-outline-warning"
                                                         disabled={workingId === comment.id}
-                                                        onClick={() => void updateStatus(comment, 'rejected')}
-                                                    >
-                                                        Tolak
-                                                    </button>
+                                                        onClick={() => void updateStatus(comment, 'rejected')}>Tolak</button>
                                                 )}
-
-                                                {comment.status !== 'pending' && (
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-outline-secondary"
+                                                {canModerateComments && comment.status !== 'pending' && (
+                                                    <button type="button" className="btn btn-sm btn-outline-secondary"
                                                         disabled={workingId === comment.id}
-                                                        onClick={() => void updateStatus(comment, 'pending')}
-                                                    >
-                                                        Tinjau ulang
-                                                    </button>
+                                                        onClick={() => void updateStatus(comment, 'pending')}>Tinjau ulang</button>
                                                 )}
-
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-sm btn-outline-danger"
-                                                    disabled={workingId === comment.id}
-                                                    onClick={() => void deleteComment(comment)}
-                                                >
-                                                    Hapus
-                                                </button>
+                                                {canDeleteComments && (
+                                                    <button type="button" className="btn btn-sm btn-outline-danger"
+                                                        disabled={workingId === comment.id}
+                                                        onClick={() => void deleteComment(comment)}>Hapus</button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

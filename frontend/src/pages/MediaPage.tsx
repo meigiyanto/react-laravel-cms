@@ -7,6 +7,7 @@ const Pagination = lazy(() => import('../components/Pagination'));
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faImages } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
+import { canExact } from '../utils/permissions';
 
 type MediaItem = {
     id: number;
@@ -77,6 +78,7 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
     const [notice, setNotice] = useState('');
     
     const profile = useAuthProfile();
+    const canUploadMedia = canExact(profile, 'media.create');
 
     const canEditMedia = (media: MediaItem) => {
         const permissions = profile?.permissions ?? [];
@@ -276,7 +278,8 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                 </div>
             )}
 
-            <section className="content-panel mt-4">            <div className="panel-heading">
+            {canUploadMedia && <section className="content-panel mt-4">
+                <div className="panel-heading">
                     <div>
                         <h3>Unggah Gambar</h3>
                         <p>Format JPEG, JPG, PNG, WebP, atau GIF. Maksimum 5 MB.</p>
@@ -315,9 +318,10 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                         {uploading ? 'Mengunggah...': 'Unggah Gambar'}
                     </button>
                 </form>
-            </section>
+            </section>}
 
-            <section className="content-panel mt-4">            <div className="panel-heading">
+            <section className="content-panel mt-4">
+                <div className="panel-heading">
                     <div>
                         <h3>Perpustakaan Media</h3>
                         <p>
@@ -397,6 +401,7 @@ export default function MediaPage({ onNavigate, onLogout }: NavigationProps) {
                                     className="form-control form-control-sm"
                                     maxLength={255}
                                     value={altTexts[media.id] ?? ''}
+                                    disabled={!canEditMedia(media)}
                                     onChange={(event) => setAltTexts((current) => ({
                                         ...current,
                                         [media.id]: event.target.value,
