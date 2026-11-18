@@ -107,7 +107,9 @@ class TagManagementTest extends TestCase
             $this->actingAs($user, 'sanctum')
                 ->getJson('/api/tags')
                 ->assertOk()
-                ->assertJsonFragment(['id' => $tag->id, 'name' => 'Laravel', 'slug' => 'laravel'])
+                ->assertJsonFragment(['id' => $tag->id, 'name' => 'Laravel', 'slug' => 'laravel']);
+
+            $this->actingAs($user, 'sanctum')
                 ->postJson('/api/tags', ['name' => 'Tidak Diizinkan'])
                 ->assertForbidden();
 
