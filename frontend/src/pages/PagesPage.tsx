@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, lazy, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, lazy, Suspense, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
+const RichTextEditor = lazy(() => import('../components/RichTextEditor'));
 import { faBookOpen, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { canExact } from "../utils/permissions";
@@ -14,6 +15,7 @@ type Status = 'draft' | 'published' | 'archived';
 type MediaOption = {
     id: number;
     path: string;
+    url: string;
     original_name: string;
     alt_text: string | null;
 };
@@ -187,6 +189,12 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
 
     async function savePage(event: FormEvent < HTMLFormElement >) {
         event.preventDefault();
+
+        const plainText = form.body.replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/gi, ' ').trim();
+        if (!plainText && !/<img\b/i.test(form.body)) {
+            setError('Isi halaman wajib diisi.');
+            return;
+        }
 
         setSaving(true);
         setError('');
@@ -430,9 +438,17 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                             </div>
     
                             <div className="mb-3">
-                                <label className="form-label" htmlFor="page-body">Isi halaman *</label>
-                                <textarea id="page-body" className="form-control editor-body" rows={8} required value={form.body} onChange={(event) => setForm((current) => ({ ...current, body: event.target.value }))} />
-                                <div className="form-text">Saat ini isi halaman disimpan sebagai teks. Editor rich-text belum ditambahkan.</div>
+                                <label className="form-label" id="page-body-label">Isi halaman *</label>
+                                <Suspense fallback={<div className="form-control py-3" role="status">Memuat editor halaman...</div>}>
+                                    <RichTextEditor
+                                        value={form.body}
+                                        onChange={(html) => setForm((current) => ({ ...current, body: html }))}
+                                        mediaItems={media}
+                                        disabled={saving}
+                                        ariaLabel="Isi halaman"
+                                    />
+                                </Suspense>
+                                <div className="form-text">Gunakan toolbar untuk mengatur format teks, tautan, daftar, kutipan, dan gambar dari Media Library.</div>
                             </div>
     
                             <div className="mb-3">
@@ -484,7 +500,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                         Batal
                                     </button>
                                 )}
-                                {canDeletePage && (
+                                {(editing ? canEditPage : canCreatePage) && (
                                     <button type="submit" className="btn btn-primary" disabled={saving}>
                                         {saving ? 'Menyimpan...': editing ? 'Simpan Perubahan': 'Buat Halaman'}
                                     </button>
