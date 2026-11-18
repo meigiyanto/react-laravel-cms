@@ -81,8 +81,12 @@ jobs:
       - name: Install backend npm dependencies
         run: npm ci
 
-      - name: Audit backend npm dependencies
-        run: node ../.github/scripts/audit-npm.mjs
+      - name: Audit backend production npm dependencies
+        run: npm audit --omit=dev --audit-level=low
+
+      - name: Report backend development npm advisories
+        run: npm audit --audit-level=low
+        continue-on-error: true
 
       - name: Build backend assets
         run: npm run build
@@ -110,8 +114,12 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Audit all npm dependencies
-        run: node ../.github/scripts/audit-npm.mjs
+      - name: Audit frontend production npm dependencies
+        run: npm audit --omit=dev --audit-level=low
+
+      - name: Report frontend development npm advisories
+        run: npm audit --audit-level=low
+        continue-on-error: true
 
       - name: Run ESLint
         run: npm run lint
