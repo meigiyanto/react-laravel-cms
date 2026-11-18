@@ -1,6 +1,7 @@
 import { NavLink, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api, { AUTH_EXPIRED_EVENT, TOKEN_KEY } from '../../api/client';
 import { useEffect, useState, type FormEvent } from 'react';
+import axios from 'axios';
 
 const mainLinks = [
     { label: 'Home', to: '/' },
@@ -27,6 +28,7 @@ export default function Header() {
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [pagesDropdownOpen, setPagesDropdownOpen] = useState(false);
     const [deepDropdownOpen, setDeepDropdownOpen] = useState(false);
+    const [publishedPages, setPublishedPages] = useState<{ id: number; title: string; slug: string }[]>([]);
 
     const [searchDraft, setSearchDraft] = useState({ query: '', value: '' });
     const [searchParams] = useSearchParams();
@@ -37,6 +39,17 @@ export default function Header() {
     const hasStoredToken = Boolean(localStorage.getItem(TOKEN_KEY));
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authChecked, setAuthChecked] = useState(!hasStoredToken);
+
+    useEffect(() => {
+        let active = true;
+        const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+
+        axios.get(`${apiBase}/public/pages`, { headers: { Accept: 'application/json' }, timeout: 10000 })
+            .then((response) => { if (active) setPublishedPages(response.data.data ?? []); })
+            .catch(() => { if (active) setPublishedPages([]); });
+
+        return () => { active = false; };
+    }, []);
 
     useEffect(() => {
         document.body.classList.toggle('mobile-nav-active', mobileNavOpen);
@@ -181,7 +194,7 @@ export default function Header() {
                                 </a>
                         
                                 <ul className={pagesDropdownOpen ? 'dropdown-active' : ''}>
-                                    {pageLinks.map((link) => (
+                                    {[...pageLinks, ...publishedPages.map((page) => ({ label: page.title, to: `/${page.slug}` }))].map((link) => (
                                         <li key={link.to}>
                                             <Link to={link.to} onClick={closeMobileNav}>
                                                 {link.label}
