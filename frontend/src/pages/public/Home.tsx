@@ -8,7 +8,7 @@ import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import Header from '../../components/public/Header';
 import Footer from '../../components/public/Footer';
 import BackToTop from '../../components/public/BackToTop';
-import { handleDocumentImageError } from '../../utils/imageFallback';
+import { handleImageFallback } from '../../utils/imageFallback';
 import '../../public-site.css';
 
 import 'swiper/css';
@@ -103,11 +103,6 @@ function excerpt(post: Post): string {
 }
 
 export default function Home() {
-    useEffect(() => {
-        document.addEventListener('error', handleDocumentImageError, true);
-        return () => document.removeEventListener('error', handleDocumentImageError, true);
-    }, []);
-
     const [posts, setPosts] = useState<Post[]>([]);
     const [latestPosts, setLatestPosts] = useState<Post[]>([]);
     const [featuredPosts, setfeaturedPosts] = useState<Post[]>([]);
@@ -213,7 +208,7 @@ export default function Home() {
     return (
         <>
             <Header />
-            <main className="main">
+            <main className="main" onErrorCapture={handleImageFallback}>
                 {searchQuery ? (
                     <>
                         <div className="page-title">
