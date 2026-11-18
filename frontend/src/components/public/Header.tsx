@@ -44,7 +44,7 @@ export default function Header() {
         let active = true;
 
         async function loadPublishedPages() {
-            const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\\/$/, '');
+            const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
             try {
                 const response = await axios.get(`${apiBase}/public/pages`, {
