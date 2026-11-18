@@ -9,6 +9,7 @@ export type ActiveModule =
 | 'posts'
 | 'comments'
 | 'categories'
+| 'tags'
 | 'media'
 | 'pages'
 | 'users'
@@ -51,6 +52,13 @@ const items: SidebarItem[] = [
         module: "categories",
         icon: faTags,
         permission: "categories.view",
+    },
+    {
+        id: "tags",
+        label: "Tags",
+        module: "tags",
+        icon: faTags,
+        permission: "tags.view",
     },
     {
         id: "media",
