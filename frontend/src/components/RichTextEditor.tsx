@@ -29,6 +29,7 @@ type Props = {
     onChange: (html: string) => void;
     mediaItems?: EditorMedia[];
     disabled?: boolean;
+    ariaLabel?: string;
 };
 
 function getMediaUrl(media: EditorMedia): string {
@@ -48,8 +49,7 @@ function getMediaUrl(media: EditorMedia): string {
     return new URL(rawUrl, `${base}/`).toString();
 }
 
-export default function RichTextEditor({ value, onChange, 
-mediaItems = [], disabled = false }: Props) {
+export default function RichTextEditor({ value, onChange, mediaItems = [], disabled = false, ariaLabel = 'Isi konten' }: Props) {
     const [showMediaPicker, setShowMediaPicker] = useState(false);
     
     const editor = useEditor({
@@ -78,7 +78,7 @@ mediaItems = [], disabled = false }: Props) {
         },
         editorProps: {
             attributes: {
-                'aria-label': 'Isi artikel',
+                'aria-label': ariaLabel,
                 class: 'rich-text-area',
             },
         },
@@ -315,8 +315,7 @@ mediaItems = [], disabled = false }: Props) {
             <EditorContent editor={editor} />
 
             <div className="rich-text-footer">
-                Format isi artikel disimpan sebagai HTML. Gambar dari Media
-                Library menggunakan URL media yang sudah tersedia.
+                Format konten disimpan sebagai HTML. Gambar dapat dipilih dari Media Library.
                 
                 {showMediaPicker && (
                     <MediaPicker
