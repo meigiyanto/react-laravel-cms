@@ -484,7 +484,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                         Batal
                                     </button>
                                 )}
-                                {canDeletePage && (
+                                {(editing ? canEditPage : canCreatePage) && (
                                     <button type="submit" className="btn btn-primary" disabled={saving}>
                                         {saving ? 'Menyimpan...': editing ? 'Simpan Perubahan': 'Buat Halaman'}
                                     </button>
