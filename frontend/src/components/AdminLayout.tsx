@@ -1,7 +1,7 @@
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import Sidebar, { type ActiveModule } from './Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignOut } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faSignOut } from '@fortawesome/free-solid-svg-icons';
 
 type AdminLayoutProps = { 
     active: ActiveModule; 
@@ -14,14 +14,19 @@ type AdminLayoutProps = {
 };
 
 export default function AdminLayout({ active, onNavigate, title, onLogout, breadcrumb, children, actions }: AdminLayoutProps) {
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     return (
         <div className="cms-shell">
-            <Sidebar active={active} onNavigate={onNavigate} />
+            {mobileSidebarOpen && <button type="button" className="sidebar-backdrop" aria-label="Tutup menu navigasi" onClick={() => setMobileSidebarOpen(false)} />}
+            <Sidebar active={active} onNavigate={onNavigate} mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
             
             <main className="cms-main">
                 <header className="topbar">
                     <div className="topbar-heading">
+                        <button type="button" className="mobile-menu-toggle" aria-label="Buka menu navigasi" aria-controls="admin-sidebar" aria-expanded={mobileSidebarOpen} onClick={() => setMobileSidebarOpen(true)}>
+                            <FontAwesomeIcon icon={faBars} />
+                        </button>
                         <div>
                             <div className="breadcrumb-text">{breadcrumb}</div>
                             <h1>{title}</h1>

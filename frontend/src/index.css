@@ -36,6 +36,11 @@ button, input, textarea, select {
     width: var(--sidebar-width-collapsed);
 }
 
+.mobile-menu-toggle,
+.sidebar-backdrop {
+    display: none;
+}
+
 .toggle-btn {
     position: absolute;
     right: -15px;
@@ -634,6 +639,34 @@ button, input, textarea, select {
 }
 
 @media (max-width: 700px) {
+    .mobile-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border: 1px solid #e1e6ef;
+        border-radius: 10px;
+        background: #fff;
+        color: #344054;
+        font-size: 18px;
+        box-shadow: 0 2px 8px rgba(25, 37, 64, .06);
+    }
+
+    .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: rgba(17, 24, 39, .48);
+        z-index: 1040;
+    }
+
     .cms-sidebar {
         position: fixed;
         inset: 0 auto 0 0;
@@ -651,6 +684,30 @@ button, input, textarea, select {
         transition: transform .22s ease, visibility .22s ease;
         box-shadow: 12px 0 35px rgba(25, 37, 64, .12);
         z-index: 1050;
+    }
+
+    .cms-sidebar.is-open {
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    .cms-sidebar.collapsed {
+        width: min(290px, 86vw);
+    }
+
+    .cms-sidebar .toggle-btn {
+        display: none;
+    }
+
+    .cms-sidebar .hide-on-collapse {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .cms-sidebar.collapsed .cms-sidebar-link {
+        text-align: left;
+        padding: 12px !important;
+        margin: 2px 0;
     }
 
     .cms-brand {
