@@ -26,6 +26,8 @@ Route::get('/health', function () {
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
 Route::prefix('public')->group(function () {
+    Route::get('/pages', [PublicPageController::class, 'index']);
+    Route::get('/pages/{slug}', [PublicPageController::class, 'show']);
     Route::get('/posts', [PublicPostController::class, 'index']);
     Route::get('/posts/{slug}', [PublicPostController::class, 'show']);
     Route::get('/posts/{slug}/comments', [PublicPostController::class, 'comments']);
