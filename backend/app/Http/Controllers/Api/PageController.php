@@ -13,9 +13,6 @@ use Illuminate\Validation\Rule;
 
 class PageController extends Controller
 {
-    private const RESERVED_PUBLIC_SLUGS = [
-        'admin', 'login', 'about', 'about-author', 'contact', 'blog', '404', 'search-results',
-    ];
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -192,9 +189,6 @@ class PageController extends Controller
     private function uniqueSlug(string $value, ?int $ignoreId = null): string
     {
         $base = Str::slug($value) ?: 'halaman';
-        if (in_array($base, self::RESERVED_PUBLIC_SLUGS, true)) {
-            $base .= '-page';
-        }
         $slug = $base;
         $counter = 2;
 

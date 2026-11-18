@@ -8,7 +8,6 @@ import AboutAuthor from './pages/public/AboutAuthor';
 import Contact from './pages/public/Contact';
 import { PageNotFound as PublicPageNotFound } from './pages/public/PageNotFound';
 import ArticleDetail from './pages/public/ArticleDetail';
-import DynamicPage from './pages/public/DynamicPage';
 import AllArticles from './pages/public/AllArticles';
 import AdminApp from './pages/AdminApp';
 
@@ -33,7 +32,6 @@ function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/blog" element={<AllArticles />} />
                 <Route path="/blog/:slug" element={<ArticleDetail />} />
-                <Route path="/:slug" element={<DynamicPage />} />
                 <Route path="*" element={<PublicPageNotFound />} />
             </Routes>
 
