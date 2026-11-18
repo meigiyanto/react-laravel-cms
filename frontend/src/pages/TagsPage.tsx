@@ -51,7 +51,24 @@ export default function TagsPage({ onNavigate, onLogout }: NavigationProps) {
         }
     }, []);
 
-    useEffect(() => { void loadTags(); }, [loadTags]);
+    useEffect(() => {
+        let active = true;
+
+        api.get('/tags')
+            .then((response) => {
+                if (active) setTags(response.data.data);
+            })
+            .catch((err: unknown) => {
+                if (active) setError(getErrorMessage(err));
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const filteredTags = tags.filter((tag) =>
         [tag.name, tag.slug].some((value) => value.toLowerCase().includes(search.trim().toLowerCase()))
