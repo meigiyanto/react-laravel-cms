@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PageController;
+use App\Http\Controllers\Api\PublicPageController;
 use App\Http\Controllers\Api\PublicPostController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TagController;
@@ -28,6 +29,9 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 Route::prefix('public')->group(function () {
     Route::get('/posts', [PublicPostController::class, 'index']);
     Route::get('/posts/{slug}', [PublicPostController::class, 'show']);
+    Route::get('/pages', [PublicPageController::class, 'index']);
+    Route::get('/pages/{slug}', [PublicPageController::class, 'show']);
+    
     Route::get('/posts/{slug}/comments', [PublicPostController::class, 'comments']);
     Route::post('/posts/{slug}/comments', [PublicPostController::class, 'storeComment'])->middleware('throttle:5,1');
 
