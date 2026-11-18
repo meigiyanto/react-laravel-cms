@@ -4,12 +4,13 @@
     background: #f6f8fc;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
-    --sidebar-width: 300px;
+    --sidebar-width: 320px;
     --sidebar-width-collapsed: 80px;
 }
 
 body {
     margin: 0;
+    padding: 0;
     min-width: 320px;
     background: #f6f8fc;
     font-size: 14px;
@@ -29,7 +30,7 @@ button, input, textarea, select {
     height: 100vh;
     background: #f6f8fc;
     transition: all 0.3s ease;
-    padding: 20px 0 0 10px ;
+    padding: 20px 0 0 10px;
 }
 
 .cms-sidebar.collapsed {
@@ -63,7 +64,7 @@ button, input, textarea, select {
 .collapsed .cms-sidebar-link {
     text-align: center;
     padding: .5rem !important;
-    margin: 8px;
+    margin: 4px 8px;
 }
 
 .collapsed .cms-sidebar-link i {
@@ -143,12 +144,11 @@ button, input, textarea, select {
     align-items: center;
     gap: 10px;
     min-width: 0;
-    margin: 18px 10px 22px;
     padding: 10px;
     border: 1px solid #e8edf5;
-    border-radius: 10px;
     background: #fff;
 }
+
 .sidebar-user-avatar {
     display: grid;
     place-items: center;
@@ -160,11 +160,13 @@ button, input, textarea, select {
     color: #3159a8;
     font-weight: 700;
 }
+
 .sidebar-user-details {
     display: flex;
     flex-direction: column;
     min-width: 0;
 }
+
 .sidebar-user-details strong {
     overflow: hidden;
     color: #263247;
@@ -172,6 +174,7 @@ button, input, textarea, select {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .sidebar-user-details small {
     overflow: hidden;
     color: #8993a5;
@@ -179,6 +182,7 @@ button, input, textarea, select {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .collapsed .sidebar-user {
     justify-content: center;
     margin-right: 8px;
@@ -196,6 +200,16 @@ button, input, textarea, select {
     margin: 8px 10px 12px;
 }
 
+aside {
+    margin: 0;
+    padding: 0;
+}
+
+nav {
+    margin: 0;
+    padding: 0px;
+}
+
 .nav-item {
     display: flex;
     align-items: center;
@@ -203,8 +217,7 @@ button, input, textarea, select {
     width: 100%;
     border: 0;
     padding: 6px;
-    margin: 2px 0;
-    border-radius: 9px;
+    border-radius: 6px;
     color: #667187;
     background: transparent;
     text-align: left;
@@ -213,13 +226,14 @@ button, input, textarea, select {
 .nav-item > span {
     width: 20px;
     text-align: center;
-    font-size: 17px;
+    font-size: 15px;
 }
 
 .nav-item.active {
     background: #edf1ff;
     color: #3458db;
     font-weight: 700;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 }
 
 .nav-item:disabled {
@@ -233,6 +247,9 @@ button, input, textarea, select {
 }
 
 .sidebar-bottom {
+    position: absolute;
+    bottom: 200px;
+    left: 10px;
     margin-top: auto;
     padding: 15px 8px 0;
     border-top: 1px solid #edf0f5;
@@ -330,9 +347,47 @@ button, input, textarea, select {
 
 .stat-card {
     padding: 20px;
-    background: white;
-    border: 1px solid #e9edf4;
-    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 4px 8px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 20px 10px rgba(255, 255, 255, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+    );
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+    );
 }
 
 .stat-icon {
@@ -379,6 +434,7 @@ button, input, textarea, select {
 .content-panel {
     background: white;
     border: 1px solid #e9edf4;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     border-radius: 14px;
     overflow: hidden;
     padding: 20px;

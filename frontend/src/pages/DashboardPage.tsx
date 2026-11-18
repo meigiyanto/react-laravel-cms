@@ -173,24 +173,16 @@ export default function DashboardPage({ onNavigate, onLogout }: NavigationProps)
             
             <section className="welcome-panel">
                 <div>
-                    <h2>Halo, {profile?.name ?? 'Pengguna'}!</h2>
+                    <h2>Halo, {profile?.name ?? 'Pengguna'} ({profile?.role?.name ?? 'Tidak diketahui'}) !</h2>
                     <h3>Selamat datang kembali</h3>
                     <p>Kelola dashboardmu sekarang dan buat sesuatu yang fantastis!</p>
-                    <div className="mt-3">
-                        <span className="badge text-bg-primary">
-                            Role aktif: {profile?.role?.name ?? 'Tidak diketahui'}
-                        </span>
-                    </div>
                 </div>
                 <div className="welcome-icon" aria-hidden="true">
                     <FontAwesomeIcon icon={faTachometerAlt} />
                 </div>
             </section>
 
-            <section
-                className="stats-grid"
-                aria-label="Statistik artikel"
-            >
+            <section className="stats-grid" aria-label="Statistik artikel">
                 {items.map((item) => (
                     <StatCard
                         key={item.id}
@@ -202,6 +194,7 @@ export default function DashboardPage({ onNavigate, onLogout }: NavigationProps)
                     />
                 ))}
             </section>
+
         </AdminLayout>
     );
 }

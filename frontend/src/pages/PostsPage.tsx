@@ -460,10 +460,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                         />
                     </div>
     
-                    <select
-                        className="form-select status-filter"
-                        value={statusFilter}
-                        onChange={(event) => {
+                    <select className="form-select status-filter" value={statusFilter} onChange={(event) => {
                             setStatusFilter(event.target.value);
                             setPage(1);
                         }}
