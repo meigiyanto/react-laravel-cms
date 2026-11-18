@@ -38,6 +38,9 @@ class RoleSeeder extends Seeder
                     'pages.delete',
                     'pages.publish',
                     'tags.view',
+                    'tags.create',
+                    'tags.update',
+                    'tags.delete',
                 ],
             ],
             [
