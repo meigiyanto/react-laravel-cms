@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AuthFlowTest extends TestCase
@@ -64,29 +66,29 @@ class AuthFlowTest extends TestCase
     public function test_logout_revokes_the_current_token(): void
     {
         $user = User::factory()->create();
-    
+
         $token = $user->createToken('cms-admin')->plainTextToken;
         $storedToken = PersonalAccessToken::findToken($token);
-    
+
         $this->assertNotNull($storedToken);
-    
+
         $this->withToken($token)
             ->getJson('/api/auth/me')
             ->assertOk()
             ->assertJsonPath('data.id', $user->id);
-    
+
         $this->withToken($token)
             ->postJson('/api/auth/logout')
             ->assertOk()
             ->assertJsonPath('success', true);
-    
+
         // Pastikan token benar-benar dihapus dari database.
         $this->assertDatabaseMissing('personal_access_tokens', [
             'id' => $storedToken->id,
         ]);
-        
+
         Auth::forgetGuards();
-    
+
         // Token yang dicabut tidak boleh digunakan lagi.
         $this->withToken($token)
             ->getJson('/api/auth/me')
@@ -116,4 +118,29 @@ class AuthFlowTest extends TestCase
         $this->withToken($firstToken)->getJson('/api/auth/me')->assertUnauthorized();
     }
 
+    public function test_auth_me_returns_profile_photo_url_at_top_level(): void
+    {
+        Storage::fake('public');
+
+        $role = Role::create([
+            'name' => 'Editor',
+            'slug' => 'editor-profile-photo',
+            'permissions' => ['posts.view'],
+        ]);
+
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+            'profile_photo_path' => 'profiles/avatar.webp',
+        ]);
+
+        $token = $user->createToken('cms-admin')->plainTextToken;
+        $expectedUrl = Storage::disk('public')->url('profiles/avatar.webp');
+
+        $this->withToken($token)
+            ->getJson('/api/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.profile_photo_url', $expectedUrl)
+            ->assertJsonPath('data.role.slug', 'editor-profile-photo')
+            ->assertJsonMissingPath('data.role.profile_photo_url');
+    }
 }

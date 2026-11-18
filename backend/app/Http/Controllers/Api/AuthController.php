@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -53,19 +53,20 @@ class AuthController extends Controller
     {
         $user = $request->user()->loadMissing('role');
         $role = $user->role;
-    
+
         return response()->json([
             'success' => true,
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'profile_photo_url' => $user->profile_photo_path
+                    ? Storage::disk('public')->url($user->profile_photo_path)
+                    : null,
                 'role' => $role ? [
                     'id' => $role->id,
                     'name' => $role->name,
                     'slug' => $role->slug,
-                    'profile_photo_url' => $user->profile_photo_path
-    ? Storage::disk('public')->url($user->profile_photo_path) : null,
                 ] : null,
                 'permissions' => $role?->permissions ?? [],
             ],
