@@ -7,7 +7,7 @@ import { type ActiveModule } from '../components/Sidebar';
 import PostDetailPage from './PostDetailPage';
 import { sanitizeArticleHtml } from '../utils/sanitizeHtml';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faPaperPlane, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 import { canExact, canOwnResource } from '../utils/permissions';
 
@@ -155,6 +155,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [tags, setTags] = useState<Tag[]>([]);
+    const [categorySearch, setCategorySearch] = useState('');
     const [tagSearch, setTagSearch] = useState('');
     const [mediaItems, setMediaItems] = useState<MediaAsset[]>([]);
     const [loadingOptions, setLoadingOptions] = useState(false);
@@ -203,6 +204,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         setEditing(null);
         setForm(emptyForm);
         setFieldErrors({});
+        setCategorySearch('');
         setTagSearch('');
         setError('');
         setNotice('');
@@ -234,6 +236,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             });
             
             setFieldErrors({});
+            setCategorySearch('');
             setTagSearch('');
             setShowForm(true);
             void loadEditorOptions();
@@ -366,6 +369,10 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         }
     }, []);
 
+    const selectedCategories = categories.filter((category) => form.category_ids.includes(category.id));
+    const filteredCategories = categories.filter((category) =>
+        category.name.toLocaleLowerCase().includes(categorySearch.trim().toLocaleLowerCase()),
+    );
     const selectedTags = tags.filter((tag) => form.tag_ids.includes(tag.id));
     const filteredTags = tags.filter((tag) =>
         tag.name.toLocaleLowerCase().includes(tagSearch.trim().toLocaleLowerCase()),
@@ -446,7 +453,9 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
 
                 <div className="toolbar">
                     <div className="search-box">
-                        <span aria-hidden="true">⌕</span>
+                        <span aria-hidden="true">
+                            <FontAwesomeIcon icon={faSearch} />
+                        </span>
                         <input
                             className="form-control"
                             type="search"
@@ -459,18 +468,22 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                             aria-label="Cari artikel"
                         />
                     </div>
-    
-                    <select className="form-select status-filter" value={statusFilter} onChange={(event) => {
-                            setStatusFilter(event.target.value);
-                            setPage(1);
-                        }}
-                        aria-label="Filter status artikel"
-                    >
-                        <option value="">Semua status</option>
-                        <option value="published">Dipublikasikan</option>
-                        <option value="draft">Draf</option>
-                        <option value="archived">Diarsipkan</option>
-                    </select>
+                    <div>
+                        <select
+                            className="form-select status-filter"
+                            value={statusFilter}
+                            onChange={(event) => {
+                                setStatusFilter(event.target.value);
+                                setPage(1);
+                            }}
+                            aria-label="Filter status artikel"
+                        >
+                            <option value="">Semua status</option>
+                            <option value="published">Dipublikasikan</option>
+                            <option value="draft">Draf</option>
+                            <option value="archived">Diarsipkan</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div className="table-responsive">
@@ -798,35 +811,70 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                         </select>
                                     </div>
                                     <div className="mb-3">
-                                        <label className="form-label" htmlFor="post-categories">Kategori</label>
-                                        <select
-                                            id="post-categories"
-                                            className="form-select"
-                                            multiple
-                                            size={Math.min(Math.max(categories.length, 2), 6)}
+                                        <label className="form-label" htmlFor="post-category-search">Kategori</label>
+                                        <input
+                                            id="post-category-search"
+                                            type="search"
+                                            className="form-control"
+                                            placeholder="Cari kategori..."
+                                            value={categorySearch}
                                             disabled={loadingOptions}
-                                            value={form.category_ids.map(String)}
-                                            onChange={(event) => {
-                                                setForm({
-                                                    ...form,
-                                                    category_ids: Array.from(event.currentTarget.selectedOptions, (option) => Number(option.value))
-                                                });
-                                            }}
-                                        >
-                                            {categories.map((category) => (
-                                                <option key={category.id} value={category.id}>
-                                                    {category.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <small className="text-muted">
-                                            Pilih satu atau beberapa kategori. Gunakan Ctrl atau Cmd
-                                            untuk memilih beberapa opsi pada desktop.
+                                            onChange={(event) => setCategorySearch(event.target.value)}
+                                        />
+                                        {selectedCategories.length > 0 && (
+                                            <div className="d-flex flex-wrap gap-2 mt-2" aria-label="Kategori yang dipilih">
+                                                {selectedCategories.map((category) => (
+                                                    <span key={category.id} className="badge text-bg-primary d-inline-flex align-items-center gap-2">
+                                                        {category.name}
+                                                        <button
+                                                            type="button"
+                                                            className="btn-close btn-close-white"
+                                                            aria-label={`Hapus kategori ${category.name}`}
+                                                            disabled={saving}
+                                                            onClick={() => setForm((current) => ({
+                                                                ...current,
+                                                                category_ids: current.category_ids.filter((id) => id !== category.id),
+                                                            }))}
+                                                        />
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="border rounded p-2 mt-2" style={{ maxHeight: '180px', overflowY: 'auto' }} role="group" aria-label="Daftar kategori">
+                                            {loadingOptions ? (
+                                                <div className="small text-muted">Memuat kategori...</div>
+                                            ) : filteredCategories.length > 0 ? (
+                                                filteredCategories.map((category) => (
+                                                    <label key={category.id} className="form-check d-flex align-items-center gap-2 py-1 mb-0">
+                                                        <input
+                                                            className="form-check-input mt-0"
+                                                            type="checkbox"
+                                                            checked={form.category_ids.includes(category.id)}
+                                                            disabled={saving}
+                                                            onChange={(event) => {
+                                                                const checked = event.currentTarget.checked;
+                                                                setForm((current) => ({
+                                                                    ...current,
+                                                                    category_ids: checked
+                                                                        ? [...current.category_ids, category.id]
+                                                                        : current.category_ids.filter((id) => id !== category.id),
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span className="form-check-label">{category.name}</span>
+                                                    </label>
+                                                ))
+                                            ) : (
+                                                <div className="small text-muted">
+                                                    {categories.length > 0 ? 'Kategori tidak ditemukan.' : 'Belum ada kategori tersedia.'}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <small className="text-muted d-block mt-2">
+                                            Cari kategori lalu centang satu atau beberapa pilihan. Ketuk kategori terpilih untuk menghapusnya.
                                         </small>
                                         {fieldErrors.category_ids && (
-                                            <div className="text-danger small">
-                                                {fieldErrors.category_ids}
-                                            </div>
+                                            <div className="text-danger small">{fieldErrors.category_ids}</div>
                                         )}
                                     </div>
                                     <div className="mb-3">

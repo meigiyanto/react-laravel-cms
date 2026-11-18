@@ -182,7 +182,10 @@ export default function DashboardPage({ onNavigate, onLogout }: NavigationProps)
                 </div>
             </section>
 
-            <section className="stats-grid" aria-label="Statistik artikel">
+            <section
+                className="stats-grid"
+                aria-label="Statistik artikel"
+            >
                 {items.map((item) => (
                     <StatCard
                         key={item.id}
@@ -194,7 +197,6 @@ export default function DashboardPage({ onNavigate, onLogout }: NavigationProps)
                     />
                 ))}
             </section>
-
         </AdminLayout>
     );
 }
