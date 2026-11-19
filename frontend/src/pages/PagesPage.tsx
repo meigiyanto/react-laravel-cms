@@ -104,6 +104,25 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
     const canEditPage = canExact(profile, "pages.update");
     const canDeletePage = canExact(profile, "pages.delete");
     const canPublishPage = canExact(profile, "pages.publish");
+    
+    useEffect(() => {
+        const path = location.pathname.replace(/\/+$/, '');
+        if (path === '/admin/pages/create') { if (!showForm) { Promise.resolve().then(() => { setEditing(null); setForm(emptyForm); setShowForm(true); }); } return; }
+        const match = path.match(/^\/admin\/pages\/(\d+)\/edit$/);
+        if (match) {
+            const id = Number(match[1]);
+            if (editing?.id !== id) {
+                void api.get('/pages/' + id).then((response) => {
+                    const current: CmsPage = response.data.data;
+                    setEditing(current);
+                    setForm({ title: current.title, slug: current.slug, body: current.body, status: current.status, featured_image_id: current.featured_image_id ? String(current.featured_image_id) : '', meta_title: current.meta_title || '', meta_description: current.meta_description || '' });
+                    setShowForm(true);
+                }).catch((err) => setError(errorMessage(err)));
+            }
+            return;
+        }
+        if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
+    }, [location.pathname, showForm, editing?.id]);
 
     useEffect(() => {
         const path = location.pathname.replace(/\/+$/, '');
@@ -450,8 +469,8 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             {showForm && error && <div className="alert alert-danger mt-3" role="alert">{error}</div>}
 
             {showForm && (editing ? canEditPage : canCreatePage) && (
-                <div className="modal-backdrop-custom" role="presentation">
-                    <section className="editor-modal page-editor-modal" role="dialog" aria-modal="true" aria-labelledby="page-editor-title">
+                <div className="editor-page-shell">
+                    <section className="content-panel editor-page page-editor-page" role="region" aria-labelledby="page-editor-title">
                         <div className="moda-dialog modal-xl">
                             <div className="moda-content">
                                 <div className="modal-heading modal-header">
@@ -464,7 +483,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                         </p>
                                     </div>
                                     <button className="btn-close" type="button" aria-label="Tutup"
-                                        disabled={saving} onClick={() => setShowForm(false)} />
+                                        disabled={saving} onClick={closeEditor} />
                                 </div>
                                 <div className="moda-body">
                                     <form onSubmit={savePage}>

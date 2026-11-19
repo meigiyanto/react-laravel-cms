@@ -250,7 +250,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             setError(errorMessage(err));
         }
     }
-
+    
     function closeEditor() {
         setShowForm(false);
         setEditing(null);
@@ -382,7 +382,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             setLoadingOptions(false);
         }
     }, []);
-
+    
     useEffect(() => {
         const path = location.pathname.replace(/\/+$/, '');
         if (path === '/admin/posts/create') {
@@ -404,6 +404,8 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         }
         if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
     }, [location.pathname, showForm, editing?.id, loadEditorOptions]);
+
+
 
     const selectedCategories = categories.filter((category) => form.category_ids.includes(category.id));
     const filteredCategories = categories.filter((category) =>
@@ -467,7 +469,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 </div>
             )}
 
-            {!showForm && <>
+            {!showForm && <div className="posts-list-view">
             <section className="welcome-panel">
                 <div>
                     <span className="eyebrow">CONTENT MANAGEMENT</span>
@@ -478,6 +480,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     <FontAwesomeIcon icon={faPaperPlane} />
                 </div>
             </section>
+            
             
             <section className="content-panel mt-4">
                 <div className="panel-heading">
@@ -635,7 +638,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     onPageChange={setPage}
                 />
             </section>
-            </>}
+            </div>}
 
             {showForm && (editing ? canEditPost(editing) : canCreatePost) && (
                 <div className="editor-page-shell">

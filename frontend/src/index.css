@@ -29,7 +29,7 @@ button, input, textarea, select {
     height: 100vh;
     background: #f6f8fc;
     transition: all 0.3s ease;
-    padding: 20px 0 0 10px ;
+    padding: 20px 0 0 10px;
 }
 
 .cms-sidebar.collapsed {
@@ -937,7 +937,7 @@ button, input, textarea, select {
     .login-card {
         padding: 26px 22px;
     }
-    
+
     .sidebar-bottom {
         border-top: 2px solid blue;
         position: absolute;
