@@ -268,4 +268,43 @@ class PostPermissionTest extends TestCase
             'id' => $postId,
         ]);
     }
+    public function test_editor_can_filter_own_posts_or_all_posts(): void
+    {
+        $ownPostId = $this->createPostAs($this->editor, 'Artikel Milik Editor');
+        $otherPostId = $this->createPostAs($this->author, 'Artikel Milik Author');
+
+        $this->actingAs($this->editor, 'sanctum');
+
+        $this->getJson('/api/posts?ownership=own')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.id', $ownPostId);
+
+        $this->getJson('/api/posts?ownership=all')
+            ->assertOk()
+            ->assertJsonCount(2, 'data.data')
+            ->assertJsonFragment(['id' => $ownPostId])
+            ->assertJsonFragment(['id' => $otherPostId]);
+    }
+
+    public function test_user_without_view_all_permission_cannot_bypass_ownership_filter(): void
+    {
+        $ownPostId = $this->createPostAs($this->author, 'Artikel Milik Author');
+        $this->createPostAs($this->editor, 'Artikel Milik Editor');
+
+        $this->actingAs($this->author, 'sanctum')
+            ->getJson('/api/posts?ownership=all')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.id', $ownPostId);
+    }
+
+    public function test_invalid_ownership_filter_is_rejected(): void
+    {
+        $this->actingAs($this->editor, 'sanctum')
+            ->getJson('/api/posts?ownership=someone-else')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('ownership');
+    }
+
 }
