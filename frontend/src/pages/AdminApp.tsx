@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from 'react-router-dom';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import api, { AUTH_EXPIRED_EVENT, TOKEN_KEY } from '../api/client';
 import { AuthProfileContext, type AuthProfile } from '../auth/AuthProfileContext';
@@ -14,9 +15,18 @@ import LoginPage from '../pages/LoginPage';
 import type { ActiveModule } from '../components/Sidebar';
 
 function AdminApp() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const moduleFromPath = (pathname: string): ActiveModule => {
+        const section = pathname.split('/')[2];
+        if (section === 'posts' || section === 'pages' || section === 'categories' || section === 'tags' || section === 'media' || section === 'users' || section === 'profile' || section === 'comments') return section;
+        return 'dashboard';
+    }
     const [authenticated, setAuthenticated] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
-    const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
+    const [fallbackActiveModule, setFallbackActiveModule] = useState<ActiveModule>(() => moduleFromPath(window.location.pathname));
+    const activeModule = location.pathname.startsWith('/admin') ? moduleFromPath(location.pathname) : fallbackActiveModule;
+    
     const [profile, setProfile] = useState<AuthProfile | null>(null);
     
     async function loadProfile(): Promise<AuthProfile> {
@@ -50,7 +60,7 @@ function AdminApp() {
             localStorage.removeItem(TOKEN_KEY);
             setProfile(null);
             setAuthenticated(false);
-            setActiveModule('dashboard');
+            setFallbackActiveModule('dashboard');
         }
     }, []);
 
@@ -108,7 +118,7 @@ function AdminApp() {
             const nextProfile = await loadProfile();
     
             setProfile(nextProfile);
-            setActiveModule('dashboard');
+            setFallbackActiveModule('dashboard');
             setAuthenticated(true);
         } catch {
             localStorage.removeItem(TOKEN_KEY);
@@ -133,9 +143,15 @@ function AdminApp() {
     if (!authenticated) return <LoginPage onLogin={handleLogin} />;
 
     const navigation = {
-        onNavigate: (module: ActiveModule) => setActiveModule(module),
-        onBack: () => setActiveModule('dashboard'),
         onLogout: () => void handleLogout(),
+        onNavigate: (module: ActiveModule) => {
+            setFallbackActiveModule(module);
+            navigate(module === 'dashboard' ? '/admin' : `/admin/${module}`);
+        },
+        onBack: () => {
+            setFallbackActiveModule('dashboard');
+            navigate('/admin');
+        },
     };
     
     const permissions = profile?.permissions ?? [];
@@ -278,7 +294,7 @@ function AdminApp() {
                     <button
                         type="button"
                         className="btn btn-primary"
-                        onClick={() => setActiveModule('dashboard')}
+                        onClick={() => setFallbackActiveModule('dashboard')}
                     >
                         Kembali ke Dashboard
                     </button>
