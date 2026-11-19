@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ThemeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\ContentRevisionController;
+use App\Http\Controllers\Api\LayoutController;
 
 Route::get('/health', function () {
     return response()->json([
@@ -93,6 +94,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/users/{id}/role', [UserController::class, 'assignRole']);
         Route::get('/comments', [PublicPostController::class, 'moderateIndex']);
         Route::patch('/comments/{comment}/status', [PublicPostController::class, 'moderateUpdate']);
+
+        Route::get('/layouts', [LayoutController::class, 'index']);
+        Route::post('/layouts', [LayoutController::class, 'store']);
+        Route::get('/layouts/{layout}', [LayoutController::class, 'show']);
+        Route::get('/layouts/{layout}/revisions', [LayoutController::class, 'revisions']);
+        Route::match(['put', 'patch'], '/layouts/{layout}', [LayoutController::class, 'update']);
+        Route::delete('/layouts/{layout}', [LayoutController::class, 'destroy']);
 
         Route::get('/themes', [ThemeController::class, 'index']);
         Route::post('/themes', [ThemeController::class, 'store']);
