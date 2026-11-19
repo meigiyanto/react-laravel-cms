@@ -22,6 +22,7 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState<LayoutRecord | null>(null);
+    const [showEditor, setShowEditor] = useState(false);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [definitionText, setDefinitionText] = useState(starter);
@@ -37,9 +38,11 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
     }, []);
     useEffect(() => { void loadLayouts(); }, [loadLayouts]);
     function startCreate() {
+        setShowEditor(true);
         setEditing(null); setName(''); setDescription(''); setDefinitionText(starter); setRevisions([]); setError(''); setNotice('');
     }
     async function startEdit(layout: LayoutRecord) {
+        setShowEditor(true);
         setEditing(layout); setName(layout.name); setDescription(layout.description || '');
         setDefinitionText(JSON.stringify(layout.definition, null, 2)); setRevisions([]); setError(''); setNotice('');
         try {
@@ -58,7 +61,7 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
             if (editing) await api.put('/admin/layouts/' + editing.id, payload);
             else await api.post('/admin/layouts', payload);
             setNotice(editing ? 'Layout berhasil diperbarui.' : 'Layout berhasil dibuat.');
-            setEditing(null); setName(''); setDescription(''); setDefinitionText(starter); setRevisions([]);
+            setEditing(null); setShowEditor(false); setName(''); setDescription(''); setDefinitionText(starter); setRevisions([]);
             await loadLayouts();
         } catch (err) { setError(errorMessage(err)); }
         finally { setSaving(false); }
@@ -79,12 +82,12 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
                     {loading ? <tr><td colSpan={5} className="empty-state">Memuat layout...</td></tr> : layouts.length === 0 ? <tr><td colSpan={5} className="empty-state">Belum ada layout. Buat layout pertama untuk memulai.</td></tr> : layouts.map((layout) => <tr key={layout.id}><td><strong>{layout.name}</strong><div className="post-slug">{layout.slug}</div></td><td><span className={'status-badge ' + layout.status}>{layout.status}</span></td><td>{layout.revisions_count ?? 0}</td><td>{new Date(layout.updated_at).toLocaleDateString('id-ID')}</td><td><div className="d-flex justify-content-end gap-2"><button className="btn btn-sm btn-outline-primary" type="button" onClick={() => void startEdit(layout)}>Edit</button><button className="btn btn-sm btn-outline-danger" type="button" onClick={() => void remove(layout)}>Hapus</button></div></td></tr>)}
                 </tbody></table></div>
             </section>
-            {(name || editing) && <section className="content-panel mt-4"><div className="modal-heading"><div><h3>{editing ? 'Edit Layout' : 'Layout Baru'}</h3><p>Gunakan komponen dan pengaturan yang sudah diizinkan schema.</p></div><button type="button" className="btn-close" aria-label="Tutup editor" onClick={startCreate} /></div>
+            {showEditor && <section className="content-panel mt-4"><div className="modal-heading"><div><h3>{editing ? 'Edit Layout' : 'Layout Baru'}</h3><p>Gunakan komponen dan pengaturan yang sudah diizinkan schema.</p></div><button type="button" className="btn-close" aria-label="Tutup editor" onClick={startCreate} /></div>
                 <form className="p-4" onSubmit={save}>
                     <div className="mb-3"><label className="form-label" htmlFor="layout-name">Nama layout</label><input id="layout-name" className="form-control" required maxLength={120} value={name} onChange={(event) => setName(event.target.value)} /></div>
                     <div className="mb-3"><label className="form-label" htmlFor="layout-description">Deskripsi</label><textarea id="layout-description" className="form-control" rows={2} maxLength={2000} value={description} onChange={(event) => setDescription(event.target.value)} /></div>
                     <div className="mb-3"><label className="form-label" htmlFor="layout-definition">Layout definition (JSON)</label><textarea id="layout-definition" className="form-control font-monospace" rows={18} spellCheck={false} value={definitionText} onChange={(event) => setDefinitionText(event.target.value)} /><div className="form-text">Schema v1: sections dan blocks. HTML, CSS, JavaScript, dan komponen bebas tidak diperbolehkan.</div></div>
-                    <div className="d-flex justify-content-end gap-2"><button type="button" className="btn btn-light" onClick={() => { setEditing(null); setName(''); }}>Batal</button><button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Layout'}</button></div>
+                    <div className="d-flex justify-content-end gap-2"><button type="button" className="btn btn-light" onClick={() => { setShowEditor(false); setEditing(null); setName(''); }}>Batal</button><button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Layout'}</button></div>
                 </form>
                 {editing && <div className="px-4 pb-4"><h4 className="h6">Riwayat revisi</h4>{revisions.length === 0 ? <p className="text-secondary">Belum ada revisi.</p> : <ul className="list-group">{revisions.map((revision) => <li className="list-group-item d-flex justify-content-between" key={revision.id}><span>Revisi #{revision.revision_number} · {revision.user?.name || 'Pengguna tidak tersedia'}</span><small>{new Date(revision.created_at).toLocaleString('id-ID')}</small></li>)}</ul>}</div>}
             </section>}
