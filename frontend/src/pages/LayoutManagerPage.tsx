@@ -39,6 +39,7 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
     const [showEditor, setShowEditor] = useState(false);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [status, setStatus] = useState('draft');
     const [definition, setDefinition] = useState<Definition>(starter);
     const [sectionId, setSectionId] = useState<string | null>(starter.sections[0].id);
     const [blockId, setBlockId] = useState<string | null>(starter.sections[0].blocks[0].id);
@@ -61,10 +62,10 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
         return () => { active = false; };
     }, []);
     function openCreate() {
-        setEditing(null); setName(''); setDescription(''); setDefinition(starter); setSectionId(starter.sections[0].id); setBlockId(starter.sections[0].blocks[0].id); setRevisions([]); setError(''); setDevice('desktop'); setShowEditor(true);
+        setEditing(null); setName(''); setDescription(''); setStatus('draft'); setDefinition(starter); setSectionId(starter.sections[0].id); setBlockId(starter.sections[0].blocks[0].id); setRevisions([]); setError(''); setDevice('desktop'); setShowEditor(true);
     }
     async function openEdit(layout: Layout) {
-        setEditing(layout); setName(layout.name); setDescription(layout.description || ''); setDefinition(layout.definition);
+        setEditing(layout); setName(layout.name); setDescription(layout.description || ''); setStatus(layout.status); setDefinition(layout.definition);
         setSectionId(layout.definition.sections[0]?.id ?? null); setBlockId(layout.definition.sections[0]?.blocks[0]?.id ?? null); setRevisions([]); setError(''); setDevice('desktop'); setShowEditor(true);
         try { const response = await api.get('/admin/layouts/' + layout.id + '/revisions'); setRevisions(response.data.data.data || []); } catch (err) { setError(errorMessage(err)); }
     }
@@ -84,7 +85,7 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
         if (definition.sections.length > 50 || blocks > 200) { setError('Batas schema terlampaui: maksimal 50 section dan 200 block.'); return; }
         setSaving(true);
         try {
-            const payload = { name: name.trim(), description: description.trim() || null, definition };
+            const payload = { name: name.trim(), description: description.trim() || null, status, definition };
             if (editing) await api.put('/admin/layouts/' + editing.id, payload); else await api.post('/admin/layouts', payload);
             setNotice(editing ? 'Layout berhasil diperbarui.' : 'Layout berhasil dibuat.'); setShowEditor(false); setEditing(null); await loadLayouts();
         } catch (err) { setError(errorMessage(err)); } finally { setSaving(false); }
@@ -106,7 +107,7 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
             {showEditor && <div className="visual-editor-overlay"><form className="visual-editor-shell" onSubmit={save}>
                 <header className="visual-editor-topbar"><div className="visual-editor-title"><button type="button" className="btn btn-light btn-sm" onClick={() => setShowEditor(false)}>← Kembali</button><div><strong>{editing ? 'Edit Layout' : 'Layout Baru'}</strong><small>Editor visual · Schema v1</small></div></div><button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Layout'}</button></header>
                 {error && <div className="alert alert-danger m-3 mb-0">{error}</div>}
-                <div className="visual-editor-meta"><div><label htmlFor="visual-name">Nama layout</label><input id="visual-name" className="form-control form-control-sm" required maxLength={120} value={name} onChange={(event) => setName(event.target.value)} /></div><div><label htmlFor="visual-description">Deskripsi</label><input id="visual-description" className="form-control form-control-sm" maxLength={2000} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Deskripsi (opsional)" /></div></div>
+                <div className="visual-editor-meta"><div><label htmlFor="visual-name">Nama layout</label><input id="visual-name" className="form-control form-control-sm" required maxLength={120} value={name} onChange={(event) => setName(event.target.value)} /></div><div><label htmlFor="visual-description">Deskripsi</label><input id="visual-description" className="form-control form-control-sm" maxLength={2000} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Deskripsi (opsional)" /></div><div><label htmlFor="visual-layout-status">Status layout</label><select id="visual-layout-status" className="form-select form-select-sm" value={status} onChange={(event) => setStatus(event.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></div></div>
                 <div className="visual-editor-workspace">
                     <aside className="visual-toolbox"><div className="visual-panel-heading"><strong>Struktur halaman</strong><span>{definition.sections.length}/50</span></div><div className="visual-add-group"><small>Tambah section</small><div className="visual-add-grid">{sectionTypes.map((item) => <button type="button" key={item.value} onClick={() => addSection(item.value)}>＋ {item.label}</button>)}</div></div>
                         <div className="visual-section-list">{definition.sections.map((section, index) => <div key={section.id} draggable className={'visual-section-item ' + (sectionId === section.id ? 'active' : '')} onDragStart={() => setDragSection(index)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropSection(event, index)} onClick={() => { setSectionId(section.id); setBlockId(null); }}><span className="visual-drag-handle">⠿</span><span className="visual-section-name"><strong>{sectionTypes.find((item) => item.value === section.type)?.label}</strong><small>{section.blocks.length} block</small></span><span className="visual-item-actions"><button type="button" onClick={(event) => { event.stopPropagation(); reorderSections(index, index - 1); }}>↑</button><button type="button" onClick={(event) => { event.stopPropagation(); reorderSections(index, index + 1); }}>↓</button></span></div>)}{definition.sections.length === 0 && <p className="visual-empty">Tambahkan section untuk mulai.</p>}</div>

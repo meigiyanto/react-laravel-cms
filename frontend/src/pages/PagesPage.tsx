@@ -22,6 +22,8 @@ type MediaOption = {
     alt_text: string | null;
 };
 
+type LayoutOption = { id: number; name: string; slug: string };
+
 type CmsPage = {
     id: number;
     title: string;
@@ -30,6 +32,8 @@ type CmsPage = {
     status: Status;
     published_at: string | null;
     featured_image_id: number | null;
+    layout_id: number | null;
+    layout?: LayoutOption | null;
     featured_image?: MediaOption | null;
     meta_title: string | null;
     meta_description: string | null;
@@ -43,6 +47,7 @@ type PageForm = {
     body: string;
     status: Status;
     featured_image_id: string;
+    layout_id: string;
     meta_title: string;
     meta_description: string;
 };
@@ -60,6 +65,7 @@ const emptyForm: PageForm = {
     body: '',
     status: 'draft',
     featured_image_id: '',
+    layout_id: '',
     meta_title: '',
     meta_description: '',
 };
@@ -85,6 +91,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
     const location = useLocation();
     const [pages, setPages] = useState <CmsPage[]> ([]);
     const [media, setMedia] = useState <MediaOption[]> ([]);
+    const [layouts, setLayouts] = useState<LayoutOption[]>([]);
     const [page, setPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -133,6 +140,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                         body: current.body,
                         status: current.status,
                         featured_image_id: current.featured_image_id ? String(current.featured_image_id) : '',
+                        layout_id: current.layout_id ? String(current.layout_id) : '',
                         meta_title: current.meta_title || '',
                         meta_description: current.meta_description || '',
                     });
@@ -206,6 +214,12 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
         return () => window.clearTimeout(timer);
     }, [loadMediaOptions]);
 
+    useEffect(() => {
+        let active = true;
+        api.get('/pages/layout-options').then((response) => { if (active) setLayouts(response.data.data || []); }).catch((err) => { if (active) setError(errorMessage(err)); });
+        return () => { active = false; };
+    }, []);
+
     function openCreateForm() {
         setEditing(null);
         setForm(emptyForm);
@@ -230,6 +244,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                 status: current.status,
                 featured_image_id: current.featured_image_id
                 ? String(current.featured_image_id): '',
+                layout_id: current.layout_id ? String(current.layout_id) : '',
                 meta_title: current.meta_title || '',
                 meta_description: current.meta_description || '',
             });
@@ -270,6 +285,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             status: form.status,
             featured_image_id: form.featured_image_id
             ? Number(form.featured_image_id): null,
+            layout_id: form.layout_id ? Number(form.layout_id) : null,
             meta_title: form.meta_title.trim() || null,
             meta_description: form.meta_description.trim() || null,
         };
@@ -432,6 +448,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                             <div className="post-slug">
                                                 /{item.slug}
                                             </div>
+                                            {item.layout && <div className="post-slug">Layout: {item.layout.name}</div>}
                                             {item.featured_image && (
                                                 <div className="post-slug">
                                                     Gambar: {item.featured_image.original_name}
@@ -535,6 +552,15 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                         </select>
                                     </div>
             
+                                    <div className="mb-3">
+                                        <label className="form-label" htmlFor="page-layout">Layout halaman</label>
+                                        <select id="page-layout" className="form-select" value={form.layout_id} onChange={(event) => setForm((current) => ({ ...current, layout_id: event.target.value }))}>
+                                            <option value="">Layout default (konten editor)</option>
+                                            {layouts.map((layout) => <option key={layout.id} value={layout.id}>{layout.name}</option>)}
+                                        </select>
+                                        <div className="form-text">Hanya layout berstatus Published yang tersedia. Layout default menggunakan isi halaman di editor.</div>
+                                    </div>
+
                                     <div className="mb-3">
                                         <label className="form-label" htmlFor="page-featured-image">Gambar unggulan</label>
                                         <select id="page-featured-image" className="form-select" value={form.featured_image_id} onChange={(event) => setForm((current) => ({ ...current, featured_image_id: event.target.value }))}>

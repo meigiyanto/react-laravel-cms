@@ -6,6 +6,7 @@ import Header from '../../components/public/Header';
 import Footer from '../../components/public/Footer';
 import BackToTop from '../../components/public/BackToTop';
 import { handleImageFallback } from '../../utils/imageFallback';
+import LayoutRenderer, { type LayoutDefinition } from '../../components/public/LayoutRenderer';
 import '../../public-site.css';
 
 type PublicPageData = {
@@ -21,6 +22,7 @@ type PublicPageData = {
     } | null;
     meta_title: string | null;
     meta_description: string | null;
+    layout: { id: number; name: string; definition: LayoutDefinition } | null;
 };
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
@@ -120,7 +122,7 @@ export default function DynamicPage() {
                     </section>
                 ) : page ? (
                     <>
-                        <div className="page-title">
+                        {!page.layout && <div className="page-title">
                             <div className="breadcrumbs">
                                 <nav aria-label="breadcrumb">
                                     <ol className="breadcrumb">
@@ -130,8 +132,8 @@ export default function DynamicPage() {
                                 </nav>
                             </div>
                             <div className="title-wrapper"><h1>{page.title}</h1></div>
-                        </div>
-                        <section className="section">
+                        </div>}
+                        {page.layout ? <LayoutRenderer definition={page.layout.definition} /> : <section className="section">
                             <div className="container">
                                 <article className="cms-public-page">
                                     {featuredImage && (
@@ -143,7 +145,7 @@ export default function DynamicPage() {
                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.body || '') }} />
                                 </article>
                             </div>
-                        </section>
+                        </section>}
                     </>
                 ) : null}
             </main>

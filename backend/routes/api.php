@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::match(['put', 'patch'], '/media/{media}', [MediaController::class, 'update'])->middleware('permission:media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->middleware('permission:media.delete');
 
+    Route::get('/pages/layout-options', [PageController::class, 'layoutOptions'])->middleware('permission:pages.view,exact');
     Route::get('/pages', [PageController::class, 'index'])->middleware('permission:pages.view,exact');
     Route::get('/pages/{page}', [PageController::class, 'show'])->middleware('permission:pages.view,exact');
     Route::get('/pages/{page}/revisions', [ContentRevisionController::class, 'pageIndex'])->middleware('permission:pages.view,exact');
