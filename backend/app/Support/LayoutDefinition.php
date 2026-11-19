@@ -100,6 +100,7 @@ class LayoutDefinition
 
     private static function validMediaLink(string $value): bool
     {
+        if ($value === '') return true;
         return in_array(strtolower((string) parse_url($value, PHP_URL_SCHEME)), ['http', 'https'], true)
             && filter_var($value, FILTER_VALIDATE_URL) !== false;
     }
