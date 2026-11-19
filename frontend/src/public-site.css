@@ -3778,3 +3778,26 @@ section,
 
 .public-site-active[data-theme-button-style="outline"] .cms-layout-button.variant-primary { background: transparent; color: var(--theme-color-primary); }
 .public-site-active[data-theme-button-style="soft"] .cms-layout-button.variant-primary { background: color-mix(in srgb, var(--theme-color-primary), white 86%); color: var(--theme-color-primary); border-color: transparent; }
+
+
+/* Dynamic Page Builder blocks */
+.cms-layout-card { height: 100%; padding: 1.25rem; border: 1px solid var(--theme-color-border, #e5e7eb); border-radius: var(--theme-radius-card, 12px); background: var(--theme-color-surface, #fff); }
+.cms-layout-card h3 { margin: 0 0 .5rem; font-size: 1.15rem; }
+.cms-layout-card p, .cms-layout-accordion p { margin: .5rem 0 0; }
+.cms-layout-quote { margin: 0; padding: 1.25rem; border-left: 4px solid var(--theme-color-primary, #3458db); background: var(--theme-color-surface, #f8fafc); }
+.cms-layout-quote blockquote { margin: 0; font-size: 1.1rem; }
+.cms-layout-quote figcaption { margin-top: .75rem; color: var(--theme-color-muted, #64748b); font-size: .9rem; }
+.cms-layout-list { display: grid; gap: .5rem; padding-left: 1.25rem; }
+.cms-layout-accordion { padding: 1rem; border: 1px solid var(--theme-color-border, #e5e7eb); border-radius: var(--theme-radius-card, 12px); }
+.cms-layout-accordion summary { cursor: pointer; font-weight: 600; }
+.cms-layout-video { display: block; width: 100%; max-height: 560px; border-radius: var(--theme-radius-card, 12px); }
+.cms-layout-video-link { display: inline-flex; align-items: center; gap: .5rem; color: var(--theme-color-primary, #3458db); font-weight: 600; }
+.cms-layout-divider { border: 0; border-top: 1px solid var(--theme-color-border, #e5e7eb); margin: 1.5rem 0; }
+.preview-card { padding: 1rem; border: 1px solid #dce1ea; border-radius: 10px; background: #fff; }
+.preview-card strong { display: block; margin-bottom: .4rem; }
+.preview-card p { margin: 0; color: #64748b; }
+.preview-quote { margin: 0; padding: 1rem; border-left: 3px solid var(--theme-color-primary, #3458db); background: #f8fafc; }
+.preview-quote small { display: block; margin-top: .5rem; }
+.preview-accordion { padding: .75rem; border: 1px solid #dce1ea; border-radius: 8px; }
+.preview-video { padding: 1rem; border: 1px dashed #9ca3af; border-radius: 8px; overflow-wrap: anywhere; }
+.preview-list { padding-left: 1.25rem; }
