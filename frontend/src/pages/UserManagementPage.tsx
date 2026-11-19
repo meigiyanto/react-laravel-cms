@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
@@ -60,6 +61,8 @@ function formatDate(value: string): string {
 }
 
 export default function UserManagementPage({ onNavigate, onLogout }: NavigationProps) {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [users, setUsers] = useState<CmsUser[]>([]);
     const [viewing, setViewing] = useState<CmsUserDetail | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -81,14 +84,12 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
         setError('');
         try {
             const response = await api.get<UserListResponse>('/admin/users', {
-                params: { page, per_page: 100, search: search.trim() || undefined },
+                params: { page, per_page: 10, search: search.trim() || undefined },
             });
             const result = response.data;
             setUsers(result.data);
             setLastPage(result.meta.last_page);
             setTotal(result.meta.total);
-            // Backend saat ini belum menyediakan GET /roles, jadi pilihan role
-            // dikumpulkan dari metadata role pada akun yang dikembalikan API.
             setRoles((current) => {
                 const discovered = new Map<number, Role>();
                 current.forEach((role) => discovered.set(role.id, role));
@@ -103,6 +104,34 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
             setLoading(false);
         }
     }, [page, search]);
+
+    useEffect(() => {
+        const path = location.pathname.replace(/\/+$/, '');
+        if (path === '/admin/users/create') {
+            if (!showForm || editing !== null) {
+                Promise.resolve().then(() => {
+                    setEditing(null);
+                    setForm({ ...emptyForm, role_id: roles[0] ? String(roles[0].id) : '' });
+                    setShowForm(true);
+                });
+            }
+            return;
+        }
+        const match = path.match(/^\/admin\/users\/(\d+)\/edit$/);
+        if (match) {
+            const id = Number(match[1]);
+            if (editing?.id !== id || !showForm) {
+                void api.get<{ success: boolean; data: CmsUserDetail }>(`/admin/users/${id}`).then((response) => {
+                    const user = response.data.data;
+                    setEditing(user);
+                    setForm({ name: user.name, email: user.email, password: '', role_id: user.role ? String(user.role.id) : '' });
+                    setShowForm(true);
+                }).catch((err) => setError(errorMessage(err)));
+            }
+            return;
+        }
+        if (showForm) Promise.resolve().then(() => { setShowForm(false); setEditing(null); setForm(emptyForm); });
+    }, [location.pathname, showForm, editing?.id, roles]);
 
     async function openDetail(user: CmsUser) {
         setViewing(null);
@@ -162,6 +191,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
         setError('');
         setNotice('');
         setShowForm(true);
+        navigate('/admin/users/create');
     }
 
     function openEditForm(user: CmsUser) {
@@ -175,6 +205,14 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
         setError('');
         setNotice('');
         setShowForm(true);
+        navigate(`/admin/users/${user.id}/edit`);
+    }
+
+    function closeEditor() {
+        setShowForm(false);
+        setEditing(null);
+        setForm(emptyForm);
+        navigate('/admin/users');
     }
 
     async function saveUser(event: FormEvent<HTMLFormElement>) {
@@ -193,7 +231,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
                 }
                 setNotice('Data pengguna berhasil diperbarui.');
             } else {
-                await api.post('/users', {
+                await api.post('/admin/users', {
                     name: form.name.trim(),
                     email: form.email.trim(),
                     password: form.password,
@@ -202,6 +240,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
                 setNotice('Pengguna berhasil dibuat.');
             }
             setShowForm(false);
+            navigate('/admin/users');
             setEditing(null);
             setForm(emptyForm);
             setPage(1);
@@ -218,15 +257,15 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
             active="users"
             onNavigate={onNavigate}
             onLogout={onLogout}
-            title="Manajemen Pengguna"
-            breadcrumb="Workspace / Pengaturan / Pengguna"
-            actions={
+            title={showForm ? (editing ? 'Edit Pengguna' : 'Pengguna Baru') : 'Manajemen Pengguna'}
+            breadcrumb={showForm ? 'Workspace / Pengaturan / Pengguna / Editor' : 'Workspace / Pengaturan / Pengguna'}
+            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>Kembali ke Pengguna</button> : (
                 <button className="btn btn-primary" type="button" onClick={openCreateForm}>
                     <FontAwesomeIcon icon={faUserPlus} className="me-2" />Pengguna Baru
                 </button>
-            }
+            )}
         >
-            <section className="welcome-panel">
+            {!showForm && <><section className="welcome-panel">
                 <div>
                     <span className="eyebrow">USER MANAGEMENT</span>
                     <h2>Kelola akun dan role.</h2>
@@ -318,20 +357,14 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
                 />
             </section>
 
-            {showForm && <div className="modal-backdrop-custom" role="presentation" onMouseDown={(event) => {
-                if (event.target === event.currentTarget && !saving) setShowForm(false);
-            }}>
-                <section className="editor-modal" role="dialog" aria-modal="true" aria-labelledby="user-form-title">
-                    <div className="modal-heading">
-                        <div>
-                            <h2 id="user-form-title">{editing ? 'Edit Pengguna' : 'Tambah Pengguna'}</h2>
-                            <p>{editing ? 'Perbarui profil atau role akun.' : 'Buat akun baru untuk mengakses CMS.'}</p>
-                        </div>
-                        <button className="btn-close" type="button" aria-label="Tutup" disabled={saving} onClick={() => setShowForm(false)} />
-                    </div>
-                    {roles.length === 0 && <div className="alert alert-warning">
-                        Role belum dapat dimuat dari pengguna yang ada. Backend perlu menyediakan endpoint daftar role untuk pilihan lengkap.
-                    </div>}
+            </>}
+
+            {showForm && error && <div className="alert alert-danger mt-3" role="alert">{error}</div>}
+            {showForm && <section className="content-panel editor-page mt-4">
+                <div className="panel-heading">
+                    <div><h3>{editing ? 'Edit Pengguna' : 'Tambah Pengguna'}</h3><p>{editing ? 'Perbarui profil atau role akun.' : 'Buat akun baru untuk mengakses CMS.'}</p></div>
+                </div>
+                    {roles.length === 0 && <div className="alert alert-warning">Daftar role belum tersedia. Muat ulang halaman atau periksa konfigurasi role.</div>}
                     <form onSubmit={(event) => void saveUser(event)}>
                         <div className="mb-3">
                             <label className="form-label" htmlFor="user-name">Nama</label>
@@ -356,17 +389,16 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
                                 <option value="" disabled>Pilih role</option>
                                 {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
                             </select>
-                            <div className="form-text">Pilihan berasal dari role yang sudah digunakan akun yang dimuat.</div>
+                            <div className="form-text">Role menentukan izin akses pengguna di dalam CMS.</div>
                         </div>
                         <div className="modal-actions">
-                            <button className="btn btn-light" type="button" disabled={saving} onClick={() => setShowForm(false)}>Batal</button>
+                            <button className="btn btn-light" type="button" disabled={saving} onClick={closeEditor}>Batal</button>
                             <button className="btn btn-primary" type="submit" disabled={saving || !form.role_id}>
                                 {saving ? 'Menyimpan...' : editing ? 'Simpan Perubahan' : 'Buat Pengguna'}
                             </button>
                         </div>
                     </form>
-                </section>
-            </div>}
+            </section>}
 
             {(viewing || detailLoading) && (
                 <div className="modal-backdrop-custom" role="presentation" onMouseDown={(event) => {
