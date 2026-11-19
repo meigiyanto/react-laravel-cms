@@ -369,7 +369,7 @@ export default function CategoriesPage({
                     currentPage={page}
                     lastPage={lastPage}
                     total={total}
-                    perPage={10}
+                    perPage={15}
                     loading={loading}
                     itemLabel="kategori"
                     onPageChange={setPage}
