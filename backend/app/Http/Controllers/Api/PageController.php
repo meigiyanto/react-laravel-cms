@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Models\Layout;
 use App\Support\ArticleHtmlSanitizer;
 use App\Models\Media;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,11 @@ class PageController extends Controller
         'admin', 'login', 'about', 'about-author', 'contact', 'blog', '404', 'search-results',
     ];
     
+    public function layoutOptions(): JsonResponse
+    {
+        return response()->json(['success' => true, 'data' => Layout::query()->where('status', 'published')->orderBy('name')->get(['id', 'name', 'slug'])]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -29,7 +35,7 @@ class PageController extends Controller
             'page' => ['sometimes', 'integer', 'min:1'],
         ]);
     
-        $query = Page::with(['user', 'featuredImage'])
+        $query = Page::with(['user', 'featuredImage', 'layout:id,name,slug,status'])
             ->latest();
     
         $search = trim($validated['search'] ?? '');
@@ -61,6 +67,7 @@ class PageController extends Controller
             'body' => ['required', 'string'],
             'status' => ['sometimes', Rule::in(['draft', 'published', 'archived'])],
             'featured_image_id' => ['nullable', 'integer', 'exists:media,id'],
+            'layout_id' => ['nullable', 'integer', Rule::exists('layouts', 'id')->where('status', 'published')],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ]);
@@ -88,7 +95,7 @@ class PageController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Halaman berhasil dibuat.',
-            'data' => $page->load(['user', 'featuredImage']),
+            'data' => $page->load(['user', 'featuredImage', 'layout:id,name,slug,status']),
         ], 201);
     }
 
@@ -114,6 +121,7 @@ class PageController extends Controller
             'body' => ['sometimes', 'required', 'string'],
             'status' => ['sometimes', Rule::in(['draft', 'published', 'archived'])],
             'featured_image_id' => ['sometimes', 'nullable', 'integer', 'exists:media,id'],
+            'layout_id' => ['sometimes', 'nullable', 'integer', Rule::exists('layouts', 'id')->where('status', 'published')],
             'meta_title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'meta_description' => ['sometimes', 'nullable', 'string', 'max:500'],
         ]);
@@ -158,7 +166,7 @@ class PageController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Halaman berhasil diperbarui.',
-            'data' => $page->fresh()->load(['user', 'featuredImage']),
+            'data' => $page->fresh()->load(['user', 'featuredImage', 'layout:id,name,slug,status']),
         ]);
     }
 
