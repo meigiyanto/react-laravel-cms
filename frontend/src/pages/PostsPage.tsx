@@ -384,12 +384,12 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     }, []);
 
     useEffect(() => {
-        const path = location.pathname.replace(/\\/+$/, '');
+        const path = location.pathname.replace(/\/+$/, '');
         if (path === '/admin/posts/create') {
             if (!showForm) { setEditing(null); setForm(emptyForm); setFieldErrors({}); setShowForm(true); void loadEditorOptions(); }
             return;
         }
-        const match = path.match(/^\\/admin\\/posts\\/(\\d+)\\/edit$/);
+        const match = path.match(/^\/admin\/posts\/(\d+)\/edit$/);
         if (match) {
             const id = Number(match[1]);
             if (editing?.id !== id) {
