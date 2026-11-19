@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\Theme;
 use App\Models\User;
 use App\Support\ThemeDefaults;
+use App\Services\ThemeManagerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -45,7 +46,7 @@ class ThemeManagerTest extends TestCase
             'schema_version' => 1,
             'settings' => ThemeDefaults::settings(),
         ]);
-        app(\\App\\Services\\ThemeManagerService::class)->recordRevision($theme);
+        app(ThemeManagerService::class)->recordRevision($theme);
 
         return $theme;
     }
