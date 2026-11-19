@@ -365,13 +365,6 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
                 <div className="panel-heading">
                     <div><h3>{editing ? 'Edit Pengguna' : 'Tambah Pengguna'}</h3><p>{editing ? 'Perbarui profil atau role akun.' : 'Buat akun baru untuk mengakses CMS.'}</p></div>
                 </div>
-                    <div className="modal-heading">
-                        <div>
-                            <h2 id="user-form-title">{editing ? 'Edit Pengguna' : 'Tambah Pengguna'}</h2>
-                            <p>{editing ? 'Perbarui profil atau role akun.' : 'Buat akun baru untuk mengakses CMS.'}</p>
-                        </div>
-                        <button className="btn-close" type="button" aria-label="Kembali ke pengguna" disabled={saving} onClick={closeEditor} />
-                    </div>
                     {roles.length === 0 && <div className="alert alert-warning">Daftar role belum tersedia. Muat ulang halaman atau periksa konfigurasi role.</div>}
                     <form onSubmit={(event) => void saveUser(event)}>
                         <div className="mb-3">
