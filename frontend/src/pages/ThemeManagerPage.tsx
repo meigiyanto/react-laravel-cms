@@ -3,9 +3,10 @@ import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import ThemePreview from '../components/ThemePreview';
+import ThemeComparison from '../components/ThemeComparison';
 import type { ActiveModule } from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPalette, faPlus, faCheck, faEdit, faHistory, faUndo } from '@fortawesome/free-solid-svg-icons';
+import { faPalette, faPlus, faCheck, faEdit, faHistory, faUndo, faCopy } from '@fortawesome/free-solid-svg-icons';
 
 type ThemeSettings = {
     colors: Record<string, string>;
@@ -235,6 +236,24 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
         }
     }
 
+    async function duplicateTheme(theme: Theme) {
+        const name = window.prompt('Nama untuk salinan tema dari "' + theme.name + '":', theme.name + ' Copy');
+        if (!name?.trim()) return;
+        setSaving(true);
+        setError('');
+        setNotice('');
+        try {
+            const response = await api.post('/admin/themes/' + theme.id + '/duplicate', { name: name.trim() });
+            const created: Theme = response.data.data;
+            await loadThemes();
+            setNotice('Tema "' + created.name + '" berhasil diduplikasi sebagai draft. Tema aktif tidak berubah.');
+        } catch (err) {
+            setError(getErrorMessage(err));
+        } finally {
+            setSaving(false);
+        }
+    }
+
     async function activateTheme(theme: Theme) {
         if (theme.id === activeThemeId) return;
         if (!window.confirm(`Aktifkan tema "${theme.name}" untuk website publik?`)) return;
@@ -310,11 +329,14 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
                         {theme.description && <p className="theme-description">{theme.description}</p>}
                         <div className="d-flex gap-2 mt-3"><button className="btn btn-sm btn-outline-primary flex-grow-1" type="button" onClick={() => selectTheme(theme)}>
                             <FontAwesomeIcon icon={faEdit} className="me-1" />Edit</button>
+                            <button className="btn btn-sm btn-outline-secondary" type="button" disabled={saving} onClick={() => void duplicateTheme(theme)} title="Duplikasi tema"><FontAwesomeIcon icon={faCopy} /></button>
                             <button className="btn btn-sm btn-primary flex-grow-1" type="button" disabled={activeThemeId === theme.id || activatingId !== null || !theme.settings}
                                 onClick={() => void activateTheme(theme)}>{activatingId === theme.id ? 'Mengaktifkan...' : activeThemeId === theme.id ? 'Tema Aktif' : <><FontAwesomeIcon icon={faCheck} className="me-1" />Aktifkan</>}</button></div>
                     </div></article>)}
                 </div>}
             </section>
+
+            <ThemeComparison themes={themes} />
 
             {selected && <section className="content-panel mt-4 theme-editor">
                 <div className="panel-heading"><div><h3>Edit Design Tokens: {selected.name}</h3>
