@@ -6,8 +6,9 @@ export default function Footer() {
 
             <div className="container footer-top">
                 <div className="row gy-4">
-                    <div className="col-lg-4 col-md-6 footer-about">
-                        <Link to="index.html" className="logo d-flex align-items-center">
+                    <div className="col-lg-6 col-md-6 footer-about">
+                        <Link to="/" className="logo d-flex align-items-center">
+                            <span className="brand-mark text-white me-2">C</span>
                             <span className="sitename">Content HUB</span>
                         </Link>
                         <div className="footer-contact pt-3">
@@ -29,28 +30,17 @@ export default function Footer() {
                         </div>
                     </div>
     
-                    <div className="col-lg-4 col-md-6 footer-links">
+                    <div className="col-lg-6 col-md-6 footer-links">
                         <h4>Useful Links</h4>
                         <ul>
                             <li><Link to="/home">Home</Link></li>
-                            <li><Link to="/about">About us</Link></li>
-                            <li><Link to="/services">Services</Link></li>
-                            <li><Link to="/toc">Terms of service</Link></li>
-                            <li><Link to="/policy">Privacy policy</Link></li>
+                            <li><Link to="/about">About Us</Link></li>
+                            <li><Link to="/disclaimer">Disclaimer</Link></li>
+                            <li><Link to="/terms-and-conditions">Terms and Conditions</Link></li>
+                            <li><Link to="/privacy-policy">Privacy Policy</Link></li>
                         </ul>
                     </div>
-    
-                    <div className="col-lg-4 col-md-6 footer-links">
-                        <h4>Our Services</h4>
-                        <ul>
-                            <li><Link to="#">Web Design</Link></li>
-                            <li><Link to="#">Web Development</Link></li>
-                            <li><Link to="#">Product Management</Link></li>
-                            <li><Link to="#">Marketing</Link></li>
-                            <li><Link to="#">Graphic Design</Link></li>
-                        </ul>
-                    </div>
-    
+                    
                 </div>
             </div>
             

@@ -154,7 +154,7 @@ export default function Header() {
 
     return (
         <header id="header" className="header position-relative">
-            <div className="container-fluid container-xl position-relative">
+            <div className="container container-xl position-relative">
                 <div className="top-row d-flex align-items-center justify-content-between">
                     <Link to="/" className="logo d-flex align-items-end">
                         {/* Gunakan gambar logo jika diperlukan. */}
