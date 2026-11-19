@@ -30,14 +30,14 @@ class ContentRevisionController extends Controller
         $this->authorizePostUpdateAccess($request, $post);
         $this->assertRevisionBelongsTo($revision, $post);
 
-        return $this->restore($post, $revision);
+        return $this->restore($request, $post, $revision);
     }
 
-    public function restorePage(Page $page, ContentRevision $revision): JsonResponse
+    public function restorePage(Request $request, Page $page, ContentRevision $revision): JsonResponse
     {
         $this->assertRevisionBelongsTo($revision, $page);
 
-        return $this->restore($page, $revision);
+        return $this->restore($request, $page, $revision);
     }
 
     private function history(Post|Page $content): JsonResponse
@@ -48,11 +48,21 @@ class ContentRevisionController extends Controller
         ]);
     }
 
-    private function restore(Post|Page $content, ContentRevision $revision): JsonResponse
+    private function restore(Request $request, Post|Page $content, ContentRevision $revision): JsonResponse
     {
         $snapshot = $revision->snapshot;
         $allowed = array_intersect_key($snapshot, array_flip($content->getFillable()));
         unset($allowed['user_id']);
+
+        if (($allowed['status'] ?? $content->status) === 'published' && $content->status !== 'published') {
+            $permission = $content instanceof Post ? 'posts.publish' : 'pages.publish';
+            $permissions = $request->user()->role?->permissions ?? [];
+            abort_unless(
+                in_array('*', $permissions, true) || in_array($permission, $permissions, true),
+                403,
+                'Anda tidak memiliki izin untuk menerbitkan konten melalui pemulihan versi.'
+            );
+        }
 
         if (array_key_exists('body', $allowed)) {
             $allowed['body'] = ArticleHtmlSanitizer::sanitize((string) $allowed['body']);
