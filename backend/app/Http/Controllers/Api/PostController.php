@@ -55,8 +55,14 @@ class PostController extends Controller
             'status' => ['sometimes', 'nullable', Rule::in(self::STATUSES)],
             'category_id' => ['sometimes', 'nullable', 'integer', 'exists:categories,id'],
             'updated_within' => ['sometimes', 'nullable', Rule::in(['24h', '7d', '30d', '90d'])],
+            'ownership' => ['sometimes', 'nullable', Rule::in(['own', 'all'])],
             'page' => ['sometimes', 'integer', 'min:1'],
         ]);
+
+        $permissions = $request->user()->role?->permissions ?? [];
+        $canViewAll = in_array('*', $permissions, true)
+            || in_array('posts.view', $permissions, true);
+        $ownership = $validated['ownership'] ?? 'all';
 
         $posts = Post::query()
             ->with(['user.role', 'categories', 'tags', 'featuredImage'])
@@ -95,19 +101,8 @@ class PostController extends Controller
                 }
             )
             ->when(
-                ! in_array(
-                    '*',
-                    $request->user()->role?->permissions ?? [],
-                    true
-                ) && ! in_array(
-                    'posts.view',
-                    $request->user()->role?->permissions ?? [],
-                    true
-                ),
-                fn ($query) => $query->where(
-                    'user_id',
-                    $request->user()->id
-                )
+                ! $canViewAll || $ownership === 'own',
+                fn ($query) => $query->where('user_id', $request->user()->id)
             )
             ->latest()
             ->paginate(10)
