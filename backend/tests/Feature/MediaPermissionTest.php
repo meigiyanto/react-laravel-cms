@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Layout;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Post;
@@ -385,6 +386,23 @@ class MediaPermissionTest extends TestCase
             'id' => $page->id,
             'featured_image_id' => null,
         ]);
+    }
+
+
+    public function test_media_cannot_be_deleted_while_used_by_a_layout(): void
+    {
+        $media = $this->createMedia($this->admin, 'layout-image.jpg', 'Gambar layout');
+        Layout::create([
+            'name' => 'Media Layout', 'slug' => 'media-layout', 'status' => 'draft', 'schema_version' => 1,
+            'definition' => ['version' => 1, 'sections' => [[
+                'id' => 'hero', 'type' => 'hero', 'settings' => [],
+                'blocks' => [['id' => 'image', 'type' => 'image', 'content' => '', 'media_id' => $media->id, 'settings' => []]],
+            ]]],
+            'user_id' => $this->admin->id,
+        ]);
+        $this->actingAs($this->admin, 'sanctum')->deleteJson('/api/media/' . $media->id)
+            ->assertStatus(422);
+        $this->assertDatabaseHas('media', ['id' => $media->id]);
     }
 
 }
