@@ -90,8 +90,6 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
             setUsers(result.data);
             setLastPage(result.meta.last_page);
             setTotal(result.meta.total);
-            // Backend saat ini belum menyediakan GET /roles, jadi pilihan role
-            // dikumpulkan dari metadata role pada akun yang dikembalikan API.
             setRoles((current) => {
                 const discovered = new Map<number, Role>();
                 current.forEach((role) => discovered.set(role.id, role));
@@ -361,6 +359,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
 
             </>}
 
+            {showForm && error && <div className="alert alert-danger mt-3" role="alert">{error}</div>}
             {showForm && <section className="content-panel editor-page mt-4">
                 <div className="panel-heading">
                     <div><h3>{editing ? 'Edit Pengguna' : 'Tambah Pengguna'}</h3><p>{editing ? 'Perbarui profil atau role akun.' : 'Buat akun baru untuk mengakses CMS.'}</p></div>
