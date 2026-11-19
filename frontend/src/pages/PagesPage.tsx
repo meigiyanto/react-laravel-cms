@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useState, lazy, Suspense, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
@@ -80,6 +81,8 @@ type NavigationProps = {
 };
 
 export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [pages, setPages] = useState <CmsPage[]> ([]);
     const [media, setMedia] = useState <MediaOption[]> ([]);
     const [page, setPage] = useState(1);
@@ -101,6 +104,25 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
     const canEditPage = canExact(profile, "pages.update");
     const canDeletePage = canExact(profile, "pages.delete");
     const canPublishPage = canExact(profile, "pages.publish");
+
+    useEffect(() => {
+        const path = location.pathname.replace(/\\/+$/, '');
+        if (path === '/admin/pages/create') { if (!showForm) { setEditing(null); setForm(emptyForm); setShowForm(true); } return; }
+        const match = path.match(/^\\/admin\\/pages\\/(\\d+)\\/edit$/);
+        if (match) {
+            const id = Number(match[1]);
+            if (editing?.id !== id) {
+                void api.get('/pages/' + id).then((response) => {
+                    const current: CmsPage = response.data.data;
+                    setEditing(current);
+                    setForm({ title: current.title, slug: current.slug, body: current.body, status: current.status, featured_image_id: current.featured_image_id ? String(current.featured_image_id) : '', meta_title: current.meta_title || '', meta_description: current.meta_description || '' });
+                    setShowForm(true);
+                }).catch((err) => setError(errorMessage(err)));
+            }
+            return;
+        }
+        if (showForm) { setShowForm(false); setEditing(null); }
+    }, [location.pathname, showForm, editing?.id]);
 
     const loadPages = useCallback(async () => {
         setLoading(true);
@@ -162,6 +184,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
         setError('');
         setNotice('');
         setShowForm(true);
+        navigate('/admin/pages/create');
     }
 
     async function openEditForm(item: CmsPage) {
@@ -183,9 +206,17 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                 meta_description: current.meta_description || '',
             });
             setShowForm(true);
+            navigate(`/admin/pages/${current.id}/edit`);
         } catch (err) {
             setError(errorMessage(err));
         }
+    }
+
+    function closeEditor() {
+        setShowForm(false);
+        setEditing(null);
+        setForm(emptyForm);
+        navigate('/admin/pages');
     }
 
     async function savePage(event: FormEvent < HTMLFormElement >) {
@@ -232,6 +263,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             }
 
             setShowForm(false);
+            navigate('/admin/pages');
             setEditing(null);
             setForm(emptyForm);
             setPage(1);
@@ -273,14 +305,15 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             active="pages"
             onNavigate={onNavigate}
             onLogout={onLogout}
-            title="Halaman"
-            breadcrumb="Workspace / Konten / Halaman"
-            actions={canCreatePage ? (
+            title={showForm ? (editing ? 'Edit Halaman' : 'Halaman Baru') : 'Halaman'}
+            breadcrumb={showForm ? 'Workspace / Konten / Halaman / Editor' : 'Workspace / Konten / Halaman'}
+            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>Kembali ke Halaman</button> : canCreatePage ? (
                 <button className="btn btn-primary" type="button" onClick={openCreateForm}>
                     <FontAwesomeIcon icon={faPlus} /> Halaman Baru
                 </button>
             ) : null}
         >
+            {!showForm && <>
             <section className="welcome-panel">
                 <div>
                     <span className="eyebrow">PAGE MANAGEMENT</span>
@@ -410,10 +443,11 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                     onPageChange={setPage}
                 />
             </section>
+            </>}
 
             {showForm && (editing ? canEditPage : canCreatePage) && (
-                <div className="modal-backdrop-custom" role="presentation">
-                    <section className="editor-modal page-editor-modal" role="dialog" aria-modal="true" aria-labelledby="page-editor-title">
+                <div className="editor-page-shell">
+                    <section className="content-panel editor-page page-editor-page" role="region" aria-labelledby="page-editor-title">
                         <div className="modal-heading">
                             <div>
                                 <h2 id="page-editor-title">
@@ -424,7 +458,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                 </p>
                             </div>
                             <button className="btn-close" type="button" aria-label="Tutup"
-                                disabled={saving} onClick={() => setShowForm(false)} />
+                                disabled={saving} onClick={closeEditor} />
                         </div>
     
                         <form onSubmit={savePage}>
