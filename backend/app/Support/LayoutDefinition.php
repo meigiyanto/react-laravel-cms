@@ -7,8 +7,8 @@ use Illuminate\Validation\ValidationException;
 
 class LayoutDefinition
 {
-    private const SECTION_TYPES = ['container', 'hero', 'content', 'grid', 'columns', 'cta'];
-    private const BLOCK_TYPES = ['heading', 'text', 'image', 'button', 'spacer'];
+    private const SECTION_TYPES = ['container', 'hero', 'content', 'grid', 'columns', 'cta', 'features', 'testimonials', 'faq', 'gallery'];
+    private const BLOCK_TYPES = ['heading', 'text', 'image', 'button', 'spacer', 'card', 'quote', 'list', 'video', 'divider', 'accordion'];
     private const SECTION_SETTINGS = ['width', 'spacing', 'background'];
     private const BLOCK_SETTINGS = ['align', 'size', 'variant', 'url', 'target'];
 
@@ -50,8 +50,14 @@ class LayoutDefinition
                 if ($block['type'] === 'button' && isset($block['settings']['url']) && ! self::validLink($block['settings']['url'])) {
                     self::fail("{$blockPath}.settings.url", 'URL tombol harus berupa HTTP(S), mailto, tel, atau path internal yang valid.');
                 }
-                if ($block['type'] !== 'button' && (isset($block['settings']['url']) || isset($block['settings']['target']))) {
-                    self::fail("{$blockPath}.settings", 'Pengaturan tautan hanya berlaku untuk block button.');
+                if ($block['type'] === 'video' && isset($block['settings']['url']) && ! self::validMediaLink($block['settings']['url'])) {
+                    self::fail("{$blockPath}.settings.url", 'Video harus menggunakan URL HTTP(S) yang valid.');
+                }
+                if ($block['type'] !== 'button' && isset($block['settings']['target'])) {
+                    self::fail("{$blockPath}.settings", 'Target tautan hanya berlaku untuk block button.');
+                }
+                if (! in_array($block['type'], ['button', 'video'], true) && isset($block['settings']['url'])) {
+                    self::fail("{$blockPath}.settings", 'URL hanya berlaku untuk block button atau video.');
                 }
             }
         }
@@ -90,6 +96,12 @@ class LayoutDefinition
         $scheme = strtolower($scheme);
         if (in_array($scheme, ['mailto', 'tel'], true)) return preg_match('/^' . $scheme . ':[a-z0-9+().,_@-]+$/i', $value) === 1;
         return in_array($scheme, ['http', 'https'], true) && filter_var($value, FILTER_VALIDATE_URL) !== false;
+    }
+
+    private static function validMediaLink(string $value): bool
+    {
+        return in_array(strtolower((string) parse_url($value, PHP_URL_SCHEME)), ['http', 'https'], true)
+            && filter_var($value, FILTER_VALIDATE_URL) !== false;
     }
 
     private static function hasOnlyKeys(array $value, array $allowed): bool
