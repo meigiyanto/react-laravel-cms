@@ -4,7 +4,7 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTags, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faTags, faSearch, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 import { canExact } from '../utils/permissions';
 
@@ -154,8 +154,8 @@ export default function TagsPage({ onNavigate, onLogout }: NavigationProps) {
                             ) : filteredTags.map((tag) => (
                                 <tr key={tag.id}><td><div className="post-title">{tag.name}</div></td><td><span className="post-slug">/{tag.slug}</span></td>
                                     <td><div className="d-flex justify-content-end gap-2">
-                                        {canEditTag && <button className="btn btn-sm btn-outline-warning" type="button" onClick={() => openEditForm(tag)} disabled={deletingId !== null}>Edit</button>}
-                                        {canDeleteTag && <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => void deleteTag(tag)} disabled={deletingId !== null}>{deletingId === tag.id ? 'Menghapus...' : 'Hapus'}</button>}
+                                        {canEditTag && <button className="btn btn-sm btn-outline-warning" type="button" onClick={() => openEditForm(tag)} disabled={deletingId !== null}><FontAwesomeIcon icon={faEdit} /></button>}
+                                        {canDeleteTag && <button className="btn btn-sm btn-outline-danger" type="button" onClick={() => void deleteTag(tag)} disabled={deletingId !== null}>{deletingId === tag.id ? 'Menghapus...' : <FontAwesomeIcon icon={faTrash} />}</button>}
                                     </div></td>
                                 </tr>
                             ))}

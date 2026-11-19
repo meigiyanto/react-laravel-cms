@@ -33,10 +33,10 @@ export default function AdminLayout({ active, onNavigate, title, onLogout, bread
                         </div>
                     </div>
                     <div className="d-flex align-items-center gap-2">
+                        {actions}
                         <button className="btn btn-outline-secondary" type="button" onClick={onLogout}>
                             <FontAwesomeIcon icon={faSignOut} /> Keluar
                         </button>
-                        {actions}
                     </div>
                     
                 </header>

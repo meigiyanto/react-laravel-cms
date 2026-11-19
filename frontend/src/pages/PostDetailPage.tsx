@@ -173,7 +173,7 @@ export default function PostDetailPage({ onNavigate, postId, onLogout, onBack, o
                     onClick={onBack}
                 >
                     <FontAwesomeIcon icon={faArrowLeft} />
-                    Kembali ke Daftar Artikel
+                    Kembali
                 </button>
             </div>
 
