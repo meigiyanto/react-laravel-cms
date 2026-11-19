@@ -212,4 +212,32 @@ class PublicPageTest extends TestCase
             ->assertJsonPath('data.layout.definition.sections.0.blocks.0.media.alt_text', 'Pemandangan pantai');
     }
 
+
+    public function test_public_page_exposes_dynamic_layout_blocks_for_controlled_frontend_rendering(): void
+    {
+        $user = User::factory()->create();
+        $layout = Layout::create([
+            'name' => 'Dynamic Blocks', 'slug' => 'dynamic-blocks', 'status' => 'published', 'schema_version' => 1,
+            'definition' => ['version' => 1, 'sections' => [[
+                'id' => 'features', 'type' => 'features', 'settings' => [],
+                'blocks' => [
+                    ['id' => 'card-one', 'type' => 'card', 'content' => "Cepat\nDeskripsi", 'settings' => []],
+                    ['id' => 'quote-one', 'type' => 'quote', 'content' => "Sangat membantu\nPelanggan", 'settings' => []],
+                    ['id' => 'faq-one', 'type' => 'accordion', 'content' => "Apa manfaatnya?\nLebih mudah.", 'settings' => []],
+                    ['id' => 'video-one', 'type' => 'video', 'content' => 'Tonton', 'settings' => ['url' => 'https://cdn.example.test/demo.mp4']],
+                ],
+            ]]],
+            'user_id' => $user->id,
+        ]);
+        Page::create([
+            'user_id' => $user->id, 'layout_id' => $layout->id, 'title' => 'Dynamic', 'slug' => 'dynamic',
+            'body' => '', 'status' => 'published', 'published_at' => now()->subMinute(),
+        ]);
+        $this->getJson('/api/public/pages/dynamic')->assertOk()
+            ->assertJsonPath('data.layout.definition.sections.0.type', 'features')
+            ->assertJsonPath('data.layout.definition.sections.0.blocks.0.type', 'card')
+            ->assertJsonPath('data.layout.definition.sections.0.blocks.2.type', 'accordion')
+            ->assertJsonPath('data.layout.definition.sections.0.blocks.3.settings.url', 'https://cdn.example.test/demo.mp4');
+    }
+
 }
