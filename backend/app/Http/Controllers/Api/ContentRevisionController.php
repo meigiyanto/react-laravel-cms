@@ -27,7 +27,7 @@ class ContentRevisionController extends Controller
 
     public function restorePost(Request $request, Post $post, ContentRevision $revision): JsonResponse
     {
-        $this->authorizePostAccess($request, $post);
+        $this->authorizePostUpdateAccess($request, $post);
         $this->assertRevisionBelongsTo($revision, $post);
 
         return $this->restore($post, $revision);
@@ -76,6 +76,18 @@ class ContentRevisionController extends Controller
             $revision->revisionable_type === $content->getMorphClass()
                 && (int) $revision->revisionable_id === (int) $content->getKey(),
             404
+        );
+    }
+
+    private function authorizePostUpdateAccess(Request $request, Post $post): void
+    {
+        $permissions = $request->user()->role?->permissions ?? [];
+        abort_unless(
+            in_array('*', $permissions, true)
+                || in_array('posts.update', $permissions, true)
+                || ($post->user_id === $request->user()->id && in_array('posts.update.own', $permissions, true)),
+            403,
+            'Anda tidak dapat memulihkan artikel milik pengguna lain.'
         );
     }
 
