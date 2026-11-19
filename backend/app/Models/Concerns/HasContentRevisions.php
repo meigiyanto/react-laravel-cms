@@ -20,6 +20,11 @@ trait HasContentRevisions
                 ->mapWithKeys(fn (string $field) => [$field => $model->getAttribute($field)])
                 ->all();
 
+            if ($model instanceof \\App\\Models\\Post) {
+                $snapshot['is_featured'] = (bool) ($model->getAttribute('is_featured') ?? false);
+                $snapshot['allow_comments'] = (bool) ($model->getAttribute('allow_comments') ?? true);
+            }
+
             $nextNumber = (int) ContentRevision::query()
                 ->where('revisionable_type', $model->getMorphClass())
                 ->where('revisionable_id', $model->getKey())
