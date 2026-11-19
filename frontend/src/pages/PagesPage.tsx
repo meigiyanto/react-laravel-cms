@@ -110,9 +110,11 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
 
         if (path === '/admin/pages/create') {
             if (!showForm || editing !== null) {
-                setEditing(null);
-                setForm(emptyForm);
-                setShowForm(true);
+                Promise.resolve().then(() => {
+                    setEditing(null);
+                    setForm(emptyForm);
+                    setShowForm(true);
+                });
             }
             return;
         }
@@ -141,9 +143,11 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
         }
 
         if (showForm) {
-            setShowForm(false);
-            setEditing(null);
-            setForm(emptyForm);
+            Promise.resolve().then(() => {
+                setShowForm(false);
+                setEditing(null);
+                setForm(emptyForm);
+            });
         }
     }, [location.pathname, showForm, editing?.id, editing]);
 
