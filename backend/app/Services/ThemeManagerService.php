@@ -8,6 +8,7 @@ use App\Models\ThemeRevision;
 use App\Support\ThemeDefaults;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ThemeManagerService
@@ -105,6 +106,34 @@ class ThemeManagerService
                 ['id' => 1],
                 ['theme_id' => $theme->id, 'activated_by' => $userId]
             );
+        });
+    }
+
+    public function duplicate(Theme $source, string $name, ?int $userId = null): Theme
+    {
+        return DB::transaction(function () use ($source, $name, $userId) {
+            $source = Theme::query()->with('settings')->lockForUpdate()->findOrFail($source->id);
+            abort_unless($source->settings, 422, 'Tema sumber belum memiliki konfigurasi.');
+
+            $baseSlug = Str::slug($name) ?: 'theme-copy';
+            $slug = $baseSlug;
+            $suffix = 2;
+            while (Theme::query()->where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $suffix++;
+            }
+
+            $settings = $this->validateSettings($source->settings->settings);
+            $copy = Theme::create([
+                'name' => $name,
+                'slug' => $slug,
+                'description' => 'Salinan dari tema ' . $source->name,
+                'version' => $source->version,
+                'status' => 'draft',
+            ]);
+            $copy->settings()->create(['schema_version' => $source->settings->schema_version, 'settings' => $settings]);
+            $this->recordRevision($copy, $userId);
+
+            return $copy->load('settings')->loadCount('revisions');
         });
     }
 
