@@ -117,6 +117,62 @@ class ThemeManagerTest extends TestCase
         ]);
     }
 
+    public function test_administrator_can_view_theme_revision_history(): void
+    {
+        $this->signInAsAdministrator();
+        $theme = $this->createTheme('Editorial', 'editorial');
+
+        $this->getJson("/api/admin/themes/{$theme->id}/revisions")
+            ->assertOk()
+            ->assertJsonPath('data.total', 1)
+            ->assertJsonPath('data.data.0.revision_number', 1);
+    }
+
+    public function test_administrator_can_restore_a_revision_and_restore_is_recorded_as_new_revision(): void
+    {
+        $this->signInAsAdministrator();
+        $theme = $this->createTheme('Editorial', 'editorial');
+        $originalSettings = ThemeDefaults::settings();
+
+        $changedSettings = ThemeDefaults::settings();
+        $changedSettings['colors']['primary'] = '#123456';
+        $this->putJson("/api/admin/themes/{$theme->id}", [
+            'settings' => $changedSettings,
+        ])->assertOk();
+
+        $sourceRevision = $theme->revisions()->where('revision_number', 1)->firstOrFail();
+
+        $this->postJson("/api/admin/themes/{$theme->id}/revisions/{$sourceRevision->id}/restore")
+            ->assertOk()
+            ->assertJsonPath('data.theme.settings.settings.colors.primary', $originalSettings['colors']['primary'])
+            ->assertJsonPath('data.revision.revision_number', 3);
+
+        $this->assertDatabaseCount('theme_revisions', 3);
+        $this->assertDatabaseHas('theme_revisions', [
+            'id' => $sourceRevision->id,
+            'revision_number' => 1,
+        ]);
+        $this->assertDatabaseHas('theme_revisions', [
+            'theme_id' => $theme->id,
+            'revision_number' => 3,
+        ]);
+        $this->assertSame(
+            '#123456',
+            $theme->revisions()->where('revision_number', 2)->firstOrFail()->settings['colors']['primary']
+        );
+    }
+
+    public function test_theme_revision_cannot_be_restored_to_another_theme(): void
+    {
+        $this->signInAsAdministrator();
+        $first = $this->createTheme('Editorial', 'editorial');
+        $second = $this->createTheme('Minimal', 'minimal');
+        $revision = $first->revisions()->firstOrFail();
+
+        $this->postJson("/api/admin/themes/{$second->id}/revisions/{$revision->id}/restore")
+            ->assertNotFound();
+    }
+
     public function test_only_one_theme_can_be_active_and_public_endpoint_returns_current_theme(): void
     {
         $this->signInAsAdministrator();
