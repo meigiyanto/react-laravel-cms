@@ -1031,3 +1031,10 @@ button, input, textarea, select {
 .page-editor-modal {
     width: min(760px, 100%);
 }
+
+/* Dedicated content editor pages */
+.editor-page-shell { width: 100%; }
+.editor-page { width: min(1200px, 100%); margin: 24px auto; padding: 28px; overflow: visible; }
+.editor-page .form-label { font-weight: 650; font-size: 12px; }
+.editor-page .form-control, .editor-page .form-select { font-size: 13px; border-color: #dfe4ed; }
+@media (max-width: 767px) { .editor-page { margin: 16px auto; padding: 16px; } }
