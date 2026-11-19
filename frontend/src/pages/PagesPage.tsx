@@ -445,6 +445,8 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             </section>
             </>}
 
+            {showForm && error && <div className="alert alert-danger mt-3" role="alert">{error}</div>}
+
             {showForm && (editing ? canEditPage : canCreatePage) && (
                 <div className="editor-page-shell">
                     <section className="content-panel editor-page page-editor-page" role="region" aria-labelledby="page-editor-title">
