@@ -11,6 +11,7 @@ import ArticleDetail from './pages/public/ArticleDetail';
 import DynamicPage from './pages/public/DynamicPage';
 import AllArticles from './pages/public/AllArticles';
 import AdminApp from './pages/AdminApp';
+import PublicThemeProvider from './components/public/PublicThemeProvider';
 
 function App() {
     const { pathname } = useLocation();
@@ -25,7 +26,8 @@ function App() {
     }
 
     return (
-        <>
+        <PublicThemeProvider>
+          <div className="public-site-root">
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
@@ -38,7 +40,8 @@ function App() {
             </Routes>
 
             <AOSInitializer />
-        </>
+          </div>
+        </PublicThemeProvider>
     );
 }
 
