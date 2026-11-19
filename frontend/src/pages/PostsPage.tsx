@@ -151,6 +151,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     const [statusFilter, setStatusFilter] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('');
     const [updatedWithinFilter, setUpdatedWithinFilter] = useState('');
+    const [ownershipFilter, setOwnershipFilter] = useState('all');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -168,6 +169,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const profile = useAuthProfile();
     const canCreatePost = canExact(profile, 'posts.create');
+    const canViewAllPosts = canExact(profile, 'posts.view');
     const canPublishPost = canExact(profile, 'posts.publish');
     const canEditPost = (post: Post) => canOwnResource(profile, 'posts.update', 'posts.update.own', post.user?.id, profile?.id);
     const canDeletePost = (post: Post) => canOwnResource(profile, 'posts.delete', 'posts.delete.own', post.user?.id, profile?.id);
@@ -184,6 +186,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     status: statusFilter || undefined,
                     category_id: categoryFilter || undefined,
                     updated_within: updatedWithinFilter || undefined,
+                    ownership: ownershipFilter || undefined,
                 },
             });
 
@@ -198,7 +201,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         } finally {
             setLoading(false);
         }
-    }, [page, search, statusFilter, categoryFilter, updatedWithinFilter]);
+    }, [page, search, statusFilter, categoryFilter, updatedWithinFilter, ownershipFilter]);
 
     useEffect(() => {
         let active = true;
@@ -556,6 +559,20 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                             ))}
                         </select>
                     </div>
+                    {canViewAllPosts && <div>
+                        <select
+                            className="form-select status-filter"
+                            value={ownershipFilter}
+                            onChange={(event) => {
+                                setOwnershipFilter(event.target.value);
+                                setPage(1);
+                            }}
+                            aria-label="Filter kepemilikan artikel"
+                        >
+                            <option value="all">Semua kepemilikan</option>
+                            <option value="own">Artikel saya</option>
+                        </select>
+                    </div>}
                     <div>
                         <select
                             className="form-select status-filter"
