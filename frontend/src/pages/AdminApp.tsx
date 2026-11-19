@@ -151,14 +151,6 @@ function AdminApp() {
             navigate('/admin');
         },
         onLogout: () => void handleLogout(),
-        onNavigate: (module: ActiveModule) => {
-            setFallbackActiveModule(module);
-            navigate(module === 'dashboard' ? '/admin' : `/admin/${module}`);
-        },
-        onBack: () => {
-            setFallbackActiveModule('dashboard');
-            navigate('/admin');
-        },
     };
     
     const permissions = profile?.permissions ?? [];
