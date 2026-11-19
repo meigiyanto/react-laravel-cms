@@ -3775,3 +3775,6 @@ section,
 
 .cms-layout-button:hover { filter: brightness(.94); color: var(--theme-color-contrast, #fff); }
 .cms-layout-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--theme-color-primary, #3458db), transparent 55%); outline-offset: 3px; }
+
+.public-site-active[data-theme-button-style="outline"] .cms-layout-button.variant-primary { background: transparent; color: var(--theme-color-primary); }
+.public-site-active[data-theme-button-style="soft"] .cms-layout-button.variant-primary { background: color-mix(in srgb, var(--theme-color-primary), white 86%); color: var(--theme-color-primary); border-color: transparent; }
