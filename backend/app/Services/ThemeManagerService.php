@@ -16,7 +16,7 @@ class ThemeManagerService
     {
         $rules = [
             'colors' => ['required', 'array:primary,secondary,background,surface,text,heading,accent,contrast,nav,navHover,navBackground,navDropdownBackground,navDropdownText,navDropdownHover'],
-            'colors.*' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
+            'colors.*' => ['required', 'string', 'regex:/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/'],
             'typography' => ['required', 'array:bodyFont,headingFont,navFont,baseFontSize,headingWeight,bodyWeight,lineHeight'],
             'typography.bodyFont' => ['required', 'string', 'max:120', 'regex:/^[a-zA-Z0-9 ,"\'-]+$/'],
             'typography.headingFont' => ['required', 'string', 'max:120', 'regex:/^[a-zA-Z0-9 ,"\'-]+$/'],
@@ -44,7 +44,13 @@ class ThemeManagerService
             throw new ValidationException($validator);
         }
 
-        return $validator->validated();
+        $validated = $validator->validated();
+        $breakpoints = $validated['layout']['breakpoints'];
+        if (! ($breakpoints['sm'] < $breakpoints['md'] && $breakpoints['md'] < $breakpoints['lg'] && $breakpoints['lg'] < $breakpoints['xl'])) {
+            throw ValidationException::withMessages(['layout.breakpoints' => 'Breakpoint harus berurutan dari kecil ke besar.']);
+        }
+
+        return $validated;
     }
 
     public function recordRevision(Theme $theme, ?int $userId = null): ThemeRevision
