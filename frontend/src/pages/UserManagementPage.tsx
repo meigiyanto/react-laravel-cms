@@ -108,7 +108,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
     }, [page, search]);
 
     useEffect(() => {
-        const path = location.pathname.replace(/\\/+$/, '');
+        const path = location.pathname.replace(/\/+$/, '');
         if (path === '/admin/users/create') {
             if (!showForm || editing !== null) {
                 Promise.resolve().then(() => {
@@ -119,7 +119,7 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
             }
             return;
         }
-        const match = path.match(/^\\/admin\\/users\\/(\\d+)\\/edit$/);
+        const match = path.match(/^\/admin\/users\/(\d+)\/edit$/);
         if (match) {
             const id = Number(match[1]);
             if (editing?.id !== id || !showForm) {
