@@ -45,6 +45,7 @@ class ThemeManagerTest extends TestCase
             'schema_version' => 1,
             'settings' => ThemeDefaults::settings(),
         ]);
+        app(\\App\\Services\\ThemeManagerService::class)->recordRevision($theme);
 
         return $theme;
     }
