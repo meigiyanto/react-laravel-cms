@@ -12,6 +12,7 @@ const UserManagementPage = lazy(() => import('../pages/UserManagementPage'));
 const CommentsPage = lazy(() => import('../pages/CommentsPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
 const ThemeManagerPage = lazy(() => import('../pages/ThemeManagerPage'));
+const LayoutManagerPage = lazy(() => import('../pages/LayoutManagerPage'));
 import LoginPage from '../pages/LoginPage';
 import type { ActiveModule } from '../components/Sidebar';
 
@@ -20,7 +21,7 @@ function AdminApp() {
     const navigate = useNavigate();
     const moduleFromPath = (pathname: string): ActiveModule => {
         const section = pathname.split('/')[2];
-        if (section === 'posts' || section === 'pages' || section === 'categories' || section === 'tags' || section === 'media' || section === 'users' || section === 'profile' || section === 'comments' || section === 'themes') return section;
+        if (section === 'posts' || section === 'pages' || section === 'categories' || section === 'tags' || section === 'media' || section === 'users' || section === 'profile' || section === 'comments' || section === 'themes' || section === 'layouts') return section;
         return 'dashboard';
     };
     const [authenticated, setAuthenticated] = useState(false);
@@ -174,9 +175,10 @@ function AdminApp() {
         profile: null,
         comments: 'comments.view',
         themes: null,
+        layouts: null,
     };
     
-    const hasPageAccess = activeModule === 'profile' || (activeModule === 'users' || activeModule === 'themes' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!));
+    const hasPageAccess = activeModule === 'profile' || (activeModule === 'users' || activeModule === 'themes' || activeModule === 'layouts' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!));
     
     let page: React.ReactNode;
     
@@ -244,6 +246,10 @@ function AdminApp() {
             );
             break;
     
+        case 'layouts':
+            page = <Suspense fallback={<PageLoading />}><LayoutManagerPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} /></Suspense>;
+            break;
+
         case 'themes':
             page = (
                 <Suspense fallback={<PageLoading />}>
