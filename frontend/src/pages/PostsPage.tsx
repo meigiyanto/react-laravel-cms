@@ -258,13 +258,6 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         navigate('/admin/posts');
     }
 
-    function closeEditor() {
-        setShowForm(false);
-        setEditing(null);
-        setForm(emptyForm);
-        navigate('/admin/posts');
-    }
-
     async function savePost(event: FormEvent <HTMLFormElement>) {
         event.preventDefault();
         
@@ -414,28 +407,6 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
 
 
 
-    useEffect(() => {
-        const path = location.pathname.replace(/\/+$/, '');
-        if (path === '/admin/posts/create') {
-            if (!showForm) { Promise.resolve().then(() => { setEditing(null); setForm(emptyForm); setFieldErrors({}); setShowForm(true); void loadEditorOptions(); }); }
-            return;
-        }
-        const match = path.match(/^\/admin\/posts\/(\d+)\/edit$/);
-        if (match) {
-            const id = Number(match[1]);
-            if (editing?.id !== id) {
-                void api.get('/posts/' + id).then((response) => {
-                    const item: Post = response.data.data;
-                    setEditing(item);
-                    setForm({ title: item.title, slug: item.slug, excerpt: item.excerpt ?? '', body: item.body, status: item.status, category_ids: item.categories.map((category) => category.id), tag_ids: item.tags.map((tag) => tag.id), is_featured: item.is_featured ?? false, allow_comments: item.allow_comments ?? true, featured_image_id: item.featured_image_id ? String(item.featured_image_id) : '', meta_title: item.meta_title ?? '', meta_description: item.meta_description ?? '' });
-                    setFieldErrors({}); setCategorySearch(''); setTagSearch(''); setShowForm(true); void loadEditorOptions();
-                }).catch((err) => setError(errorMessage(err)));
-            }
-            return;
-        }
-        if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
-    }, [location.pathname, showForm, editing?.id, loadEditorOptions]);
-
     const selectedCategories = categories.filter((category) => form.category_ids.includes(category.id));
     const filteredCategories = categories.filter((category) =>
         category.name.toLocaleLowerCase().includes(categorySearch.trim().toLocaleLowerCase()),
@@ -498,7 +469,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 </div>
             )}
 
-            {!showForm && <>
+            {!showForm && <div className="posts-list-view">
             <section className="welcome-panel">
                 <div>
                     <span className="eyebrow">CONTENT MANAGEMENT</span>
@@ -509,7 +480,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     <FontAwesomeIcon icon={faPaperPlane} />
                 </div>
             </section>
-            </>}
+            
             
             <section className="content-panel mt-4">
                 <div className="panel-heading">
@@ -667,7 +638,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     onPageChange={setPage}
                 />
             </section>
-            </>}
+            </div>}
 
             {showForm && (editing ? canEditPost(editing) : canCreatePost) && (
                 <div className="editor-page-shell">
