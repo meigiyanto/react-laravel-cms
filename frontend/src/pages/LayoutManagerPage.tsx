@@ -146,7 +146,6 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
                 </div>
                 {editing && <footer className="visual-revision-footer"><strong>Riwayat revisi</strong>{revisions.length === 0 ? <span>Belum ada revisi.</span> : revisions.map((item) => <span key={item.id}>#{item.revision_number} · {item.user?.name || 'Pengguna'} · {new Date(item.created_at).toLocaleString('id-ID')}</span>)}</footer>}
             </form>{showMediaPicker && <MediaPicker items={mediaItems} onSelect={(media) => { if (selectedSection && selectedBlock?.type === 'image') updateBlock(selectedSection.id, selectedBlock.id, (item) => ({ ...item, media_id: media.id, content: '' })); setShowMediaPicker(false); }} onClose={() => setShowMediaPicker(false)} />}</div>}
-            </form></div>}
         </div>
     </AdminLayout>;
 }
