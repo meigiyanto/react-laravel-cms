@@ -106,7 +106,7 @@ button, input, textarea, select {
 }
 
 .cms-main {
-    margin-left: var(--sidebar-width-collapsed);
+    margin-left: var(--sidebar-width);
     padding: 30px 36px;
     min-height: 100vh;
     transition: all 0.3s ease;
