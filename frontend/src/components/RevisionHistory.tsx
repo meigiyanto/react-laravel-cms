@@ -37,8 +37,17 @@ export default function RevisionHistory({ resource, contentId, onRestored }: Pro
     }, [contentId, resource]);
 
     useEffect(() => {
-        void loadRevisions();
-    }, [loadRevisions]);
+        if (!contentId) return;
+        let active = true;
+        api.get(`/${resource}/${contentId}/revisions`)
+            .then((response) => {
+                if (active) setRevisions(response.data.data ?? []);
+            })
+            .catch(() => {
+                if (active) setError('Riwayat versi gagal dimuat.');
+            });
+        return () => { active = false; };
+    }, [contentId, resource]);
 
     async function restore(revision: Revision) {
         const title = String(revision.snapshot.title ?? `versi ${revision.revision_number}`);

@@ -9,11 +9,13 @@ trait HasContentRevisions
 {
     protected static function bootHasContentRevisions(): void
     {
-        static::saved(function ($model): void {
-            if (! $model->wasChanged()) {
-                return;
-            }
+        static::created(fn ($model) => $model->recordContentRevision());
+        static::updated(fn ($model) => $model->recordContentRevision());
+    }
 
+    public function recordContentRevision(): void
+    {
+            $model = $this;
             $fields = [
                 'title', 'slug', 'excerpt', 'body', 'status', 'published_at',
                 'featured_image_id', 'meta_title', 'meta_description',
@@ -36,7 +38,6 @@ trait HasContentRevisions
                 'user_id' => Auth::id() ?? $model->getAttribute('user_id'),
                 'snapshot' => $snapshot,
             ]);
-        });
     }
 
     public function revisions()
