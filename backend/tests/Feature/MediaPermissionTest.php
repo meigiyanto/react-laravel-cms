@@ -406,7 +406,7 @@ class MediaPermissionTest extends TestCase
         $revisionMedia = $this->createMedia($this->admin, 'revision-image.jpg');
         LayoutRevision::create([
             'layout_id' => Layout::query()->where('slug', 'media-layout')->value('id'), 'revision_number' => 2,
-            'definition' => ['version' => 1, 'sections' => [['id' => 'old', 'type' => 'hero', 'settings' => [], 'blocks' => [['id' => 'old-image', 'type' => 'image', 'content' => '', 'media_id' => $revisionMedia->id, 'settings' => []]]]],
+            'definition' => ['version' => 1, 'sections' => [['id' => 'old', 'type' => 'hero', 'settings' => [], 'blocks' => [['id' => 'old-image', 'type' => 'image', 'content' => '', 'media_id' => $revisionMedia->id, 'settings' => []]]]]],
             'user_id' => $this->admin->id,
         ]);
         $this->deleteJson('/api/media/' . $revisionMedia->id)->assertStatus(422);
