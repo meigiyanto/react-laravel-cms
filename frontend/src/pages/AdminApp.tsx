@@ -117,7 +117,7 @@ function AdminApp() {
             const nextProfile = await loadProfile();
     
             setProfile(nextProfile);
-            setActiveModule('dashboard');
+            setFallbackActiveModule('dashboard');
             setAuthenticated(true);
         } catch {
             localStorage.removeItem(TOKEN_KEY);
@@ -143,11 +143,11 @@ function AdminApp() {
 
     const navigation = {
         onNavigate: (module: ActiveModule) => {
-            setActiveModule(module);
+            setFallbackActiveModule(module);
             navigate(module === 'dashboard' ? '/admin' : `/admin/${module}`);
         },
         onBack: () => {
-            setActiveModule('dashboard');
+            setFallbackActiveModule('dashboard');
             navigate('/admin');
         },
         onLogout: () => void handleLogout(),
@@ -293,7 +293,7 @@ function AdminApp() {
                     <button
                         type="button"
                         className="btn btn-primary"
-                        onClick={() => setActiveModule('dashboard')}
+                        onClick={() => setFallbackActiveModule('dashboard')}
                     >
                         Kembali ke Dashboard
                     </button>
