@@ -5,7 +5,7 @@ import AdminLayout from '../components/AdminLayout';
 import ThemePreview from '../components/ThemePreview';
 import type { ActiveModule } from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPalette, faPlus, faCheck, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faPalette, faPlus, faCheck, faEdit, faHistory, faUndo } from '@fortawesome/free-solid-svg-icons';
 
 type ThemeSettings = {
     colors: Record<string, string>;
@@ -40,6 +40,7 @@ type Theme = {
     updated_at: string;
 };
 
+type ThemeRevision = { id: number; revision_number: number; user?: { id: number; name: string } | null; created_at: string; settings: ThemeSettings };
 type NavigationProps = { onNavigate: (module: ActiveModule) => void; onLogout: () => void; };
 type ThemeResponse = { data: Theme[]; meta?: { active_theme_id: number | null } };
 
@@ -97,6 +98,9 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
     const [newTheme, setNewTheme] = useState({ name: '', slug: '', description: '' });
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
+    const [revisions, setRevisions] = useState<ThemeRevision[]>([]);
+    const [loadingRevisions, setLoadingRevisions] = useState(false);
+    const [restoringRevisionId, setRestoringRevisionId] = useState<number | null>(null);
 
     const loadThemes = useCallback(async () => {
         try {
@@ -127,12 +131,26 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
         return () => { active = false; };
     }, []);
 
+    async function loadRevisions(themeId: number) {
+        setLoadingRevisions(true);
+        try {
+            const response = await api.get(`/admin/themes/${themeId}/revisions`);
+            setRevisions(response.data.data.data || []);
+        } catch (err) {
+            setError(getErrorMessage(err));
+        } finally {
+            setLoadingRevisions(false);
+        }
+    }
+
     function selectTheme(theme: Theme) {
         setSelected(theme);
         setSettings(cloneSettings(theme.settings?.settings));
+        setRevisions([]);
         setError('');
         setNotice('');
         setShowCreate(false);
+        void loadRevisions(theme.id);
     }
 
     function updateColor(key: string, value: string) {
@@ -187,11 +205,33 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
             setSelected(updated);
             setSettings(cloneSettings(updated.settings?.settings));
             setThemes((current) => current.map((theme) => theme.id === updated.id ? updated : theme));
+            await loadRevisions(updated.id);
             setNotice('Konfigurasi tema berhasil disimpan. Perubahan belum diterapkan ke website sampai tema diaktifkan.');
         } catch (err) {
             setError(getErrorMessage(err));
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function restoreRevision(revision: ThemeRevision) {
+        if (!selected) return;
+        if (!window.confirm(`Pulihkan konfigurasi tema ke revisi #${revision.revision_number}? Konfigurasi saat ini akan tetap tersimpan sebagai riwayat.`)) return;
+        setRestoringRevisionId(revision.id);
+        setError('');
+        setNotice('');
+        try {
+            const response = await api.post(`/admin/themes/${selected.id}/revisions/${revision.id}/restore`);
+            const updated: Theme = response.data.data.theme;
+            setSelected(updated);
+            setSettings(cloneSettings(updated.settings?.settings));
+            setThemes((current) => current.map((theme) => theme.id === updated.id ? updated : theme));
+            await loadRevisions(updated.id);
+            setNotice(`Tema berhasil dipulihkan dari revisi #${revision.revision_number}. Pemulihan tercatat sebagai revisi baru.`);
+        } catch (err) {
+            setError(getErrorMessage(err));
+        } finally {
+            setRestoringRevisionId(null);
         }
     }
 
@@ -314,6 +354,28 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
                     <div className="d-flex justify-content-end gap-2 mt-4"><button className="btn btn-light" type="button" onClick={() => setSettings(cloneSettings(selected.settings?.settings))} disabled={saving}>Reset perubahan</button>
                         <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Design Tokens'}</button></div>
                 </form>
+                <section className="theme-editor-section theme-revision-history">
+                    <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+                        <div><h4><FontAwesomeIcon icon={faHistory} className="me-2" />Riwayat Revisi</h4>
+                            <p>Setiap penyimpanan dan pemulihan menghasilkan snapshot baru. Revisi lama tidak diubah.</p></div>
+                        <span className="total-badge">{selected.revisions_count ?? revisions.length} revisi</span>
+                    </div>
+                    {loadingRevisions ? <div className="empty-state">Memuat riwayat revisi...</div> : revisions.length === 0 ? (
+                        <div className="empty-state">Belum ada riwayat revisi untuk tema ini.</div>
+                    ) : <div className="table-responsive"><table className="table cms-table align-middle">
+                        <thead><tr><th>Revisi</th><th>Disimpan oleh</th><th>Tanggal</th><th className="text-end">Aksi</th></tr></thead>
+                        <tbody>{revisions.map((revision) => <tr key={revision.id}>
+                            <td><strong>#{revision.revision_number}</strong></td>
+                            <td>{revision.user?.name || 'Pengguna tidak tersedia'}</td>
+                            <td>{new Date(revision.created_at).toLocaleString()}</td>
+                            <td className="text-end"><button className="btn btn-sm btn-outline-secondary" type="button"
+                                disabled={saving || restoringRevisionId !== null}
+                                onClick={() => void restoreRevision(revision)}>
+                                <FontAwesomeIcon icon={faUndo} className="me-1" />{restoringRevisionId === revision.id ? 'Memulihkan...' : 'Pulihkan'}
+                            </button></td>
+                        </tr>)}</tbody>
+                    </table></div>}
+                </section>
             </section>}
         {showPreview && selected && <ThemePreview name={selected.name} settings={settings} onClose={() => setShowPreview(false)} />}
         </AdminLayout>
