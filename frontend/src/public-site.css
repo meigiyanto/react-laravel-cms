@@ -3719,3 +3719,17 @@ section,
         padding: 7px 10px;
     }
 }
+/* Theme Manager tokens are scoped to the public site lifecycle. */
+.public-site-root { color: var(--default-color); background: var(--background-color); font-family: var(--default-font); font-size: var(--theme-base-font-size, 16px); font-weight: var(--theme-body-font-weight, 400); line-height: var(--theme-line-height, 1.5); }
+.public-site-active .container { max-width: min(var(--theme-container-width, 1200px), calc(100% - 24px)); }
+.public-site-active .section { padding-block: var(--theme-section-spacing, 64px); }
+.public-site-active h1, .public-site-active h2, .public-site-active h3 { color: var(--heading-color); font-family: var(--heading-font); font-weight: var(--theme-heading-font-weight, 700); }
+.public-site-active .header .top-row .logo .sitename { font-family: var(--heading-font); }
+.public-site-active .btn, .public-site-active button.btn { border-radius: var(--theme-radius-medium, 8px); }
+.public-site-active .btn-primary { background-color: var(--theme-color-primary); border-color: var(--theme-color-primary); color: var(--theme-color-contrast); }
+.public-site-active .btn-primary:hover { filter: brightness(.94); }
+.public-site-active[data-theme-button-style="outline"] .btn-primary { background: transparent; color: var(--theme-color-primary); }
+.public-site-active[data-theme-button-style="soft"] .btn-primary { background: color-mix(in srgb, var(--theme-color-primary), white 86%); color: var(--theme-color-primary); border-color: transparent; }
+.public-site-active .blog-item, .public-site-active .post-item, .public-site-active .feature-box, .public-site-active .widget-item, .public-site-active .cms-public-page { border-radius: var(--theme-radius-large, 16px); }
+.public-site-active[data-theme-card-style="flat"] .blog-item, .public-site-active[data-theme-card-style="flat"] .feature-box, .public-site-active[data-theme-card-style="flat"] .widget-item { box-shadow: none; border-color: transparent; }
+.public-site-active[data-theme-card-style="bordered"] .blog-item, .public-site-active[data-theme-card-style="bordered"] .feature-box, .public-site-active[data-theme-card-style="bordered"] .widget-item { box-shadow: none; border: 1px solid color-mix(in srgb, var(--default-color), transparent 78%); }
