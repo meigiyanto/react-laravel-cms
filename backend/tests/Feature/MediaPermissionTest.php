@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Layout;
+use App\Models\LayoutRevision;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Post;
@@ -402,7 +403,15 @@ class MediaPermissionTest extends TestCase
         ]);
         $this->actingAs($this->admin, 'sanctum')->deleteJson('/api/media/' . $media->id)
             ->assertStatus(422);
+        $revisionMedia = $this->createMedia($this->admin, 'revision-image.jpg');
+        LayoutRevision::create([
+            'layout_id' => Layout::query()->where('slug', 'media-layout')->value('id'), 'revision_number' => 2,
+            'definition' => ['version' => 1, 'sections' => [['id' => 'old', 'type' => 'hero', 'settings' => [], 'blocks' => [['id' => 'old-image', 'type' => 'image', 'content' => '', 'media_id' => $revisionMedia->id, 'settings' => []]]]],
+            'user_id' => $this->admin->id,
+        ]);
+        $this->deleteJson('/api/media/' . $revisionMedia->id)->assertStatus(422);
         $this->assertDatabaseHas('media', ['id' => $media->id]);
+        $this->assertDatabaseHas('media', ['id' => $revisionMedia->id]);
     }
 
 }
