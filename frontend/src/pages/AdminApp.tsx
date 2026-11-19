@@ -24,15 +24,10 @@ function AdminApp() {
     };
     const [authenticated, setAuthenticated] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
-    const [activeModule, setActiveModule] = useState<ActiveModule>(() => moduleFromPath(window.location.pathname));
+    const [fallbackActiveModule, setFallbackActiveModule] = useState<ActiveModule>(() => moduleFromPath(window.location.pathname));
+    const activeModule = location.pathname.startsWith('/admin') ? moduleFromPath(location.pathname) : fallbackActiveModule;
     const [profile, setProfile] = useState<AuthProfile | null>(null);
 
-    useEffect(() => {
-        if (location.pathname.startsWith('/admin')) {
-            setActiveModule(moduleFromPath(location.pathname));
-        }
-    }, [location.pathname]);
-    
     async function loadProfile(): Promise<AuthProfile> {
         const response = await api.get('/auth/me');
         const data = response.data?.data;
@@ -64,7 +59,7 @@ function AdminApp() {
             localStorage.removeItem(TOKEN_KEY);
             setProfile(null);
             setAuthenticated(false);
-            setActiveModule('dashboard');
+            setFallbackActiveModule('dashboard');
         }
     }, []);
 
