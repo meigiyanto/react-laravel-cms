@@ -386,7 +386,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     useEffect(() => {
         const path = location.pathname.replace(/\/+$/, '');
         if (path === '/admin/posts/create') {
-            if (!showForm) { setEditing(null); setForm(emptyForm); setFieldErrors({}); setShowForm(true); void loadEditorOptions(); }
+            if (!showForm) { Promise.resolve().then(() => { setEditing(null); setForm(emptyForm); setFieldErrors({}); setShowForm(true); void loadEditorOptions(); }); }
             return;
         }
         const match = path.match(/^\/admin\/posts\/(\d+)\/edit$/);
@@ -402,7 +402,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             }
             return;
         }
-        if (showForm) { setShowForm(false); setEditing(null); }
+        if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
     }, [location.pathname, showForm, editing?.id, loadEditorOptions]);
 
     const selectedCategories = categories.filter((category) => form.category_ids.includes(category.id));
