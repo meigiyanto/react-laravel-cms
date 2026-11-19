@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Theme;
+use App\Models\ThemeRevision;
 use App\Services\ThemeManagerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -105,6 +106,35 @@ class ThemeController extends Controller
             'success' => true,
             'message' => 'Tema berhasil diperbarui.',
             'data' => $theme,
+        ]);
+    }
+
+    public function revisions(Theme $theme): JsonResponse
+    {
+        $revisions = $theme->revisions()
+            ->with('user:id,name')
+            ->paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'data' => $revisions,
+        ]);
+    }
+
+    public function restoreRevision(Request $request, Theme $theme, ThemeRevision $revision): JsonResponse
+    {
+        abort_unless($revision->theme_id === $theme->id, 404);
+
+        $newRevision = $this->themes->restoreRevision($theme, $revision, $request->user()->id);
+        $updatedTheme = $theme->fresh()->load('settings')->loadCount('revisions');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tema berhasil dipulihkan dari revisi #' . $revision->revision_number . '.',
+            'data' => [
+                'theme' => $updatedTheme,
+                'revision' => $newRevision->load('user:id,name'),
+            ],
         ]);
     }
 
