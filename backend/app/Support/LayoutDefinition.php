@@ -21,7 +21,7 @@ class LayoutDefinition
         $sectionIds = [];
         $blockIds = [];
         $blockCount = 0;
-        foreach ($definition['sections'] as $index => $section) {
+        foreach ($definition['sections'] as $index => &$section) {
             $path = "definition.sections.{$index}";
             if (! is_array($section) || ! self::hasOnlyKeys($section, ['id', 'type', 'settings', 'blocks'])
                 || ! self::validId($section['id'] ?? null) || ! in_array($section['type'] ?? null, self::SECTION_TYPES, true)
@@ -31,8 +31,13 @@ class LayoutDefinition
             if (isset($sectionIds[$section['id']])) self::fail("{$path}.id", 'ID section harus unik.');
             $sectionIds[$section['id']] = true;
             self::validateSettings($section['settings'], self::SECTION_SETTINGS, "{$path}.settings");
-            foreach ($section['blocks'] as $blockIndex => $block) {
+            foreach ($section['blocks'] as $blockIndex => &$block) {
                 $blockCount++;
+                // Laravel's ConvertEmptyStringsToNull middleware turns empty editor fields into null.
+                // Normalize them back to the schema's canonical empty string before validation/storage.
+                if (is_array($block) && array_key_exists('content', $block) && $block['content'] === null) {
+                    $block['content'] = '';
+                }
                 $blockPath = "{$path}.blocks.{$blockIndex}";
                 if (! is_array($block) || ! self::hasOnlyKeys($block, ['id', 'type', 'content', 'settings', 'media_id'])
                     || ! self::validId($block['id'] ?? null) || ! in_array($block['type'] ?? null, self::BLOCK_TYPES, true)
@@ -60,7 +65,9 @@ class LayoutDefinition
                     self::fail("{$blockPath}.settings", 'URL hanya berlaku untuk block button atau video.');
                 }
             }
+            unset($block);
         }
+        unset($section);
         if ($blockCount > 200) self::fail('definition.sections', 'Maksimal 200 block dalam satu layout.');
         return $definition;
     }
