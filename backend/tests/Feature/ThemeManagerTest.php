@@ -72,6 +72,53 @@ class ThemeManagerTest extends TestCase
         ]);
     }
 
+    public function test_administrator_can_duplicate_theme_without_changing_active_theme(): void
+    {
+        $user = $this->signInAsAdministrator();
+        $source = $this->createTheme('Editorial', 'editorial');
+        $settings = ThemeDefaults::settings();
+        $settings['colors']['primary'] = '#123456';
+        $source->settings()->update(['settings' => $settings]);
+
+        $this->postJson("/api/admin/themes/{$source->id}/activate")->assertOk();
+
+        $this->postJson("/api/admin/themes/{$source->id}/duplicate", [
+            'name' => 'Editorial Copy',
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.name', 'Editorial Copy')
+            ->assertJsonPath('data.slug', 'editorial-copy')
+            ->assertJsonPath('data.status', 'draft')
+            ->assertJsonPath('data.settings.settings.colors.primary', '#123456')
+            ->assertJsonPath('data.revisions_count', 1);
+
+        $copy = Theme::where('slug', 'editorial-copy')->firstOrFail();
+        $this->assertDatabaseHas('theme_revisions', ['theme_id' => $copy->id, 'revision_number' => 1]);
+        $this->assertDatabaseHas('theme_activations', ['id' => 1, 'theme_id' => $source->id]);
+        $this->assertSame($user->id, $copy->revisions()->firstOrFail()->user_id);
+    }
+
+    public function test_theme_duplicate_generates_a_unique_slug_when_name_already_exists(): void
+    {
+        $this->signInAsAdministrator();
+        $source = $this->createTheme('Editorial', 'editorial');
+        $this->createTheme('Editorial Copy', 'editorial-copy');
+
+        $this->postJson("/api/admin/themes/{$source->id}/duplicate", ['name' => 'Editorial Copy'])
+            ->assertCreated()
+            ->assertJsonPath('data.slug', 'editorial-copy-2');
+    }
+
+    public function test_theme_duplicate_requires_administrator_and_valid_name(): void
+    {
+        $source = $this->createTheme('Editorial', 'editorial');
+        $this->postJson("/api/admin/themes/{$source->id}/duplicate", ['name' => ''])
+            ->assertUnauthorized();
+        $this->signInAsAdministrator();
+        $this->postJson("/api/admin/themes/{$source->id}/duplicate", ['name' => ''])
+            ->assertUnprocessable();
+    }
+
     public function test_theme_settings_reject_unsafe_values_and_unknown_keys(): void
     {
         $this->signInAsAdministrator();
