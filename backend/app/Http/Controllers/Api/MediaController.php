@@ -16,6 +16,7 @@ class MediaController extends Controller
         $validated = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'max:255'],
             'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
         
         $query = Media::with('user')->latest();
@@ -45,7 +46,7 @@ class MediaController extends Controller
             $query->where('user_id', $request->user()->id);
         }
     
-        $data = $query->paginate(20)
+        $data = $query->paginate($validated['per_page'] ?? 20)
             ->through(fn (Media $media) => $this->formatMedia($media));
     
         return response()->json([
@@ -154,7 +155,15 @@ class MediaController extends Controller
             ], 403);
         }
     
-        if ($media->posts()->exists() || $media->pages()->exists()) {
+        $usedInLayout = Layout::query()->get(['definition'])->contains(function (Layout $layout) use ($media) {
+            foreach (($layout->definition['sections'] ?? []) as $section) {
+                foreach (($section['blocks'] ?? []) as $block) {
+                    if ((int) ($block['media_id'] ?? 0) === (int) $media->id) return true;
+                }
+            }
+            return false;
+        });
+        if ($media->posts()->exists() || $media->pages()->exists() || $usedInLayout) {
             return response()->json([
                 'message' => 'Media sedang digunakan dan tidak dapat dihapus.',
             ], 422);
