@@ -14,6 +14,11 @@ class ThemeManagerService
 {
     public function validateSettings(array $settings): array
     {
+        $allowedKeys = ['colors', 'typography', 'layout', 'radius', 'shadows', 'components'];
+        if (array_diff(array_keys($settings), $allowedKeys)) {
+            throw ValidationException::withMessages(['settings' => 'Konfigurasi tema berisi properti yang tidak diizinkan.']);
+        }
+
         $rules = [
             'colors' => ['required', 'array:primary,secondary,background,surface,text,heading,accent,contrast,nav,navHover,navBackground,navDropdownBackground,navDropdownText,navDropdownHover'],
             'colors.*' => ['required', 'string', 'regex:/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/'],
