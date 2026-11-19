@@ -3,6 +3,7 @@
 namespace App\Models\Concerns;
 
 use App\Models\ContentRevision;
+use App\Models\Post;
 use Illuminate\Support\Facades\Auth;
 
 trait HasContentRevisions
@@ -20,7 +21,7 @@ trait HasContentRevisions
                 ->mapWithKeys(fn (string $field) => [$field => $model->getAttribute($field)])
                 ->all();
 
-            if ($model instanceof \\App\\Models\\Post) {
+            if ($model instanceof Post) {
                 $snapshot['is_featured'] = (bool) ($model->getAttribute('is_featured') ?? false);
                 $snapshot['allow_comments'] = (bool) ($model->getAttribute('allow_comments') ?? true);
             }
