@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Media;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -85,4 +86,30 @@ class LayoutManagerTest extends TestCase
         auth()->guard('sanctum')->forgetUser();
         $this->getJson('/api/admin/layouts')->assertUnauthorized();
     }
+
+    public function test_layout_supports_safe_button_links_and_rejects_unsafe_protocols(): void
+    {
+        $this->administrator();
+        $definition = $this->definition();
+        $definition['sections'][0]['blocks'][] = [
+            'id' => 'hero-button', 'type' => 'button', 'content' => 'Hubungi kami',
+            'settings' => ['variant' => 'primary', 'url' => '/contact', 'target' => '_blank'],
+        ];
+        $this->postJson('/api/admin/layouts', ['name' => 'Linked CTA', 'definition' => $definition])
+            ->assertCreated()
+            ->assertJsonPath('data.definition.sections.0.blocks.2.settings.url', '/contact');
+        $definition['sections'][0]['blocks'][2]['settings']['url'] = 'javascript:alert(1)';
+        $this->postJson('/api/admin/layouts', ['name' => 'Unsafe CTA', 'definition' => $definition])->assertUnprocessable();
+    }
+
+    public function test_layout_image_block_must_reference_an_image_in_media_library(): void
+    {
+        $this->administrator();
+        $user = User::factory()->create();
+        $media = Media::create(['user_id' => $user->id, 'disk' => 'public', 'path' => 'cms-media/document.pdf', 'original_name' => 'document.pdf', 'mime_type' => 'application/pdf', 'size' => 100]);
+        $definition = $this->definition();
+        $definition['sections'][0]['blocks'][] = ['id' => 'hero-image', 'type' => 'image', 'content' => '', 'media_id' => $media->id, 'settings' => []];
+        $this->postJson('/api/admin/layouts', ['name' => 'Invalid Image', 'definition' => $definition])->assertUnprocessable();
+    }
+
 }
