@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Models\Concerns;
+
+use App\Models\ContentRevision;
+use App\Models\Post;
+use Illuminate\Support\Facades\Auth;
+
+trait HasContentRevisions
+{
+    public function recordContentRevision(): void
+    {
+            $model = $this;
+            $fields = [
+                'title', 'slug', 'excerpt', 'body', 'status', 'published_at',
+                'featured_image_id', 'meta_title', 'meta_description',
+                'is_featured', 'allow_comments',
+            ];
+            $snapshot = collect($fields)
+                ->filter(fn (string $field) => in_array($field, $model->getFillable(), true))
+                ->mapWithKeys(fn (string $field) => [$field => $model->getAttribute($field)])
+                ->all();
+
+            if ($model instanceof Post) {
+                $snapshot['is_featured'] = (bool) ($model->getAttribute('is_featured') ?? false);
+                $snapshot['allow_comments'] = (bool) ($model->getAttribute('allow_comments') ?? true);
+            }
+
+            $nextNumber = (int) ContentRevision::query()
+                ->where('revisionable_type', $model->getMorphClass())
+                ->where('revisionable_id', $model->getKey())
+                ->max('revision_number') + 1;
+
+            ContentRevision::create([
+                'revisionable_type' => $model->getMorphClass(),
+                'revisionable_id' => $model->getKey(),
+                'revision_number' => $nextNumber,
+                'user_id' => Auth::id() ?? $model->getAttribute('user_id'),
+                'snapshot' => $snapshot,
+            ]);
+    }
+
+    public function revisions()
+    {
+        return $this->morphMany(ContentRevision::class, 'revisionable')->latest('revision_number');
+    }
+}
