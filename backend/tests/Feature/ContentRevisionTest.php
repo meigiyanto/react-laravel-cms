@@ -95,6 +95,33 @@ class ContentRevisionTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_restoring_a_published_page_requires_publish_permission(): void
+    {
+        $page = Page::create([
+            'user_id' => $this->administrator->id,
+            'title' => 'Halaman terbit',
+            'slug' => 'halaman-terbit',
+            'body' => '<p>Konten terbit</p>',
+            'status' => 'draft',
+        ]);
+        $page->update(['status' => 'published', 'published_at' => now()]);
+        $publishedRevision = $page->revisions()->firstOrFail();
+        $page->update(['status' => 'draft', 'published_at' => null]);
+
+        $editorRole = Role::create([
+            'name' => 'Editor',
+            'slug' => 'editor-revisions',
+            'permissions' => ['pages.view', 'pages.update'],
+        ]);
+        $editor = User::factory()->create(['role_id' => $editorRole->id]);
+
+        $this->actingAs($editor, 'sanctum')
+            ->postJson("/api/pages/{$page->id}/revisions/{$publishedRevision->id}/restore")
+            ->assertForbidden();
+
+        $this->assertSame('draft', $page->fresh()->status);
+    }
+
     public function test_revision_history_requires_authentication(): void
     {
         $this->app['auth']->forgetGuards();
