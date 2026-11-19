@@ -73,7 +73,7 @@ export function themeToCssVariables(settings: ThemeSettings): Record<string, str
     result['--theme-section-spacing'] = safeLength(layout.sectionSpacing, '64px', 500);
     for (const key of ['sm', 'md', 'lg', 'xl'] as const) {
         const breakpoint = layout.breakpoints?.[key];
-        result[\`--theme-breakpoint-\${key}\`] = typeof breakpoint === 'number' && Number.isInteger(breakpoint) && breakpoint >= 320 && breakpoint <= 1920 ? \`\${breakpoint}px\` : ({ sm: '576px', md: '768px', lg: '992px', xl: '1200px' }[key]);
+        result['--theme-breakpoint-' + key] = typeof breakpoint === 'number' && Number.isInteger(breakpoint) && breakpoint >= 320 && breakpoint <= 1920 ? String(breakpoint) + 'px' : ({ sm: '576px', md: '768px', lg: '992px', xl: '1200px' }[key]);
     }
     result['--theme-radius-small'] = safeLength(radius.small, '4px', 200);
     result['--theme-radius-medium'] = safeLength(radius.medium, '8px', 200);
