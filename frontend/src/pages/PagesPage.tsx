@@ -124,24 +124,6 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
         if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
     }, [location.pathname, showForm, editing?.id]);
 
-    useEffect(() => {
-        const path = location.pathname.replace(/\/+$/, '');
-        if (path === '/admin/pages/create') { if (!showForm) { Promise.resolve().then(() => { setEditing(null); setForm(emptyForm); setShowForm(true); }); } return; }
-        const match = path.match(/^\/admin\/pages\/(\d+)\/edit$/);
-        if (match) {
-            const id = Number(match[1]);
-            if (editing?.id !== id) {
-                void api.get('/pages/' + id).then((response) => {
-                    const current: CmsPage = response.data.data;
-                    setEditing(current);
-                    setForm({ title: current.title, slug: current.slug, body: current.body, status: current.status, featured_image_id: current.featured_image_id ? String(current.featured_image_id) : '', meta_title: current.meta_title || '', meta_description: current.meta_description || '' });
-                    setShowForm(true);
-                }).catch((err) => setError(errorMessage(err)));
-            }
-            return;
-        }
-        if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
-    }, [location.pathname, showForm, editing?.id]);
 
     const loadPages = useCallback(async () => {
         setLoading(true);
@@ -332,7 +314,19 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                 </button>
             ) : null}
         >
-            {!showForm && <>
+            {error && (
+                <div className="alert alert-danger mt-3" role="alert">
+                    {error}
+                    <button className="btn-close float-end" type="button" onClick={() => setError('')} aria-label="Tutup" />
+                </div>
+            )}
+            {notice && (
+                <div className="alert alert-success mt-3" role="status">
+                    {notice}
+                    <button className="btn-close float-end" type="button" onClick={() => setNotice('')} aria-label="Tutup" />
+                </div>
+            )}
+            {!showForm && <div className="pages-list-view">
             <section className="welcome-panel">
                 <div>
                     <span className="eyebrow">PAGE MANAGEMENT</span>
@@ -344,19 +338,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                 </div>
             </section>
 
-            {error && (
-                <div className="alert alert-danger mt-3" role="alert">
-                    {error}
-                    <button className="btn-close float-end" type="button" onClick={() => setError('')} aria-label="Close" />
-                </div>
-            )}
             
-            {notice && (
-                <div className="alert alert-success mt-3" role="status">
-                    {notice}
-                    <button className="btn-close float-end" type="button" onClick={() => setNotice('')} aria-label="Close" />
-                </div>
-            )}
 
             <section className="content-panel mt-4">
                 <div className="panel-heading">
@@ -464,16 +446,12 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                     onPageChange={setPage}
                 />
             </section>
-            </>}
-
-            {showForm && error && <div className="alert alert-danger mt-3" role="alert">{error}</div>}
+            </div>}
 
             {showForm && (editing ? canEditPage : canCreatePage) && (
                 <div className="editor-page-shell">
                     <section className="content-panel editor-page page-editor-page" role="region" aria-labelledby="page-editor-title">
-                        <div className="moda-dialog modal-xl">
-                            <div className="moda-content">
-                                <div className="modal-heading modal-header">
+                        <div className="modal-heading">
                                     <div>
                                         <h2 id="page-editor-title">
                                             {editing ? 'Edit Halaman': 'Buat Halaman Baru'}
@@ -485,8 +463,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                     <button className="btn-close" type="button" aria-label="Tutup"
                                         disabled={saving} onClick={closeEditor} />
                                 </div>
-                                <div className="moda-body">
-                                    <form onSubmit={savePage}>
+                        <form onSubmit={savePage}>
                                         <div className="row">
                                             <div className="col-md-7">                                                                
                                                 <div className="mb-3">
@@ -561,9 +538,9 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                         </div>
                                         
                                         <div className="modal-actions">
-                                            {canEditPage && (
+                                            {(editing ? canEditPage : canCreatePage) && (
                                                 <button type="button" className="btn btn-light" disabled={saving}
-                                                    onClick={() => setShowForm(false)}>
+                                                    onClick={closeEditor}>
                                                     Batal
                                                 </button>
                                             )}
@@ -573,10 +550,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                                                 </button>
                                             )}
                                         </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
+                        </form>
                     </section>
                 </div>
             )}
