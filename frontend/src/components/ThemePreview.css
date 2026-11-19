@@ -1,0 +1,26 @@
+.theme-preview-backdrop{position:fixed;inset:0;z-index:2000;background:rgba(15,23,42,.72);display:grid;place-items:center;padding:24px}
+.theme-preview-dialog{width:min(1120px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.3)}
+.theme-preview-toolbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:16px 22px;background:#fff;border-bottom:1px solid #e8edf5}
+.theme-preview-toolbar strong,.theme-preview-toolbar span{display:block}.theme-preview-toolbar span{font-size:12px;color:#778196;margin-top:3px}
+.theme-preview-canvas{--default-font:Roboto,sans-serif;--heading-font:Nunito,sans-serif;--nav-font:Poppins,sans-serif;--default-color:#212529;--background-color:#fff;--surface-color:#f8fafc;--heading-color:#2d465e;--accent-color:#f75815;--contrast-color:#fff;color:var(--default-color);background:var(--background-color);font-family:var(--default-font);font-size:var(--theme-base-font-size,16px);font-weight:var(--theme-body-font-weight,400);line-height:var(--theme-line-height,1.5)}
+.theme-preview-nav{display:flex;align-items:center;justify-content:space-between;padding:20px clamp(20px,6vw,72px);background:var(--theme-color-navBackground);color:var(--theme-color-nav);border-bottom:1px solid color-mix(in srgb,var(--theme-color-text),transparent 90%);font-family:var(--nav-font)}
+.theme-preview-nav strong{font-family:var(--heading-font);font-size:22px}.theme-preview-nav nav{display:flex;gap:24px;font-size:14px}
+.theme-preview-main{max-width:var(--theme-container-width,1200px);margin:auto;padding:clamp(40px,7vw,88px) 24px}
+.theme-preview-eyebrow{color:var(--theme-color-primary);font-size:12px;font-weight:800;letter-spacing:1.5px}
+.theme-preview-main h1{max-width:720px;margin:12px 0;color:var(--heading-color);font-family:var(--heading-font);font-size:clamp(34px,5vw,58px);font-weight:var(--theme-heading-font-weight,700);line-height:1.1}
+.theme-preview-main>p{max-width:620px;color:var(--default-color);opacity:.8}
+.theme-preview-actions{display:flex;gap:12px;margin:28px 0 48px}
+.theme-preview-actions button{padding:11px 20px;border-radius:var(--theme-radius-medium,8px);font-weight:600;cursor:default}
+.theme-preview-primary{background:var(--theme-color-primary);color:var(--theme-color-contrast);border:1px solid var(--theme-color-primary)}
+.theme-preview-secondary{background:transparent;color:var(--theme-color-primary);border:1px solid var(--theme-color-primary)}
+.theme-preview-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.theme-preview-cards article{padding:24px;border-radius:var(--theme-radius-large,16px);background:var(--surface-color);border:1px solid color-mix(in srgb,var(--default-color),transparent 88%);box-shadow:var(--theme-shadow-medium,none)}
+.theme-preview-canvas[data-card-style=flat] .theme-preview-cards article{box-shadow:none;border-color:transparent}
+.theme-preview-canvas[data-card-style=bordered] .theme-preview-cards article{box-shadow:none;border:1px solid var(--theme-color-secondary)}
+.theme-preview-card-icon{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:var(--theme-radius-small,4px);background:var(--theme-color-primary);color:var(--theme-color-contrast);font-weight:700}
+.theme-preview-cards h2{margin:18px 0 8px;color:var(--heading-color);font-family:var(--heading-font);font-size:20px}
+.theme-preview-cards p{margin:0;color:var(--default-color);opacity:.8}
+.theme-preview-footer{padding:24px;text-align:center;background:var(--surface-color);color:var(--default-color);font-size:13px}
+.theme-preview-canvas[data-button-style=outline] .theme-preview-primary{background:transparent;color:var(--theme-color-primary)}
+.theme-preview-canvas[data-button-style=soft] .theme-preview-primary{background:color-mix(in srgb,var(--theme-color-primary),white 86%);color:var(--theme-color-primary);border-color:transparent}
+@media(max-width:700px){.theme-preview-nav nav{gap:10px;font-size:12px}.theme-preview-cards{grid-template-columns:1fr}.theme-preview-main{padding:40px 20px}.theme-preview-backdrop{padding:8px}.theme-preview-dialog{max-height:96vh}}

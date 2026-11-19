@@ -53,8 +53,16 @@ class PostController extends Controller
         $validated = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'max:255'],
             'status' => ['sometimes', 'nullable', Rule::in(self::STATUSES)],
+            'category_id' => ['sometimes', 'nullable', 'integer', 'exists:categories,id'],
+            'updated_within' => ['sometimes', 'nullable', Rule::in(['24h', '7d', '30d', '90d'])],
+            'ownership' => ['sometimes', 'nullable', Rule::in(['own', 'all'])],
             'page' => ['sometimes', 'integer', 'min:1'],
         ]);
+
+        $permissions = $request->user()->role?->permissions ?? [];
+        $canViewAll = in_array('*', $permissions, true)
+            || in_array('posts.view', $permissions, true);
+        $ownership = $validated['ownership'] ?? 'all';
 
         $posts = Post::query()
             ->with(['user.role', 'categories', 'tags', 'featuredImage'])
@@ -73,19 +81,28 @@ class PostController extends Controller
                 fn ($query) => $query->where('status', $validated['status'])
             )
             ->when(
-                ! in_array(
-                    '*',
-                    $request->user()->role?->permissions ?? [],
-                    true
-                ) && ! in_array(
-                    'posts.view',
-                    $request->user()->role?->permissions ?? [],
-                    true
-                ),
-                fn ($query) => $query->where(
-                    'user_id',
-                    $request->user()->id
+                filled($validated['category_id'] ?? null),
+                fn ($query) => $query->whereHas(
+                    'categories',
+                    fn ($categoryQuery) => $categoryQuery->whereKey($validated['category_id'])
                 )
+            )
+            ->when(
+                filled($validated['updated_within'] ?? null),
+                function ($query) use ($validated) {
+                    $cutoff = match ($validated['updated_within']) {
+                        '24h' => now()->subDay(),
+                        '7d' => now()->subDays(7),
+                        '30d' => now()->subDays(30),
+                        '90d' => now()->subDays(90),
+                    };
+
+                    $query->where('updated_at', '>=', $cutoff);
+                }
+            )
+            ->when(
+                ! $canViewAll || $ownership === 'own',
+                fn ($query) => $query->where('user_id', $request->user()->id)
             )
             ->latest()
             ->paginate(10)
