@@ -7,12 +7,6 @@ use Illuminate\Support\Facades\Auth;
 
 trait HasContentRevisions
 {
-    protected static function bootHasContentRevisions(): void
-    {
-        static::created(fn ($model) => $model->recordContentRevision());
-        static::updated(fn ($model) => $model->recordContentRevision());
-    }
-
     public function recordContentRevision(): void
     {
             $model = $this;
