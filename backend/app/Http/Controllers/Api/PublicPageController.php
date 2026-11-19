@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Support\LayoutDefinition;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
@@ -38,10 +39,15 @@ class PublicPageController extends Controller
             ->where('status', 'published')
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now())
-            ->with('featuredImage')
+            ->with(['featuredImage', 'layout'])
             ->firstOrFail();
 
         $featuredImage = $page->featuredImage;
+        $layout = $page->layout && $page->layout->status === 'published' ? [
+            'id' => $page->layout->id,
+            'name' => $page->layout->name,
+            'definition' => LayoutDefinition::validate($page->layout->definition),
+        ] : null;
         $image = $featuredImage ? [
             'id' => $featuredImage->id,
             'path' => $featuredImage->path,
@@ -60,6 +66,7 @@ class PublicPageController extends Controller
                 'status' => $page->status,
                 'published_at' => $page->published_at,
                 'featured_image' => $image,
+                'layout' => $layout,
                 'meta_title' => $page->meta_title,
                 'meta_description' => $page->meta_description,
             ],
