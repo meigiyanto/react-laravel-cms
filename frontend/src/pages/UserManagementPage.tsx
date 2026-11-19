@@ -6,7 +6,7 @@ import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import Pagination from '../components/Pagination';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faSearch, faUserPlus, faUserPen, faEye, faRemove } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faSearch, faUserPlus, faUserPen, faEye, faRemove, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 type RolesResponse = {
     success: boolean;
@@ -259,9 +259,11 @@ export default function UserManagementPage({ onNavigate, onLogout }: NavigationP
             onLogout={onLogout}
             title={showForm ? (editing ? 'Edit Pengguna' : 'Pengguna Baru') : 'Manajemen Pengguna'}
             breadcrumb={showForm ? 'Workspace / Pengaturan / Pengguna / Editor' : 'Workspace / Pengaturan / Pengguna'}
-            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>Kembali ke Pengguna</button> : (
+            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>
+                <FontAwesomeIcon icon={faArrowLeft} /> 
+                Kembali</button> : (
                 <button className="btn btn-primary" type="button" onClick={openCreateForm}>
-                    <FontAwesomeIcon icon={faUserPlus} className="me-2" />Pengguna Baru
+                    <FontAwesomeIcon icon={faUserPlus} className="me-2" /> Pengguna Baru
                 </button>
             )}
         >
