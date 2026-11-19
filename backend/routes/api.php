@@ -97,6 +97,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/themes', [ThemeController::class, 'index']);
         Route::post('/themes', [ThemeController::class, 'store']);
         Route::get('/themes/{theme}', [ThemeController::class, 'show']);
+        Route::get('/themes/{theme}/revisions', [ThemeController::class, 'revisions']);
+        Route::post('/themes/{theme}/revisions/{revision}/restore', [ThemeController::class, 'restoreRevision']);
         Route::put('/themes/{theme}', [ThemeController::class, 'update']);
         Route::post('/themes/{theme}/activate', [ThemeController::class, 'activate']);
     });
