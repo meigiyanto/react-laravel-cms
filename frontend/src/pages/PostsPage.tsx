@@ -625,7 +625,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                         </div>
     
                         <form onSubmit={savePost}>
-                            {editing && <RevisionHistory resource="posts" contentId={editing.id} onRestored={() => openEditForm(editing)} />}
+                            
                             <div className="row">
                                 <div className="col-md-8">
                                     <div className="mb-3">
@@ -1006,6 +1006,8 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                             Jika dinonaktifkan, pengunjung tidak dapat mengirim komentar baru.
                                         </small>
                                     </div>
+                                    
+                                    {editing && <RevisionHistory resource="posts" contentId={editing.id} onRestored={() => openEditForm(editing)} />}
                                 </div>
                             </div>
                             <div className="modal-actions">
