@@ -36,7 +36,17 @@ export default function LayoutManagerPage({ onNavigate, onLogout }: Props) {
         } catch (err) { setError(errorMessage(err)); }
         finally { setLoading(false); }
     }, []);
-    useEffect(() => { void loadLayouts(); }, [loadLayouts]);
+    useEffect(() => {
+        let active = true;
+        api.get('/admin/layouts').then((response) => {
+            if (active) setLayouts(response.data.data.data || []);
+        }).catch((err: unknown) => {
+            if (active) setError(errorMessage(err));
+        }).finally(() => {
+            if (active) setLoading(false);
+        });
+        return () => { active = false; };
+    }, []);
     function startCreate() {
         setShowEditor(true);
         setEditing(null); setName(''); setDescription(''); setDefinitionText(starter); setRevisions([]); setError(''); setNotice('');
