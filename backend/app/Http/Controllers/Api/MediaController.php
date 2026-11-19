@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Layout;
+use App\Models\LayoutRevision;
 use App\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -156,15 +157,10 @@ class MediaController extends Controller
             ], 403);
         }
     
-        $usedInLayout = Layout::query()->get(['definition'])->contains(function (Layout $layout) use ($media) {
-            foreach (($layout->definition['sections'] ?? []) as $section) {
-                foreach (($section['blocks'] ?? []) as $block) {
-                    if ((int) ($block['media_id'] ?? 0) === (int) $media->id) return true;
-                }
-            }
-            return false;
-        });
-        if ($media->posts()->exists() || $media->pages()->exists() || $usedInLayout) {
+        $referencesMedia = fn (array $definition) => collect($definition['sections'] ?? [])->contains(fn ($section) => collect($section['blocks'] ?? [])->contains(fn ($block) => (int) ($block['media_id'] ?? 0) === (int) $media->id));
+        $usedInLayout = Layout::query()->get(['definition'])->contains(fn (Layout $layout) => $referencesMedia($layout->definition ?? []));
+        $usedInRevision = LayoutRevision::query()->get(['definition'])->contains(fn (LayoutRevision $revision) => $referencesMedia($revision->definition ?? []));
+        if ($media->posts()->exists() || $media->pages()->exists() || $usedInLayout || $usedInRevision) {
             return response()->json([
                 'message' => 'Media sedang digunakan dan tidak dapat dihapus.',
             ], 422);
