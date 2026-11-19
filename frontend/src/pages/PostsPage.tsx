@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, lazy, Suspense, type FormEvent } from
 import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
+import RevisionHistory from '../components/RevisionHistory';
 import { type ActiveModule } from '../components/Sidebar';
 // import { dummyArticles } from '../data/posts';
 import PostDetailPage from './PostDetailPage';
@@ -624,6 +625,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                         </div>
     
                         <form onSubmit={savePost}>
+                            {editing && <RevisionHistory resource="posts" contentId={editing.id} onRestored={() => openEditForm(editing)} />}
                             <div className="row">
                                 <div className="col-md-8">
                                     <div className="mb-3">

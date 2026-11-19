@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\PublicPageController;
 use App\Http\Controllers\Api\PublicPostController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TagController;
+use App\Http\Controllers\Api\ContentRevisionController;
 
 
 Route::get('/health', function () {
@@ -54,10 +55,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('permission:posts.view')->group(function () {
         Route::get('/posts', [PostController::class, 'index']);
         Route::get('/posts/{post}', [PostController::class, 'show']);
+        Route::get('/posts/{post}/revisions', [ContentRevisionController::class, 'postIndex']);
     });
 
     Route::post('/posts', [PostController::class, 'store'])->middleware('permission:posts.create,exact');
     Route::match(['put', 'patch'], '/posts/{post}', [PostController::class, 'update'])->middleware('permission:posts.update');
+    Route::post('/posts/{post}/revisions/{revision}/restore', [ContentRevisionController::class, 'restorePost'])->middleware('permission:posts.update');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->middleware('permission:posts.delete');
 
     // KATEGORI: hanya role yang memiliki permission terkait
@@ -77,8 +80,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // HALAMAN
     Route::get('/pages', [PageController::class, 'index'])->middleware('permission:pages.view,exact');
     Route::get('/pages/{page}', [PageController::class, 'show'])->middleware('permission:pages.view,exact');
+    Route::get('/pages/{page}/revisions', [ContentRevisionController::class, 'pageIndex'])->middleware('permission:pages.view,exact');
     Route::post('/pages', [PageController::class, 'store'])->middleware('permission:pages.create,exact');
     Route::match(['put', 'patch'], '/pages/{page}', [PageController::class, 'update'])->middleware('permission:pages.update,exact');
+    Route::post('/pages/{page}/revisions/{revision}/restore', [ContentRevisionController::class, 'restorePage'])->middleware('permission:pages.update,exact');
     Route::delete('/pages/{page}', [PageController::class, 'destroy'])->middleware('permission:pages.delete,exact');
 
     // TAG: tag dibuat di modul ini sebelum dipilih pada form Post.

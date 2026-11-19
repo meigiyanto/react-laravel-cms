@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, lazy, Suspense, type FormEvent } from
 import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
+import RevisionHistory from '../components/RevisionHistory';
 import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
 const RichTextEditor = lazy(() => import('../components/RichTextEditor'));
@@ -427,6 +428,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                         </div>
     
                         <form onSubmit={savePage}>
+                            {editing && <RevisionHistory resource="pages" contentId={editing.id} onRestored={() => openEditForm(editing)} />}
                             <div className="mb-3">
                                 <label className="form-label" htmlFor="page-title">Judul *</label>
                                 <input id="page-title" className="form-control" required maxLength={255} value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} />
