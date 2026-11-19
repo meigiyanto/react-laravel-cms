@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from 'react-router-dom';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import api, { AUTH_EXPIRED_EVENT, TOKEN_KEY } from '../api/client';
 import { AuthProfileContext, type AuthProfile } from '../auth/AuthProfileContext';
@@ -14,10 +15,23 @@ import LoginPage from '../pages/LoginPage';
 import type { ActiveModule } from '../components/Sidebar';
 
 function AdminApp() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const moduleFromPath = (pathname: string): ActiveModule => {
+        const section = pathname.split('/')[2];
+        if (section === 'posts' || section === 'pages' || section === 'categories' || section === 'tags' || section === 'media' || section === 'users' || section === 'profile' || section === 'comments') return section;
+        return 'dashboard';
+    };
     const [authenticated, setAuthenticated] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
-    const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
+    const [activeModule, setActiveModule] = useState<ActiveModule>(() => moduleFromPath(window.location.pathname));
     const [profile, setProfile] = useState<AuthProfile | null>(null);
+
+    useEffect(() => {
+        if (location.pathname.startsWith('/admin')) {
+            setActiveModule(moduleFromPath(location.pathname));
+        }
+    }, [location.pathname]);
     
     async function loadProfile(): Promise<AuthProfile> {
         const response = await api.get('/auth/me');
@@ -133,8 +147,14 @@ function AdminApp() {
     if (!authenticated) return <LoginPage onLogin={handleLogin} />;
 
     const navigation = {
-        onNavigate: (module: ActiveModule) => setActiveModule(module),
-        onBack: () => setActiveModule('dashboard'),
+        onNavigate: (module: ActiveModule) => {
+            setActiveModule(module);
+            navigate(module === 'dashboard' ? '/admin' : `/admin/${module}`);
+        },
+        onBack: () => {
+            setActiveModule('dashboard');
+            navigate('/admin');
+        },
         onLogout: () => void handleLogout(),
     };
     
