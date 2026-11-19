@@ -1038,3 +1038,32 @@ button, input, textarea, select {
 .editor-page .form-label { font-weight: 650; font-size: 12px; }
 .editor-page .form-control, .editor-page .form-select { font-size: 13px; border-color: #dfe4ed; }
 @media (max-width: 767px) { .editor-page { margin: 16px auto; padding: 16px; } }
+
+
+/* Theme Manager */
+.theme-manager-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; padding: 0 24px 24px; }
+.theme-manager-card { min-width: 0; overflow: hidden; border: 1px solid #e7ebf2; border-radius: 12px; background: #fff; transition: border-color .2s ease, box-shadow .2s ease; }
+.theme-manager-card.selected { border-color: #3458db; box-shadow: 0 0 0 2px rgba(52, 88, 219, .12); }
+.theme-card-preview { height: 150px; padding: 12px; overflow: hidden; border-bottom: 1px solid #edf0f5; }
+.theme-preview-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 6px; font-size: 10px; box-shadow: 0 2px 8px rgba(20, 30, 50, .08); }
+.theme-preview-content { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; height: 85px; padding-top: 12px; }
+.theme-preview-content span { display: block; border-radius: 6px; }
+.theme-preview-content div { border-radius: 6px; border: 1px solid rgba(0,0,0,.05); }
+.theme-card-body { padding: 16px; }
+.theme-card-body h4 { margin: 0; color: #29364b; font-size: 14px; font-weight: 750; }
+.theme-card-body p { margin: 4px 0 0; color: #8993a5; font-size: 11px; }
+.theme-card-body .theme-description { margin-top: 10px; color: #667187; font-size: 12px; }
+.theme-active-badge, .theme-draft-badge { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; padding: 5px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+.theme-active-badge { color: #128052; background: #e6f8ef; }
+.theme-draft-badge { color: #667085; background: #edf0f4; }
+.theme-editor-section { padding: 22px 0; border-top: 1px solid #edf0f5; }
+.theme-editor-section h4 { margin: 0 0 5px; color: #2a3548; font-size: 14px; font-weight: 750; }
+.theme-editor-section > p { margin: 0 0 18px; color: #8993a5; font-size: 12px; }
+.theme-color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 12px; }
+.theme-color-field { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 9px; border: 1px solid #edf0f5; border-radius: 8px; }
+.theme-color-field > span { flex: 1; color: #536076; font-size: 11px; }
+.theme-color-field .form-control-color { width: 34px; height: 30px; padding: 2px; border: 1px solid #dfe4ed; }
+.theme-color-field code { color: #8993a5; font-size: 10px; }
+.theme-editor .form-label { font-size: 11px; font-weight: 650; }
+.theme-editor .form-control, .theme-editor .form-select { font-size: 12px; border-color: #dfe4ed; }
+@media (max-width: 700px) { .theme-manager-grid { grid-template-columns: 1fr; padding: 0 15px 18px; } .theme-color-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .theme-color-field { flex-wrap: wrap; } .theme-color-field > span { flex-basis: 100%; } }

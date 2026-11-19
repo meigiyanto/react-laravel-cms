@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faChevronLeft, faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers, faUserCircle, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { faComments, faChevronLeft, faTachometerAlt, faPaperPlane, faTags, faImages, faBookOpen, faUsers, faUserCircle, faGlobe, faPalette } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 
@@ -13,7 +13,8 @@ export type ActiveModule =
 | 'media'
 | 'pages'
 | 'users'
-| 'profile';
+| 'profile'
+| 'themes';
 
 type SidebarItem = {
     id: ActiveModule;
@@ -79,6 +80,13 @@ const items: SidebarItem[] = [
         label: "Users & Roles",
         module: "users",
         icon: faUsers,
+        adminOnly: true,
+    },
+    {
+        id: 'themes',
+        label: 'Theme Manager',
+        module: 'themes',
+        icon: faPalette,
         adminOnly: true,
     },
     {
