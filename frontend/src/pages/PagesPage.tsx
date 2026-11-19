@@ -106,9 +106,9 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
     const canPublishPage = canExact(profile, "pages.publish");
 
     useEffect(() => {
-        const path = location.pathname.replace(/\\/+$/, '');
+        const path = location.pathname.replace(/\/+$/, '');
         if (path === '/admin/pages/create') { if (!showForm) { setEditing(null); setForm(emptyForm); setShowForm(true); } return; }
-        const match = path.match(/^\\/admin\\/pages\\/(\\d+)\\/edit$/);
+        const match = path.match(/^\/admin\/pages\/(\d+)\/edit$/);
         if (match) {
             const id = Number(match[1]);
             if (editing?.id !== id) {
