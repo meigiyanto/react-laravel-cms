@@ -108,7 +108,22 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
         }
     }, []);
 
-    useEffect(() => { void loadThemes(); }, [loadThemes]);
+    useEffect(() => {
+        let active = true;
+        api.get<ThemeResponse>('/admin/themes')
+            .then((response) => {
+                if (!active) return;
+                setThemes(response.data.data || []);
+                setActiveThemeId(response.data.meta?.active_theme_id ?? null);
+            })
+            .catch((err: unknown) => {
+                if (active) setError(getErrorMessage(err));
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+        return () => { active = false; };
+    }, []);
 
     function selectTheme(theme: Theme) {
         setSelected(theme);
