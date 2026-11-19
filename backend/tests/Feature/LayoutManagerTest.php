@@ -112,4 +112,22 @@ class LayoutManagerTest extends TestCase
         $this->postJson('/api/admin/layouts', ['name' => 'Invalid Image', 'definition' => $definition])->assertUnprocessable();
     }
 
+
+    public function test_layout_accepts_dynamic_content_blocks_and_rejects_unsafe_video_urls(): void
+    {
+        $this->administrator();
+        $definition = $this->definition();
+        $definition['sections'][0]['blocks'] = [
+            ['id' => 'feature-card', 'type' => 'card', 'content' => "Cepat\nDeskripsi fitur", 'settings' => []],
+            ['id' => 'testimonial', 'type' => 'quote', 'content' => "Produk bagus\nPelanggan", 'settings' => []],
+            ['id' => 'feature-list', 'type' => 'list', 'content' => "Cepat\nAman", 'settings' => []],
+            ['id' => 'faq-item', 'type' => 'accordion', 'content' => "Bagaimana?\nBegini caranya.", 'settings' => []],
+            ['id' => 'video-item', 'type' => 'video', 'content' => 'Tonton video', 'settings' => ['url' => 'https://cdn.example.test/demo.mp4']],
+            ['id' => 'separator', 'type' => 'divider', 'content' => '', 'settings' => []],
+        ];
+        $this->postJson('/api/admin/layouts', ['name' => 'Dynamic Blocks', 'definition' => $definition])->assertCreated();
+        $definition['sections'][0]['blocks'][4]['settings']['url'] = 'javascript:alert(1)';
+        $this->postJson('/api/admin/layouts', ['name' => 'Unsafe Video', 'definition' => $definition])->assertUnprocessable();
+    }
+
 }
