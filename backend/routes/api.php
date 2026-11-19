@@ -96,6 +96,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/themes', [ThemeController::class, 'index']);
         Route::post('/themes', [ThemeController::class, 'store']);
+        Route::post('/themes/{theme}/duplicate', [ThemeController::class, 'duplicate']);
         Route::get('/themes/{theme}', [ThemeController::class, 'show']);
         Route::get('/themes/{theme}/revisions', [ThemeController::class, 'revisions']);
         Route::post('/themes/{theme}/revisions/{revision}/restore', [ThemeController::class, 'restoreRevision']);
