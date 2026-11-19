@@ -149,6 +149,8 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     const [total, setTotal] = useState(0);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
+    const [updatedWithinFilter, setUpdatedWithinFilter] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -180,6 +182,8 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     page,
                     search: search.trim() || undefined,
                     status: statusFilter || undefined,
+                    category_id: categoryFilter || undefined,
+                    updated_within: updatedWithinFilter || undefined,
                 },
             });
 
@@ -194,7 +198,21 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         } finally {
             setLoading(false);
         }
-    }, [page, search, statusFilter]);
+    }, [page, search, statusFilter, categoryFilter, updatedWithinFilter]);
+
+    useEffect(() => {
+        let active = true;
+
+        loadAllPages<Category>('/categories')
+            .then((items) => {
+                if (active) setCategories(items);
+            })
+            .catch((err) => {
+                if (active) setError(errorMessage(err));
+            });
+
+        return () => { active = false; };
+    }, []);
 
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -520,6 +538,39 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                             <option value="published">Dipublikasikan</option>
                             <option value="draft">Draf</option>
                             <option value="archived">Diarsipkan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select
+                            className="form-select status-filter"
+                            value={categoryFilter}
+                            onChange={(event) => {
+                                setCategoryFilter(event.target.value);
+                                setPage(1);
+                            }}
+                            aria-label="Filter kategori artikel"
+                        >
+                            <option value="">Semua kategori</option>
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id}>{category.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <select
+                            className="form-select status-filter"
+                            value={updatedWithinFilter}
+                            onChange={(event) => {
+                                setUpdatedWithinFilter(event.target.value);
+                                setPage(1);
+                            }}
+                            aria-label="Filter terakhir diperbarui"
+                        >
+                            <option value="">Kapan saja diperbarui</option>
+                            <option value="24h">24 jam terakhir</option>
+                            <option value="7d">7 hari terakhir</option>
+                            <option value="30d">30 hari terakhir</option>
+                            <option value="90d">90 hari terakhir</option>
                         </select>
                     </div>
                 </div>
