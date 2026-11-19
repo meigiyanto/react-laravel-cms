@@ -12,7 +12,7 @@ class Page extends Model
     use HasContentRevisions;
 
     protected $fillable = [
-        'user_id', 'featured_image_id', 'title', 'slug',
+        'user_id', 'featured_image_id', 'layout_id', 'title', 'slug',
         'body', 'status', 'published_at',
         'meta_title', 'meta_description',
     ];
@@ -25,6 +25,11 @@ class Page extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function layout(): BelongsTo
+    {
+        return $this->belongsTo(Layout::class);
     }
 
     public function featuredImage(): BelongsTo
