@@ -26,7 +26,9 @@ class ThemeSeeder extends Seeder
             ['schema_version' => 1, 'settings' => app(ThemeManagerService::class)->defaultSettings()]
         );
 
-        app(ThemeManagerService::class)->recordRevision($theme);
+        if (! $theme->revisions()->exists()) {
+            app(ThemeManagerService::class)->recordRevision($theme);
+        }
         ThemeActivation::query()->firstOrCreate(
             ['id' => 1],
             ['theme_id' => $theme->id]
