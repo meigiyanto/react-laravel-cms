@@ -65,6 +65,21 @@ class ThemeController extends Controller
         ], 201);
     }
 
+    public function duplicate(Request $request, Theme $theme): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+        ]);
+
+        $copy = $this->themes->duplicate($theme, trim($validated['name']), $request->user()->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tema berhasil diduplikasi sebagai draft.',
+            'data' => $copy,
+        ], 201);
+    }
+
     public function show(Theme $theme): JsonResponse
     {
         return response()->json([
