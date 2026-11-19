@@ -12,10 +12,11 @@ use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\PublicPageController;
 use App\Http\Controllers\Api\PublicPostController;
+use App\Http\Controllers\Api\PublicThemeController;
+use App\Http\Controllers\Api\ThemeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\ContentRevisionController;
-
 
 Route::get('/health', function () {
     return response()->json([
@@ -32,10 +33,9 @@ Route::prefix('public')->group(function () {
     Route::get('/posts/{slug}', [PublicPostController::class, 'show']);
     Route::get('/pages', [PublicPageController::class, 'index']);
     Route::get('/pages/{slug}', [PublicPageController::class, 'show']);
-    
+    Route::get('/theme', [PublicThemeController::class, 'active']);
     Route::get('/posts/{slug}/comments', [PublicPostController::class, 'comments']);
     Route::post('/posts/{slug}/comments', [PublicPostController::class, 'storeComment'])->middleware('throttle:5,1');
-
     Route::get('/categories/posts', [PublicPostController::class, 'postsByCategory']);
 });
 
@@ -43,41 +43,34 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/profile', [ProfileController::class, 'update']);
-
     Route::get('/dashboard/stats', [PostController::class, 'stats'])->middleware('permission:posts.view');
 
-    // KOMENTAR
     Route::get('/comments', [CommentController::class, 'index'])->middleware('permission:comments.view,exact');
     Route::patch('/comments/{comment}/status', [CommentController::class, 'updateStatus'])->middleware('permission:comments.moderate,exact');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('permission:comments.delete,exact');
 
-    // ARTIKEL
     Route::middleware('permission:posts.view')->group(function () {
         Route::get('/posts', [PostController::class, 'index']);
         Route::get('/posts/{post}', [PostController::class, 'show']);
         Route::get('/posts/{post}/revisions', [ContentRevisionController::class, 'postIndex']);
     });
-
     Route::post('/posts', [PostController::class, 'store'])->middleware('permission:posts.create,exact');
     Route::match(['put', 'patch'], '/posts/{post}', [PostController::class, 'update'])->middleware('permission:posts.update');
     Route::post('/posts/{post}/revisions/{revision}/restore', [ContentRevisionController::class, 'restorePost'])->middleware('permission:posts.update');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->middleware('permission:posts.delete');
 
-    // KATEGORI: hanya role yang memiliki permission terkait
     Route::get('/categories', [CategoryController::class, 'index'])->middleware('permission:categories.view,exact');
     Route::get('/categories/{category}', [CategoryController::class, 'show'])->middleware('permission:categories.view,exact');
     Route::post('/categories', [CategoryController::class, 'store'])->middleware('permission:categories.create,exact');
     Route::match(['put', 'patch'], '/categories/{category}', [CategoryController::class, 'update'])->middleware('permission:categories.update,exact');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:categories.delete,exact');
 
-    // MEDIA
     Route::get('/media', [MediaController::class, 'index'])->middleware('permission:media.view');
     Route::get('/media/{media}', [MediaController::class, 'show'])->middleware('permission:media.view');
     Route::post('/media', [MediaController::class, 'store'])->middleware('permission:media.create,exact');
     Route::match(['put', 'patch'], '/media/{media}', [MediaController::class, 'update'])->middleware('permission:media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->middleware('permission:media.delete');
 
-    // HALAMAN
     Route::get('/pages', [PageController::class, 'index'])->middleware('permission:pages.view,exact');
     Route::get('/pages/{page}', [PageController::class, 'show'])->middleware('permission:pages.view,exact');
     Route::get('/pages/{page}/revisions', [ContentRevisionController::class, 'pageIndex'])->middleware('permission:pages.view,exact');
@@ -86,14 +79,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pages/{page}/revisions/{revision}/restore', [ContentRevisionController::class, 'restorePage'])->middleware('permission:pages.update,exact');
     Route::delete('/pages/{page}', [PageController::class, 'destroy'])->middleware('permission:pages.delete,exact');
 
-    // TAG: tag dibuat di modul ini sebelum dipilih pada form Post.
     Route::get('/tags', [TagController::class, 'index'])->middleware('permission:tags.view');
     Route::post('/tags', [TagController::class, 'store'])->middleware('permission:tags.create,exact');
     Route::match(['put', 'patch'], '/tags/{tag}', [TagController::class, 'update'])->middleware('permission:tags.update,exact');
     Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->middleware('permission:tags.delete,exact');
-    
-    // USER && ROLE
-    // Manajemen pengguna: pertahankan grup administrator yang sudah ada.
+
     Route::middleware('administrator')->prefix('admin')->group(function () {
         Route::get('/roles', [RoleController::class, 'index']);
         Route::get('/users', [UserController::class, 'index']);
@@ -101,9 +91,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users/{id}', [UserController::class, 'show']);
         Route::put('/users/{id}', [UserController::class, 'update']);
         Route::put('/users/{id}/role', [UserController::class, 'assignRole']);
-
         Route::get('/comments', [PublicPostController::class, 'moderateIndex']);
         Route::patch('/comments/{comment}/status', [PublicPostController::class, 'moderateUpdate']);
+
+        Route::get('/themes', [ThemeController::class, 'index']);
+        Route::post('/themes', [ThemeController::class, 'store']);
+        Route::get('/themes/{theme}', [ThemeController::class, 'show']);
+        Route::put('/themes/{theme}', [ThemeController::class, 'update']);
+        Route::post('/themes/{theme}/activate', [ThemeController::class, 'activate']);
     });
 });
-
