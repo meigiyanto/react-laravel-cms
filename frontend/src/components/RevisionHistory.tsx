@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api/client';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRefresh } from '@fortawesome/free-solid-svg-icons';
 
 type Revision = {
     id: number;
@@ -70,11 +72,13 @@ export default function RevisionHistory({ resource, contentId, onRestored }: Pro
     return (
         <section className="border rounded p-3 my-4" aria-labelledby={`revision-history-${resource}`}>
             <div className="d-flex justify-content-between align-items-center mb-2">
-                <div>
+                <div className="text-wrap me-1">
                     <h3 className="h6 mb-1" id={`revision-history-${resource}`}>Riwayat Versi</h3>
                     <p className="small text-muted mb-0">Versi tersimpan otomatis setiap konten dibuat atau diperbarui.</p>
                 </div>
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void loadRevisions()} disabled={loading}>Muat ulang</button>
+                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void loadRevisions()} disabled={loading}>
+                    <FontAwesomeIcon icon={faRefresh} />
+                </button>
             </div>
             {error && <div className="alert alert-danger py-2" role="alert">{error}</div>}
             {loading ? <p className="small text-muted mb-0">Memuat riwayat...</p> : revisions.length === 0 ? (

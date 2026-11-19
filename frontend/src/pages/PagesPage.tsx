@@ -7,8 +7,8 @@ import RevisionHistory from '../components/RevisionHistory';
 import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
 const RichTextEditor = lazy(() => import('../components/RichTextEditor'));
-import { faBookOpen, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBookOpen, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { canExact } from "../utils/permissions";
 import { useAuthProfile } from '../auth/AuthProfileContext';
 
@@ -320,20 +320,22 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                     <h2>Kelola halaman situs.</h2>
                     <p>Atur isi halaman, publikasi, gambar unggulan, dan metadata SEO.</p>
                 </div>
-                <div className="welcome-icon" aria-hidden="true"><FontAwesomeIcon icon={faBookOpen} /></div>
+                <div className="welcome-icon" aria-hidden="true">
+                    <FontAwesomeIcon icon={faBookOpen} />
+                </div>
             </section>
 
             {error && (
                 <div className="alert alert-danger mt-3" role="alert">
                     {error}
-                    <button className="btn-close float-end" type="button" onClick={() => setError('')} aria-label="Tutup" />
+                    <button className="btn-close float-end" type="button" onClick={() => setError('')} aria-label="Close" />
                 </div>
             )}
             
             {notice && (
                 <div className="alert alert-success mt-3" role="status">
                     {notice}
-                    <button className="btn-close float-end" type="button" onClick={() => setNotice('')} aria-label="Tutup" />
+                    <button className="btn-close float-end" type="button" onClick={() => setNotice('')} aria-label="Close" />
                 </div>
             )}
 
@@ -349,13 +351,13 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                 <div className="toolbar">
                     <div className="search-box">
                         <span aria-hidden="true">⌕</span>
-                        <input className="form-control" type="search" placeholder="Cari judul atau slug..." aria-label="Cari halaman" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }}/>
+                        <input className="form-control" type="search" placeholder="Search Title or Slug..." aria-label="Search Page" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }}/>
                     </div>
                     <select className="form-select status-filter" value={statusFilter} aria-label="Filter status halaman" onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}>
-                        <option value="">Semua status</option>
+                        <option value="">All Status</option>
                         <option value="draft">Draf</option>
-                        <option value="published">Dipublikasikan</option>
-                        <option value="archived">Diarsipkan</option>
+                        <option value="published">Published</option>
+                        <option value="archived">Archived</option>
                     </select>
                 </div>
 
@@ -363,10 +365,10 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                     <table className="table cms-table align-middle">
                         <thead>
                             <tr>
-                                <th>JUDUL HALAMAN</th>
+                                <th>PAGE TITLE</th>
                                 <th>STATUS</th>
-                                <th>DIPERBARUI</th>
-                                <th className="text-end">AKSI</th>
+                                <th>UPDATED</th>
+                                <th className="text-end">ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -448,103 +450,114 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             {showForm && error && <div className="alert alert-danger mt-3" role="alert">{error}</div>}
 
             {showForm && (editing ? canEditPage : canCreatePage) && (
-                <div className="editor-page-shell">
-                    <section className="content-panel editor-page page-editor-page" role="region" aria-labelledby="page-editor-title">
-                        <div className="modal-heading">
-                            <div>
-                                <h2 id="page-editor-title">
-                                    {editing ? 'Edit Halaman': 'Buat Halaman Baru'}
-                                </h2>
-                                <p>
-                                    Isi konten halaman dan pengaturan publikasi.
-                                </p>
-                            </div>
-                            <button className="btn-close" type="button" aria-label="Tutup"
-                                disabled={saving} onClick={closeEditor} />
-                        </div>
-    
-                        <form onSubmit={savePage}>
-                            {editing && <RevisionHistory resource="pages" contentId={editing.id} onRestored={() => openEditForm(editing)} />}
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="page-title">Judul *</label>
-                                <input id="page-title" className="form-control" required maxLength={255} value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} />
-                            </div>        
-                            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="page-slug">Slug (opsional)</label>
-                                <input id="page-slug" className="form-control" maxLength={255} placeholder="Dibuat otomatis jika kosong" value={form.slug} onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))} />
-                            </div>
-    
-                            <div className="mb-3">
-                                <label className="form-label" id="page-body-label">Isi halaman *</label>
-                                <Suspense fallback={<div className="form-control py-3" role="status">Memuat editor halaman...</div>}>
-                                    <RichTextEditor
-                                        value={form.body}
-                                        onChange={(html) => setForm((current) => ({ ...current, body: html }))}
-                                        mediaItems={media}
-                                        disabled={saving}
-                                        ariaLabel="Isi halaman"
-                                    />
-                                </Suspense>
-                                <div className="form-text">Gunakan toolbar untuk mengatur format teks, tautan, daftar, kutipan, dan gambar dari Media Library.</div>
-                            </div>
-    
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="page-status">Status *</label>
-                                <select id="page-status" className="form-select" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Status }))}>
-                                    <option value="draft">Draf</option>
-                                    {canPublishPage && (
-                                        <option value="published">Dipublikasikan</option>
-                                    )}
-                                    <option value="archived">Diarsipkan</option>
-                                </select>
-                            </div>
-    
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="page-featured-image">Gambar unggulan</label>
-                                <select id="page-featured-image" className="form-select" value={form.featured_image_id} onChange={(event) => setForm((current) => ({ ...current, featured_image_id: event.target.value }))}>
-                                    <option value="">Tanpa gambar unggulan</option>
-                                    {media.map((item) => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.original_name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="form-text">
-                                    Pilihan menampilkan hingga 20 media terbaru. Unggah gambar baru melalui menu Media.
+                <div className="modal-backdrop-custom" role="presentation">
+                    <section className="editor-modal page-editor-modal" role="dialog" aria-modal="true" aria-labelledby="page-editor-title">
+                        <div className="moda-dialog modal-xl">
+                            <div className="moda-content">
+                                <div className="modal-heading modal-header">
+                                    <div>
+                                        <h2 id="page-editor-title">
+                                            {editing ? 'Edit Halaman': 'Buat Halaman Baru'}
+                                        </h2>
+                                        <p>
+                                            Isi konten halaman dan pengaturan publikasi.
+                                        </p>
+                                    </div>
+                                    <button className="btn-close" type="button" aria-label="Tutup"
+                                        disabled={saving} onClick={() => setShowForm(false)} />
+                                </div>
+                                <div className="moda-body">
+                                    <form onSubmit={savePage}>
+                                        <div className="row">
+                                            <div className="col-md-7">                                                                
+                                                <div className="mb-3">
+                                                    <label className="form-label" htmlFor="page-title">Title *</label>
+                                                    <input id="page-title" className="form-control" required maxLength={255} value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} />
+                                                </div>       
+                                                
+                                                <div className="mb-3">
+                                                    <label className="form-label" htmlFor="page-slug">Slug (opsional)</label>
+                                                    <input id="page-slug" className="form-control" maxLength={255} placeholder="Dibuat otomatis jika kosong" value={form.slug} onChange={(event) => setForm((current) => ({ ...current, slug: event.target.value }))} />
+                                                </div>
+                        
+                                                <div className="mb-3">
+                                                    <label className="form-label" id="page-body-label">Isi halaman *</label>
+                                                    <Suspense fallback={<div className="form-control py-3" role="status">Memuat editor halaman...</div>}>
+                                                        <RichTextEditor
+                                                            value={form.body}
+                                                            onChange={(html) => setForm((current) => ({ ...current, body: html }))}
+                                                            mediaItems={media}
+                                                            disabled={saving}
+                                                            ariaLabel="Isi halaman"
+                                                        />
+                                                    </Suspense>
+                                                    <div className="form-text">Gunakan toolbar untuk mengatur format teks, tautan, daftar, kutipan, dan gambar dari Media Library.</div>
+                                                </div>
+                        
+                                                <div className="mb-3">
+                                                    <label className="form-label" htmlFor="page-status">Status *</label>
+                                                    <select id="page-status" className="form-select" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as Status }))}>
+                                                        <option value="draft">Draf</option>
+                                                        {canPublishPage && (
+                                                            <option value="published">Dipublikasikan</option>
+                                                        )}
+                                                        <option value="archived">Diarsipkan</option>
+                                                    </select>
+                                                </div>
+                        
+                                                <div className="mb-3">
+                                                    <label className="form-label" htmlFor="page-featured-image">Gambar unggulan</label>
+                                                    <select id="page-featured-image" className="form-select" value={form.featured_image_id} onChange={(event) => setForm((current) => ({ ...current, featured_image_id: event.target.value }))}>
+                                                        <option value="">Tanpa gambar unggulan</option>
+                                                        {media.map((item) => (
+                                                            <option key={item.id} value={item.id}>
+                                                                {item.original_name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="form-text">
+                                                        Pilihan menampilkan hingga 20 media terbaru. Unggah gambar baru melalui menu Media.
+                                                    </div>
+                                                </div>
+            
+                                            </div>
+                                            <div className="col-md-5">
+                                                            
+                                                <h3 className="h6 mb-3">Metadata SEO</h3>
+                                                
+                                                <div className="mb-3">
+                                                    <label className="form-label" htmlFor="page-meta-title">Meta title</label>
+                                                    <input id="page-meta-title" className="form-control" maxLength={255} value={form.meta_title} onChange={(event) => setForm((current) => ({ ...current, meta_title: event.target.value }))} />
+                                                    <div className="form-text">{form.meta_title.length}/255 karakter</div>
+                                                </div>
+                                    
+                                                <div className="mb-4">
+                                                    <label className="form-label" htmlFor="page-meta-description">Meta description</label>
+                                                    <textarea id="page-meta-description" className="form-control" rows={3} maxLength={500} value={form.meta_description} onChange={(event) => setForm((current) => ({ ...current, meta_description: event.target.value }))} />
+                                                    <div className="form-text text-end">{form.meta_description.length}/500 karakter</div>
+                                                </div>
+                                                
+                                                {editing && <RevisionHistory resource="pages" contentId={editing.id} onRestored={() => openEditForm(editing)} />}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="modal-actions">
+                                            {canEditPage && (
+                                                <button type="button" className="btn btn-light" disabled={saving}
+                                                    onClick={() => setShowForm(false)}>
+                                                    Batal
+                                                </button>
+                                            )}
+                                            {(editing ? canEditPage : canCreatePage) && (
+                                                <button type="submit" className="btn btn-primary" disabled={saving}>
+                                                    {saving ? 'Menyimpan...': editing ? 'Simpan Perubahan': 'Buat Halaman'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
-            
-                            <hr />
-            
-                            <h3 className="h6 mb-3">Metadata SEO</h3>
-                            
-                            <div className="mb-3">
-                                <label className="form-label" htmlFor="page-meta-title">Meta title</label>
-                                <input id="page-meta-title" className="form-control" maxLength={255} value={form.meta_title} onChange={(event) => setForm((current) => ({ ...current, meta_title: event.target.value }))} />
-                                <div className="form-text">{form.meta_title.length}/255 karakter</div>
-                            </div>
-                
-                            <div className="mb-4">
-                                <label className="form-label" htmlFor="page-meta-description">Meta description</label>
-                                <textarea id="page-meta-description" className="form-control" rows={3} maxLength={500} value={form.meta_description} onChange={(event) => setForm((current) => ({ ...current, meta_description: event.target.value }))} />
-                                <div className="form-text text-end">{form.meta_description.length}/500 karakter</div>
-                            </div>
-                
-                            <div className="modal-actions">
-                                {canEditPage && (
-                                    <button type="button" className="btn btn-light" disabled={saving}
-                                        onClick={() => setShowForm(false)}>
-                                        Batal
-                                    </button>
-                                )}
-                                {(editing ? canEditPage : canCreatePage) && (
-                                    <button type="submit" className="btn btn-primary" disabled={saving}>
-                                        {saving ? 'Menyimpan...': editing ? 'Simpan Perubahan': 'Buat Halaman'}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
+                        </div>
                     </section>
                 </div>
             )}
