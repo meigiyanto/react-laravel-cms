@@ -4,7 +4,7 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPalette, faPlus, faCheck, faEdit, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faPalette, faPlus, faCheck, faEdit } from '@fortawesome/free-solid-svg-icons';
 
 type ThemeSettings = {
     colors: Record<string, string>;
@@ -97,17 +97,10 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
     const [notice, setNotice] = useState('');
 
     const loadThemes = useCallback(async () => {
-        setLoading(true);
-        setError('');
         try {
             const response = await api.get<ThemeResponse>('/admin/themes');
             setThemes(response.data.data || []);
             setActiveThemeId(response.data.meta?.active_theme_id ?? null);
-            setSelected((current) => {
-                const updated = (response.data.data || []).find((theme) => theme.id === current?.id);
-                if (updated) setSettings(cloneSettings(updated.settings?.settings));
-                return updated || null;
-            });
         } catch (err) {
             setError(getErrorMessage(err));
         } finally {
