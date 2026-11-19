@@ -13,13 +13,14 @@ class LayoutDefinition
 
     public static function validate(mixed $definition): array
     {
-        if (! is_array($definition) || array_keys($definition) !== ['version', 'sections']
+        if (! is_array($definition) || ! self::hasOnlyKeys($definition, ['version', 'sections']) || ! array_key_exists('version', $definition) || ! array_key_exists('sections', $definition)
             || ($definition['version'] ?? null) !== 1 || ! is_array($definition['sections'])
             || count($definition['sections']) > 50) {
             self::fail('definition', 'Struktur layout harus memiliki version 1 dan sections (maksimal 50).');
         }
 
         $sectionIds = [];
+        $blockIds = [];
         $blockCount = 0;
         foreach ($definition['sections'] as $index => $section) {
             $path = "definition.sections.{$index}";
@@ -42,6 +43,8 @@ class LayoutDefinition
                     || ! is_array($block['settings'] ?? null)) {
                     self::fail($blockPath, 'Block tidak valid atau menggunakan properti yang tidak didukung.');
                 }
+                if (isset($blockIds[$block['id']])) self::fail("{$blockPath}.id", 'ID block harus unik.');
+                $blockIds[$block['id']] = true;
                 self::validateSettings($block['settings'], self::BLOCK_SETTINGS, "{$blockPath}.settings");
             }
         }
