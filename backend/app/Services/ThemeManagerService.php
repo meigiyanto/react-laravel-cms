@@ -69,6 +69,26 @@ class ThemeManagerService
         ]);
     }
 
+    public function restoreRevision(Theme $theme, ThemeRevision $revision, ?int $userId = null): ThemeRevision
+    {
+        return DB::transaction(function () use ($theme, $revision, $userId) {
+            $lockedTheme = Theme::query()->lockForUpdate()->findOrFail($theme->id);
+            $sourceRevision = $lockedTheme->revisions()
+                ->whereKey($revision->id)
+                ->firstOrFail();
+            $settings = $this->validateSettings($sourceRevision->settings);
+
+            $lockedTheme->settings()->updateOrCreate(
+                ['theme_id' => $lockedTheme->id],
+                ['schema_version' => 1, 'settings' => $settings]
+            );
+
+            // Restoring is append-only: keep the source snapshot and record the
+            // restored configuration as a new revision in the history.
+            return $this->recordRevision($lockedTheme, $userId);
+        });
+    }
+
     public function activate(Theme $theme, ?int $userId = null): ThemeActivation
     {
         return DB::transaction(function () use ($theme, $userId) {
