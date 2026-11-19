@@ -53,7 +53,7 @@ class ThemeManagerService
 
         return $theme->revisions()->create([
             'revision_number' => $revisionNumber,
-            'settings' => $theme->settings()->value('settings'),
+            'settings' => $theme->settings()->firstOrFail()->settings,
             'user_id' => $userId,
         ]);
     }
@@ -62,8 +62,8 @@ class ThemeManagerService
     {
         return DB::transaction(function () use ($theme, $userId) {
             Theme::query()->lockForUpdate()->firstOrFail();
-
             $theme->loadMissing('settings');
+
             if (! $theme->settings) {
                 abort(422, 'Tema belum memiliki konfigurasi.');
             }
