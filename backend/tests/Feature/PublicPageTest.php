@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Media;
+use App\Models\Layout;
 use App\Models\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -114,5 +115,74 @@ class PublicPageTest extends TestCase
     {
         $this->getJson('/api/public/pages')->assertOk();
         $this->getJson('/api/public/pages/not-existing')->assertNotFound();
+    }
+
+    public function test_public_page_renders_assigned_published_layout_definition(): void
+    {
+        $user = User::factory()->create();
+        $layout = Layout::create([
+            'name' => 'Landing Layout',
+            'slug' => 'landing-layout',
+            'description' => 'Layout publik.',
+            'status' => 'published',
+            'schema_version' => 1,
+            'definition' => [
+                'version' => 1,
+                'sections' => [[
+                    'id' => 'hero-main',
+                    'type' => 'hero',
+                    'settings' => ['width' => 'wide', 'spacing' => 'large', 'background' => 'primary'],
+                    'blocks' => [[
+                        'id' => 'hero-title',
+                        'type' => 'heading',
+                        'content' => 'Selamat datang',
+                        'settings' => ['align' => 'center', 'size' => 'large'],
+                    ]],
+                ]],
+            ],
+            'user_id' => $user->id,
+        ]);
+        Page::create([
+            'user_id' => $user->id,
+            'layout_id' => $layout->id,
+            'title' => 'Landing',
+            'slug' => 'landing',
+            'body' => '<p>Legacy content.</p>',
+            'status' => 'published',
+            'published_at' => now()->subMinute(),
+        ]);
+
+        $this->getJson('/api/public/pages/landing')
+            ->assertOk()
+            ->assertJsonPath('data.layout.name', 'Landing Layout')
+            ->assertJsonPath('data.layout.definition.version', 1)
+            ->assertJsonPath('data.layout.definition.sections.0.blocks.0.content', 'Selamat datang');
+    }
+
+    public function test_public_page_does_not_expose_draft_layout_definition(): void
+    {
+        $user = User::factory()->create();
+        $layout = Layout::create([
+            'name' => 'Draft Layout',
+            'slug' => 'draft-layout',
+            'status' => 'draft',
+            'schema_version' => 1,
+            'definition' => ['version' => 1, 'sections' => []],
+            'user_id' => $user->id,
+        ]);
+        Page::create([
+            'user_id' => $user->id,
+            'layout_id' => $layout->id,
+            'title' => 'Fallback Page',
+            'slug' => 'fallback-page',
+            'body' => '<p>Legacy fallback.</p>',
+            'status' => 'published',
+            'published_at' => now()->subMinute(),
+        ]);
+
+        $this->getJson('/api/public/pages/fallback-page')
+            ->assertOk()
+            ->assertJsonPath('data.layout', null)
+            ->assertJsonPath('data.body', '<p>Legacy fallback.</p>');
     }
 }
