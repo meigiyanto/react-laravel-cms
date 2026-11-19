@@ -34,6 +34,62 @@ class PostManagementTest extends TestCase
         $this->postJson('/api/posts', [])->assertUnauthorized();
     }
 
+    public function test_posts_can_be_filtered_by_category_and_last_updated_window(): void
+    {
+        $user = User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]);
+        $this->actingAs($user, 'sanctum');
+
+        $technology = Category::create(['name' => 'Teknologi', 'slug' => 'teknologi']);
+        $tutorial = Category::create(['name' => 'Tutorial', 'slug' => 'tutorial']);
+
+        $olderPost = Post::create([
+            'user_id' => $user->id,
+            'title' => 'Artikel Teknologi Lama',
+            'slug' => 'artikel-teknologi-lama',
+            'body' => 'Isi artikel',
+            'status' => 'draft',
+        ]);
+        $olderPost->categories()->attach($technology);
+        $olderPost->forceFill(['updated_at' => now()->subDays(10)])->saveQuietly();
+
+        $recentPost = Post::create([
+            'user_id' => $user->id,
+            'title' => 'Tutorial Terbaru',
+            'slug' => 'tutorial-terbaru',
+            'body' => 'Isi artikel',
+            'status' => 'draft',
+        ]);
+        $recentPost->categories()->attach($tutorial);
+
+        $this->getJson('/api/posts?category_id=' . $technology->id)
+            ->assertOk()
+            ->assertJsonPath('data.total', 1)
+            ->assertJsonPath('data.data.0.id', $olderPost->id);
+
+        $this->getJson('/api/posts?updated_within=7d')
+            ->assertOk()
+            ->assertJsonPath('data.total', 1)
+            ->assertJsonPath('data.data.0.id', $recentPost->id);
+
+        $this->getJson('/api/posts?category_id=' . $tutorial->id . '&updated_within=7d')
+            ->assertOk()
+            ->assertJsonPath('data.total', 1)
+            ->assertJsonPath('data.data.0.id', $recentPost->id);
+    }
+
+    public function test_invalid_post_filter_values_are_rejected(): void
+    {
+        $this->actingAs(User::factory()->create([
+            'role_id' => $this->administratorRole->id,
+        ]), 'sanctum');
+
+        $this->getJson('/api/posts?category_id=not-a-number&updated_within=2y')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['category_id', 'updated_within']);
+    }
+
     public function test_authors_and_contributors_can_load_tags_for_the_post_editor(): void
     {
         $this->seed(RoleSeeder::class);
