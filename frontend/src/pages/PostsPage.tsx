@@ -1,3 +1,4 @@
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useState, lazy, Suspense, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
@@ -139,6 +140,8 @@ type NavigationProps = {
 };
 
 export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [posts, setPosts] = useState <Post[]> ([]);
     const [detailPostId, setDetailPostId] = useState<number | null>(null);
     const [page, setPage] = useState(1);
@@ -166,6 +169,28 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
     const canPublishPost = canExact(profile, 'posts.publish');
     const canEditPost = (post: Post) => canOwnResource(profile, 'posts.update', 'posts.update.own', post.user?.id, profile?.id);
     const canDeletePost = (post: Post) => canOwnResource(profile, 'posts.delete', 'posts.delete.own', post.user?.id, profile?.id);
+
+    useEffect(() => {
+        const path = location.pathname.replace(/\\/+$/, '');
+        if (path === '/admin/posts/create') {
+            if (!showForm) { setEditing(null); setForm(emptyForm); setFieldErrors({}); setShowForm(true); void loadEditorOptions(); }
+            return;
+        }
+        const match = path.match(/^\\/admin\\/posts\\/(\\d+)\\/edit$/);
+        if (match) {
+            const id = Number(match[1]);
+            if (editing?.id !== id) {
+                void api.get('/posts/' + id).then((response) => {
+                    const item: Post = response.data.data;
+                    setEditing(item);
+                    setForm({ title: item.title, slug: item.slug, excerpt: item.excerpt ?? '', body: item.body, status: item.status, category_ids: item.categories.map((category) => category.id), tag_ids: item.tags.map((tag) => tag.id), is_featured: item.is_featured ?? false, allow_comments: item.allow_comments ?? true, featured_image_id: item.featured_image_id ? String(item.featured_image_id) : '', meta_title: item.meta_title ?? '', meta_description: item.meta_description ?? '' });
+                    setFieldErrors({}); setCategorySearch(''); setTagSearch(''); setShowForm(true); void loadEditorOptions();
+                }).catch((err) => setError(errorMessage(err)));
+            }
+            return;
+        }
+        if (showForm) { setShowForm(false); setEditing(null); }
+    }, [location.pathname, showForm, editing?.id, loadEditorOptions]);
 
     const loadPosts = useCallback(async () => {
         setLoading(true);
@@ -210,6 +235,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         setError('');
         setNotice('');
         setShowForm(true);
+        navigate('/admin/posts/create');
         void loadEditorOptions();
     }
 
@@ -240,10 +266,18 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             setCategorySearch('');
             setTagSearch('');
             setShowForm(true);
+            navigate(`/admin/posts/${item.id}/edit`);
             void loadEditorOptions();
         } catch (err) {
             setError(errorMessage(err));
         }
+    }
+
+    function closeEditor() {
+        setShowForm(false);
+        setEditing(null);
+        setForm(emptyForm);
+        navigate('/admin/posts');
     }
 
     async function savePost(event: FormEvent <HTMLFormElement>) {
@@ -291,6 +325,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             }
 
             setShowForm(false);
+            navigate('/admin/posts');
             setEditing(null);
             setForm(emptyForm);
 
@@ -399,9 +434,9 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             active="posts"
             onNavigate={onNavigate}
             onLogout={onLogout}
-            title="Artikel"
-            breadcrumb="Workspace / Konten / Artikel"
-            actions={canCreatePost ? (
+            title={showForm ? (editing ? 'Edit Artikel' : 'Artikel Baru') : 'Artikel'}
+            breadcrumb={showForm ? 'Workspace / Konten / Artikel / Editor' : 'Workspace / Konten / Artikel'}
+            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>Kembali ke Artikel</button> : canCreatePost ? (
                 <button className="btn btn-primary" type="button" onClick={openCreateForm}>
                     <FontAwesomeIcon icon={faPlus} /> Artikel Baru
                 </button>
@@ -432,6 +467,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 </div>
             )}
 
+            {!showForm && <>
             <section className="welcome-panel">
                 <div>
                     <span className="eyebrow">CONTENT MANAGEMENT</span>
@@ -599,13 +635,13 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     onPageChange={setPage}
                 />
             </section>
+            </>}
 
             {showForm && (editing ? canEditPost(editing) : canCreatePost) && (
-                <div className="modal-backdrop-custom" role="presentation">
+                <div className="editor-page-shell">
                     <section
-                        className="editor-modal"
-                        role="dialog"
-                        aria-modal="true"
+                        className="content-panel editor-page"
+                        role="region"
                         aria-labelledby="post-editor-title"
                     >
                         <div className="modal-heading">
@@ -620,7 +656,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                 type="button"
                                 aria-label="Tutup"
                                 disabled={saving}
-                                onClick={() => setShowForm(false)}
+                                onClick={closeEditor}
                             />
                         </div>
     
