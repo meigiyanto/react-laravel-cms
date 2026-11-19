@@ -21,14 +21,13 @@ function AdminApp() {
         const section = pathname.split('/')[2];
         if (section === 'posts' || section === 'pages' || section === 'categories' || section === 'tags' || section === 'media' || section === 'users' || section === 'profile' || section === 'comments') return section;
         return 'dashboard';
-    }
+    };
     const [authenticated, setAuthenticated] = useState(false);
     const [checkingAuth, setCheckingAuth] = useState(true);
     const [fallbackActiveModule, setFallbackActiveModule] = useState<ActiveModule>(() => moduleFromPath(window.location.pathname));
     const activeModule = location.pathname.startsWith('/admin') ? moduleFromPath(location.pathname) : fallbackActiveModule;
-    
     const [profile, setProfile] = useState<AuthProfile | null>(null);
-    
+
     async function loadProfile(): Promise<AuthProfile> {
         const response = await api.get('/auth/me');
         const data = response.data?.data;
@@ -143,6 +142,14 @@ function AdminApp() {
     if (!authenticated) return <LoginPage onLogin={handleLogin} />;
 
     const navigation = {
+        onNavigate: (module: ActiveModule) => {
+            setFallbackActiveModule(module);
+            navigate(module === 'dashboard' ? '/admin' : `/admin/${module}`);
+        },
+        onBack: () => {
+            setFallbackActiveModule('dashboard');
+            navigate('/admin');
+        },
         onLogout: () => void handleLogout(),
         onNavigate: (module: ActiveModule) => {
             setFallbackActiveModule(module);

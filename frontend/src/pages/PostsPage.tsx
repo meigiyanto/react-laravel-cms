@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useState, lazy, Suspense, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
@@ -140,9 +140,8 @@ type NavigationProps = {
 };
 
 export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
-    const location = useLocation();
     const navigate = useNavigate();
-    
+    const location = useLocation();
     const [posts, setPosts] = useState <Post[]> ([]);
     const [detailPostId, setDetailPostId] = useState<number | null>(null);
     const [page, setPage] = useState(1);
@@ -214,7 +213,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         setError('');
         setNotice('');
         setShowForm(true);
-        navigate('admin/posts/create');
+        navigate('/admin/posts/create');
         void loadEditorOptions();
     }
 
@@ -245,13 +244,20 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             setCategorySearch('');
             setTagSearch('');
             setShowForm(true);
-            navigate(`admin/posts/${item.id}/edit`);
+            navigate(`/admin/posts/${item.id}/edit`);
             void loadEditorOptions();
         } catch (err) {
             setError(errorMessage(err));
         }
     }
     
+    function closeEditor() {
+        setShowForm(false);
+        setEditing(null);
+        setForm(emptyForm);
+        navigate('/admin/posts');
+    }
+
     function closeEditor() {
         setShowForm(false);
         setEditing(null);
@@ -304,6 +310,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             }
 
             setShowForm(false);
+            navigate('/admin/posts');
             setEditing(null);
             setForm(emptyForm);
 
@@ -407,6 +414,28 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
 
 
 
+    useEffect(() => {
+        const path = location.pathname.replace(/\/+$/, '');
+        if (path === '/admin/posts/create') {
+            if (!showForm) { Promise.resolve().then(() => { setEditing(null); setForm(emptyForm); setFieldErrors({}); setShowForm(true); void loadEditorOptions(); }); }
+            return;
+        }
+        const match = path.match(/^\/admin\/posts\/(\d+)\/edit$/);
+        if (match) {
+            const id = Number(match[1]);
+            if (editing?.id !== id) {
+                void api.get('/posts/' + id).then((response) => {
+                    const item: Post = response.data.data;
+                    setEditing(item);
+                    setForm({ title: item.title, slug: item.slug, excerpt: item.excerpt ?? '', body: item.body, status: item.status, category_ids: item.categories.map((category) => category.id), tag_ids: item.tags.map((tag) => tag.id), is_featured: item.is_featured ?? false, allow_comments: item.allow_comments ?? true, featured_image_id: item.featured_image_id ? String(item.featured_image_id) : '', meta_title: item.meta_title ?? '', meta_description: item.meta_description ?? '' });
+                    setFieldErrors({}); setCategorySearch(''); setTagSearch(''); setShowForm(true); void loadEditorOptions();
+                }).catch((err) => setError(errorMessage(err)));
+            }
+            return;
+        }
+        if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
+    }, [location.pathname, showForm, editing?.id, loadEditorOptions]);
+
     const selectedCategories = categories.filter((category) => form.category_ids.includes(category.id));
     const filteredCategories = categories.filter((category) =>
         category.name.toLocaleLowerCase().includes(categorySearch.trim().toLocaleLowerCase()),
@@ -438,7 +467,8 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             onLogout={onLogout}
             title={showForm ? (editing ? 'Edit Artikel' : 'Artikel Baru') : 'Artikel'}
             breadcrumb={showForm ? 'Workspace / Konten / Artikel / Editor' : 'Workspace / Konten / Artikel'}
-            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>Kembali ke Artikel</button> : canCreatePost ? (    <button className="btn btn-primary" type="button" onClick={openCreateForm}>
+            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>Kembali ke Artikel</button> : canCreatePost ? (
+                <button className="btn btn-primary" type="button" onClick={openCreateForm}>
                     <FontAwesomeIcon icon={faPlus} /> Artikel Baru
                 </button>
             ) : null}
@@ -467,7 +497,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     />
                 </div>
             )}
-            
+
             {!showForm && <>
             <section className="welcome-panel">
                 <div>
@@ -637,11 +667,11 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     onPageChange={setPage}
                 />
             </section>
+            </>}
 
             {showForm && (editing ? canEditPost(editing) : canCreatePost) && (
-                <div className="page-shell">
+                <div className="editor-page-shell">
                     <section
-                        aria-modal="true"
                         className="content-panel editor-page"
                         role="region"
                         aria-labelledby="post-editor-title"

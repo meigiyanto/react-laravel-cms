@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCallback, useEffect, useState, lazy, Suspense, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
@@ -81,9 +81,8 @@ type NavigationProps = {
 };
 
 export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
-    const location = useLocation();
     const navigate = useNavigate();
-    
+    const location = useLocation();
     const [pages, setPages] = useState <CmsPage[]> ([]);
     const [media, setMedia] = useState <MediaOption[]> ([]);
     const [page, setPage] = useState(1);
@@ -106,6 +105,25 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
     const canDeletePage = canExact(profile, "pages.delete");
     const canPublishPage = canExact(profile, "pages.publish");
     
+    useEffect(() => {
+        const path = location.pathname.replace(/\/+$/, '');
+        if (path === '/admin/pages/create') { if (!showForm) { Promise.resolve().then(() => { setEditing(null); setForm(emptyForm); setShowForm(true); }); } return; }
+        const match = path.match(/^\/admin\/pages\/(\d+)\/edit$/);
+        if (match) {
+            const id = Number(match[1]);
+            if (editing?.id !== id) {
+                void api.get('/pages/' + id).then((response) => {
+                    const current: CmsPage = response.data.data;
+                    setEditing(current);
+                    setForm({ title: current.title, slug: current.slug, body: current.body, status: current.status, featured_image_id: current.featured_image_id ? String(current.featured_image_id) : '', meta_title: current.meta_title || '', meta_description: current.meta_description || '' });
+                    setShowForm(true);
+                }).catch((err) => setError(errorMessage(err)));
+            }
+            return;
+        }
+        if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
+    }, [location.pathname, showForm, editing?.id]);
+
     useEffect(() => {
         const path = location.pathname.replace(/\/+$/, '');
         if (path === '/admin/pages/create') { if (!showForm) { Promise.resolve().then(() => { setEditing(null); setForm(emptyForm); setShowForm(true); }); } return; }
@@ -185,7 +203,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
         setError('');
         setNotice('');
         setShowForm(true);
-        navigate('admin/pages/create');
+        navigate('/admin/pages/create');
     }
 
     async function openEditForm(item: CmsPage) {
@@ -264,6 +282,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             }
 
             setShowForm(false);
+            navigate('/admin/pages');
             setEditing(null);
             setForm(emptyForm);
             setPage(1);
@@ -314,20 +333,16 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             ) : null}
         >
             {!showForm && <>
-                <section className="welcome-panel">
-                    <div>
-                        <span className="eyebrow">PAGE MANAGEMENT</span>
-                        <h2>Kelola halaman situs.</h2>
-                        <p>Atur isi halaman, publikasi, gambar unggulan, dan metadata SEO.</p>
-                    </div>
-                    <div className="welcome-icon" aria-hidden="true">
-                        <FontAwesomeIcon icon={faBookOpen} />
-                    </div>
-                </section>
-            </>}
-
-            {showForm && error && <div className="alert alert-danger mt-3" role="alert">{error}</div>}
-
+            <section className="welcome-panel">
+                <div>
+                    <span className="eyebrow">PAGE MANAGEMENT</span>
+                    <h2>Kelola halaman situs.</h2>
+                    <p>Atur isi halaman, publikasi, gambar unggulan, dan metadata SEO.</p>
+                </div>
+                <div className="welcome-icon" aria-hidden="true">
+                    <FontAwesomeIcon icon={faBookOpen} />
+                </div>
+            </section>
 
             {error && (
                 <div className="alert alert-danger mt-3" role="alert">
@@ -449,6 +464,9 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
                     onPageChange={setPage}
                 />
             </section>
+            </>}
+
+            {showForm && error && <div className="alert alert-danger mt-3" role="alert">{error}</div>}
 
             {showForm && (editing ? canEditPage : canCreatePage) && (
                 <div className="editor-page-shell">
