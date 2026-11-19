@@ -30,6 +30,7 @@ class LayoutController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'slug' => ['nullable', 'string', 'max:140', 'alpha_dash', 'unique:layouts,slug'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'status' => ['sometimes', Rule::in(['draft', 'published', 'archived'])],
             'definition' => ['required', 'array'],
         ]);
         $definition = LayoutDefinition::validate($validated['definition']);
@@ -40,7 +41,7 @@ class LayoutController extends Controller
                 'description' => $validated['description'] ?? null,
                 'definition' => $definition,
                 'schema_version' => 1,
-                'status' => 'draft',
+                'status' => $validated['status'] ?? 'draft',
                 'user_id' => $request->user()->id,
             ]);
             $this->recordRevision($layout, $request->user()->id);
