@@ -185,4 +185,31 @@ class PublicPageTest extends TestCase
             ->assertJsonPath('data.layout', null)
             ->assertJsonPath('data.body', '<p>Legacy fallback.</p>');
     }
+
+    public function test_public_layout_image_block_resolves_media_library_url_and_alt_text(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('cms-media/hero.webp', 'image-content');
+        $user = User::factory()->create();
+        $media = Media::create([
+            'user_id' => $user->id, 'disk' => 'public', 'path' => 'cms-media/hero.webp',
+            'original_name' => 'hero.webp', 'mime_type' => 'image/webp', 'size' => 13, 'alt_text' => 'Pemandangan pantai',
+        ]);
+        $layout = Layout::create([
+            'name' => 'Image Layout', 'slug' => 'image-layout', 'status' => 'published', 'schema_version' => 1,
+            'definition' => ['version' => 1, 'sections' => [[
+                'id' => 'hero', 'type' => 'hero', 'settings' => [],
+                'blocks' => [['id' => 'hero-image', 'type' => 'image', 'content' => '', 'media_id' => $media->id, 'settings' => []]],
+            ]]],
+            'user_id' => $user->id,
+        ]);
+        Page::create([
+            'user_id' => $user->id, 'layout_id' => $layout->id, 'title' => 'Image Page', 'slug' => 'image-page',
+            'body' => '', 'status' => 'published', 'published_at' => now()->subMinute(),
+        ]);
+        $this->getJson('/api/public/pages/image-page')->assertOk()
+            ->assertJsonPath('data.layout.definition.sections.0.blocks.0.media.url', Storage::disk('public')->url('cms-media/hero.webp'))
+            ->assertJsonPath('data.layout.definition.sections.0.blocks.0.media.alt_text', 'Pemandangan pantai');
+    }
+
 }

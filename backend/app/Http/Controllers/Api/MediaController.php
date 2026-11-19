@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Layout;
+use App\Models\LayoutRevision;
 use App\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +18,7 @@ class MediaController extends Controller
         $validated = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'max:255'],
             'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
         
         $query = Media::with('user')->latest();
@@ -45,7 +48,7 @@ class MediaController extends Controller
             $query->where('user_id', $request->user()->id);
         }
     
-        $data = $query->paginate(20)
+        $data = $query->paginate($validated['per_page'] ?? 20)
             ->through(fn (Media $media) => $this->formatMedia($media));
     
         return response()->json([
@@ -154,7 +157,10 @@ class MediaController extends Controller
             ], 403);
         }
     
-        if ($media->posts()->exists() || $media->pages()->exists()) {
+        $referencesMedia = fn (array $definition) => collect($definition['sections'] ?? [])->contains(fn ($section) => collect($section['blocks'] ?? [])->contains(fn ($block) => (int) ($block['media_id'] ?? 0) === (int) $media->id));
+        $usedInLayout = Layout::query()->get(['definition'])->contains(fn (Layout $layout) => $referencesMedia($layout->definition ?? []));
+        $usedInRevision = LayoutRevision::query()->get(['definition'])->contains(fn (LayoutRevision $revision) => $referencesMedia($revision->definition ?? []));
+        if ($media->posts()->exists() || $media->pages()->exists() || $usedInLayout || $usedInRevision) {
             return response()->json([
                 'message' => 'Media sedang digunakan dan tidak dapat dihapus.',
             ], 422);
