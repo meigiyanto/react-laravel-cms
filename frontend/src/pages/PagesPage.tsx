@@ -107,7 +107,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
 
     useEffect(() => {
         const path = location.pathname.replace(/\/+$/, '');
-        if (path === '/admin/pages/create') { if (!showForm) { setEditing(null); setForm(emptyForm); setShowForm(true); } return; }
+        if (path === '/admin/pages/create') { if (!showForm) { Promise.resolve().then(() => { setEditing(null); setForm(emptyForm); setShowForm(true); }); } return; }
         const match = path.match(/^\/admin\/pages\/(\d+)\/edit$/);
         if (match) {
             const id = Number(match[1]);
@@ -121,7 +121,7 @@ export default function PagesPage({ onNavigate, onLogout } : NavigationProps) {
             }
             return;
         }
-        if (showForm) { setShowForm(false); setEditing(null); }
+        if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
     }, [location.pathname, showForm, editing?.id]);
 
     const loadPages = useCallback(async () => {
