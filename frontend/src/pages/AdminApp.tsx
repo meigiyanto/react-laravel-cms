@@ -11,6 +11,7 @@ const PostsPage = lazy(() => import('../pages/PostsPage'));
 const UserManagementPage = lazy(() => import('../pages/UserManagementPage'));
 const CommentsPage = lazy(() => import('../pages/CommentsPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+const ThemeManagerPage = lazy(() => import('../pages/ThemeManagerPage'));
 import LoginPage from '../pages/LoginPage';
 import type { ActiveModule } from '../components/Sidebar';
 
@@ -19,7 +20,7 @@ function AdminApp() {
     const navigate = useNavigate();
     const moduleFromPath = (pathname: string): ActiveModule => {
         const section = pathname.split('/')[2];
-        if (section === 'posts' || section === 'pages' || section === 'categories' || section === 'tags' || section === 'media' || section === 'users' || section === 'profile' || section === 'comments') return section;
+        if (section === 'posts' || section === 'pages' || section === 'categories' || section === 'tags' || section === 'media' || section === 'users' || section === 'profile' || section === 'comments' || section === 'themes') return section;
         return 'dashboard';
     };
     const [authenticated, setAuthenticated] = useState(false);
@@ -172,9 +173,10 @@ function AdminApp() {
         users: null,
         profile: null,
         comments: 'comments.view',
+        themes: null,
     };
     
-    const hasPageAccess = activeModule === 'profile' || (activeModule === 'users' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!));
+    const hasPageAccess = activeModule === 'profile' || (activeModule === 'users' || activeModule === 'themes' ? isAdministrator : modulePermission[activeModule] !== null && can(modulePermission[activeModule]!));
     
     let page: React.ReactNode;
     
@@ -242,6 +244,14 @@ function AdminApp() {
             );
             break;
     
+        case 'themes':
+            page = (
+                <Suspense fallback={<PageLoading />}>
+                    <ThemeManagerPage onNavigate={navigation.onNavigate} onLogout={navigation.onLogout} />
+                </Suspense>
+            );
+            break;
+
         case 'users':
             page = (
                 <Suspense fallback={<PageLoading />}>
