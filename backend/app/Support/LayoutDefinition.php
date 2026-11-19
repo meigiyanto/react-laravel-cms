@@ -88,7 +88,7 @@ class LayoutDefinition
         $scheme = parse_url($value, PHP_URL_SCHEME);
         if (! is_string($scheme)) return false;
         $scheme = strtolower($scheme);
-        if (in_array($scheme, ['mailto', 'tel'], true)) return preg_match('/^' . $scheme . ':[a-z0-9+().,_-]+$/i', $value) === 1;
+        if (in_array($scheme, ['mailto', 'tel'], true)) return preg_match('/^' . $scheme . ':[a-z0-9+().,_@-]+$/i', $value) === 1;
         return in_array($scheme, ['http', 'https'], true) && filter_var($value, FILTER_VALIDATE_URL) !== false;
     }
 
