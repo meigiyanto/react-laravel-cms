@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../api/client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTimes, faCheck, faRefresh, faTrash } from '@fortawesome/free-solid-svg-icons';
 import AdminLayout from '../components/AdminLayout';
 import type { ActiveModule } from '../components/Sidebar';
 import Pagination from '../components/Pagination';
@@ -377,22 +377,34 @@ export default function CommentsPage({
                                                 {canModerateComments && comment.status !== 'approved' && (
                                                     <button type="button" className="btn btn-sm btn-outline-success"
                                                         disabled={workingId === comment.id}
-                                                        onClick={() => void updateStatus(comment, 'approved')}>Setujui</button>
+                                                        onClick={() => void updateStatus(comment, 'approved')}>
+                                                        <FontAwesomeIcon icon={faCheck} />
+                                                        Accept
+                                                    </button>
                                                 )}
                                                 {canModerateComments && comment.status !== 'rejected' && (
                                                     <button type="button" className="btn btn-sm btn-outline-warning"
                                                         disabled={workingId === comment.id}
-                                                        onClick={() => void updateStatus(comment, 'rejected')}>Tolak</button>
+                                                        onClick={() => void updateStatus(comment, 'rejected')}>
+                                                        <FontAwesomeIcon icon={faTimes} />
+                                                        Reject
+                                                    </button>
                                                 )}
                                                 {canModerateComments && comment.status !== 'pending' && (
                                                     <button type="button" className="btn btn-sm btn-outline-secondary"
                                                         disabled={workingId === comment.id}
-                                                        onClick={() => void updateStatus(comment, 'pending')}>Tinjau ulang</button>
+                                                        onClick={() => void updateStatus(comment, 'pending')}>
+                                                        <FontAwesomeIcon icon={faRefresh} />
+                                                        Review
+                                                    </button>
                                                 )}
                                                 {canDeleteComments && (
                                                     <button type="button" className="btn btn-sm btn-outline-danger"
                                                         disabled={workingId === comment.id}
-                                                        onClick={() => void deleteComment(comment)}>Hapus</button>
+                                                        onClick={() => void deleteComment(comment)}>
+                                                        <FontAwesomeIcon icon={faTrash} />
+                                                        Remove
+                                                    </button>
                                                 )}
                                             </div>
                                         </td>

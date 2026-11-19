@@ -9,7 +9,7 @@ import { type ActiveModule } from '../components/Sidebar';
 import PostDetailPage from './PostDetailPage';
 import { sanitizeArticleHtml } from '../utils/sanitizeHtml';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faPaperPlane, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faPaperPlane, faSearch, faArrowLeft, faEye, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 import { canExact, canOwnResource } from '../utils/permissions';
 
@@ -250,7 +250,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             setError(errorMessage(err));
         }
     }
-    
+
     function closeEditor() {
         setShowForm(false);
         setEditing(null);
@@ -382,7 +382,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             setLoadingOptions(false);
         }
     }, []);
-    
+
     useEffect(() => {
         const path = location.pathname.replace(/\/+$/, '');
         if (path === '/admin/posts/create') {
@@ -404,8 +404,6 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
         }
         if (showForm) { Promise.resolve().then(() => { setShowForm(false); setEditing(null); }); }
     }, [location.pathname, showForm, editing?.id, loadEditorOptions]);
-
-
 
     const selectedCategories = categories.filter((category) => form.category_ids.includes(category.id));
     const filteredCategories = categories.filter((category) =>
@@ -438,7 +436,8 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
             onLogout={onLogout}
             title={showForm ? (editing ? 'Edit Artikel' : 'Artikel Baru') : 'Artikel'}
             breadcrumb={showForm ? 'Workspace / Konten / Artikel / Editor' : 'Workspace / Konten / Artikel'}
-            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>Kembali ke Artikel</button> : canCreatePost ? (
+            actions={showForm ? <button className="btn btn-outline-secondary" type="button" onClick={closeEditor}>
+                <FontAwesomeIcon icon={faArrowLeft} /> Kembali</button> : canCreatePost ? (
                 <button className="btn btn-primary" type="button" onClick={openCreateForm}>
                     <FontAwesomeIcon icon={faPlus} /> Artikel Baru
                 </button>
@@ -469,7 +468,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                 </div>
             )}
 
-            {!showForm && <div className="posts-list-view">
+            {!showForm && <>
             <section className="welcome-panel">
                 <div>
                     <span className="eyebrow">CONTENT MANAGEMENT</span>
@@ -480,7 +479,6 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     <FontAwesomeIcon icon={faPaperPlane} />
                 </div>
             </section>
-            
             
             <section className="content-panel mt-4">
                 <div className="panel-heading">
@@ -530,10 +528,10 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     <table className="table cms-table align-middle">
                         <thead>
                             <tr>
-                                <th>JUDUL ARTIKEL</th>
-                                <th>STATUS</th>
-                                <th>TANGGAL</th>
-                                <th className="text-end">AKSI</th>
+                                <th>Article Title</th>
+                                <th>Satus</th>
+                                <th>Date</th>
+                                <th className="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -599,25 +597,25 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                                         <td>
                                             <div className="d-flex justify-content-end gap-2">
                                                 <button
-                                                    className="btn btn-sm btn-outline-primary"
+                                                    className="btn btn-sm btn-outline-info"
                                                     type="button"
                                                     onClick={() => setDetailPostId(post.id)}
                                                 >
-                                                    Detail
+                                                    <FontAwesomeIcon icon={faEye} />
                                                 </button>
                                                 {canEditPost(post) && <button
                                                     className="btn btn-sm btn-outline-warning"
                                                     type="button"
                                                     onClick={() => void openEditForm(post)}
                                                 >
-                                                    Edit
+                                                    <FontAwesomeIcon icon={faEdit} />
                                                 </button>}
                                                 {canDeletePost(post) && <button
                                                     className="btn btn-sm btn-outline-danger"
                                                     type="button"
                                                     onClick={() => void deletePost(post)}
                                                 >
-                                                    Hapus
+                                                    <FontAwesomeIcon icon={faTrash} />
                                                 </button>}
                                             </div>
                                         </td>
@@ -638,7 +636,7 @@ export default function PostsPage({ onNavigate, onLogout }: NavigationProps) {
                     onPageChange={setPage}
                 />
             </section>
-            </div>}
+            </>}
 
             {showForm && (editing ? canEditPost(editing) : canCreatePost) && (
                 <div className="editor-page-shell">

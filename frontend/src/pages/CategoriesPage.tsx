@@ -4,7 +4,7 @@ import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
 import { type ActiveModule } from '../components/Sidebar';
 const Pagination = lazy(() => import('../components/Pagination'));
-import { faTags, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faTags, faSearch, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useAuthProfile } from '../auth/AuthProfileContext';
 import { canExact } from '../utils/permissions';
@@ -346,7 +346,7 @@ export default function CategoriesPage({
                                                     onClick={()=> openEditForm(category)}
                                                     disabled={deletingId !== null}
                                                 >
-                                                    Edit
+                                                    <FontAwesomeIcon icon={faEdit} />
                                                 </button>}
                                                 {canDeleteCategory && <button
                                                     className="btn btn-sm btn-outline-danger"
@@ -354,7 +354,7 @@ export default function CategoriesPage({
                                                     onClick={()=> void deleteCategory(category)}
                                                     disabled={deletingId !== null}
                                                 >
-                                                    {deletingId === category.id ? 'Menghapus...' : 'Hapus'}
+                                                    {deletingId === category.id ? 'Menghapus...' : <FontAwesomeIcon icon={faTrash} />}
                                                 </button>}
                                             </div>
                                         </td>
