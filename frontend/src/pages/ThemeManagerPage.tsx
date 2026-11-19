@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import axios from 'axios';
 import api from '../api/client';
 import AdminLayout from '../components/AdminLayout';
+import ThemePreview from '../components/ThemePreview';
 import type { ActiveModule } from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPalette, faPlus, faCheck, faEdit } from '@fortawesome/free-solid-svg-icons';
@@ -92,6 +93,7 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
     const [saving, setSaving] = useState(false);
     const [activatingId, setActivatingId] = useState<number | null>(null);
     const [showCreate, setShowCreate] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
     const [newTheme, setNewTheme] = useState({ name: '', slug: '', description: '' });
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
@@ -277,7 +279,8 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
             {selected && <section className="content-panel mt-4 theme-editor">
                 <div className="panel-heading"><div><h3>Edit Design Tokens: {selected.name}</h3>
                     <p>Perubahan disimpan sebagai revisi baru. Simpan konfigurasi sebelum mengaktifkan tema.</p></div>
-                    <button className="btn btn-sm btn-outline-secondary" type="button" onClick={() => setSelected(null)}>Tutup Editor</button></div>
+                    <div className="d-flex gap-2"><button className="btn btn-sm btn-outline-primary" type="button" onClick={() => setShowPreview(true)}>Preview</button>
+                        <button className="btn btn-sm btn-outline-secondary" type="button" onClick={() => setSelected(null)}>Tutup Editor</button></div></div>
                 <form onSubmit={saveTheme} className="px-4 pb-4">
                     <div className="theme-editor-section"><h4>Color System</h4><p>Atur warna dasar dan warna navigasi website.</p>
                         <div className="theme-color-grid">{Object.entries(colorLabels).map(([key, label]) => <label className="theme-color-field" key={key}>
@@ -312,6 +315,7 @@ export default function ThemeManagerPage({ onNavigate, onLogout }: NavigationPro
                         <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Design Tokens'}</button></div>
                 </form>
             </section>}
+        {showPreview && selected && <ThemePreview name={selected.name} settings={settings} onClose={() => setShowPreview(false)} />}
         </AdminLayout>
     );
 }
