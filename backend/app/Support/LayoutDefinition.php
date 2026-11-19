@@ -86,8 +86,10 @@ class LayoutDefinition
         if ($value === '') return true;
         if (str_starts_with($value, '/') && ! str_starts_with($value, '//')) return true;
         $scheme = parse_url($value, PHP_URL_SCHEME);
-        return is_string($scheme) && in_array(strtolower($scheme), ['http', 'https', 'mailto', 'tel'], true)
-            && filter_var($value, FILTER_VALIDATE_URL) !== false;
+        if (! is_string($scheme)) return false;
+        $scheme = strtolower($scheme);
+        if (in_array($scheme, ['mailto', 'tel'], true)) return preg_match('/^' . $scheme . ':[a-z0-9+().,_-]+$/i', $value) === 1;
+        return in_array($scheme, ['http', 'https'], true) && filter_var($value, FILTER_VALIDATE_URL) !== false;
     }
 
     private static function hasOnlyKeys(array $value, array $allowed): bool
