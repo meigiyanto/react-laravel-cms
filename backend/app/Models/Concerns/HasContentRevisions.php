@@ -1,9 +1,9 @@
 <?php
 
-namespace App\\Models\\Concerns;
+namespace App\Models\Concerns;
 
-use App\\Models\\ContentRevision;
-use Illuminate\\Support\\Facades\\Auth;
+use App\Models\ContentRevision;
+use Illuminate\Support\Facades\Auth;
 
 trait HasContentRevisions
 {

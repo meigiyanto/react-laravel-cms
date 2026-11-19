@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\ContentRevision;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Role;
@@ -98,7 +97,7 @@ class ContentRevisionTest extends TestCase
 
     public function test_revision_history_requires_authentication(): void
     {
-        auth()->guard('sanctum')->logout();
+        $this->app['auth']->forgetGuards();
 
         $post = Post::create(['title' => 'Privat', 'slug' => 'privat', 'body' => 'Isi', 'status' => 'draft']);
 

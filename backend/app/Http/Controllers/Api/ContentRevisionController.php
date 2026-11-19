@@ -1,15 +1,15 @@
 <?php
 
-namespace App\\Http\\Controllers\\Api;
+namespace App\Http\Controllers\Api;
 
-use App\\Http\\Controllers\\Controller;
-use App\\Models\\ContentRevision;
-use App\\Models\\Page;
-use App\\Models\\Post;
-use App\\Support\\ArticleHtmlSanitizer;
-use Illuminate\\Http\\JsonResponse;
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\DB;
+use App\Http\Controllers\Controller;
+use App\Models\ContentRevision;
+use App\Models\Page;
+use App\Models\Post;
+use App\Support\ArticleHtmlSanitizer;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ContentRevisionController extends Controller
 {
