@@ -47,6 +47,6 @@
     "lightningcss": "^1.33.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.69.0",
-    "vite": "^8.3.0"
+    "vite": "^8.3.8"
   }
 }
